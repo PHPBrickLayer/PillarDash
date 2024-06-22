@@ -10,7 +10,7 @@ use BrickLayer\Lay\Core\View\Tags\Script;
 
 final class Layout
 {
-    private static string $assets = "@ui/assets/";
+    private static string $assets = "@ui/static/assets/";
     private static string $dashboard_scripts = "";
     private static string $header;
     private static string $sidebar;
@@ -30,7 +30,7 @@ final class Layout
      * Inform the class of the location of static assets if they are not in the default location
      * @return void
      */
-    public static function set_assets_src(string $src = "@ui/assets/") : void
+    public static function set_assets_src(string $src) : void
     {
         self::$assets = $src;
     }
@@ -44,7 +44,7 @@ final class Layout
      * Get assets src
      * @return string
      */
-    public static function assets() : string
+    public static function __assets__() : string
     {
         return self::$assets;
     }

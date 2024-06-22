@@ -6,9 +6,9 @@ because some of the classes are being accessed like the `DomainResource` class a
 available on the web side of the framework, and not the server side.
 
 ### Get Started
-To get started, you need to link static assets to the ui folder of the domain you wish to use this package with, like this:
+To get started, you need to link static __assets__ to the ui folder of the domain you wish to use this package with, like this:
 ```shell
-php bob link:dir utils/PillarDash/assets web/domains/Default/static/dev/ui/assets
+php bob link:dir utils/Pillar/static web/domains/Default/static/dev/ui/static
 ```
 
 Then navigate to the `layout` folder and do the following in the appropriate files:
@@ -28,6 +28,7 @@ Then navigate to the `layout` folder and do the following in the appropriate fil
 \utils\PillarDash\Layout::body();
 ```
 ### Creating Header Section
+Open the `body.inc` file and do the following to set up the header, sidebar and every other required component
 
 ```php
 Layout::header(
@@ -70,7 +71,7 @@ Layout::header(
     \utils\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
-        "@ui/assets/media/avatars/300-2.jpg",
+        "@ui/__assets__/media/avatars/300-2.jpg",
         [
             "name" => "Profile",
             "url" => "profile",

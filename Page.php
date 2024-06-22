@@ -21,11 +21,11 @@ final class Page
     private static function e_template(string $illustration, string $bg) : string
     {
         $page = DomainResource::plaster()->page;
-        $src = Layout::assets();
+        $src = Layout::__assets__();
         $fof = Img::new()->alt("Page not found")->class("mw-100 mh-300px theme-light-show")->src($src . "media/auth/$illustration.png", false)
             . Img::new()->alt("Page not found")->class("mw-100 mh-300px theme-dark-show")->src($src . "media/auth/$illustration-dark.png", false);
         $href = Anchor::new()->href()->get_href();
-        $img = SrcFilter::go("@ui/assets/media/");
+        $img = SrcFilter::go(Layout::__assets__() . "media/");
 
         return <<<PAGE
         @style
@@ -66,12 +66,12 @@ final class Page
             self::$table_script_added = true;
 
             $script = Script::new();
-            $asset = Layout::assets();
+            $asset = Layout::__assets__();
 
             Layout::__INT_SCRIPT__(
                  $script->defer($defer)->src($asset . "plugins/custom/datatables/datatables.bundle.js")
                 . $script->defer($defer)->src($asset . "plugins/custom/datatables/datatables.bundle.js")
-                . $script->defer($defer)->src($asset . "custom/datatable.js")
+                . $script->defer($defer)->src($asset . "../custom/datatable.js")
             );
 
         }
