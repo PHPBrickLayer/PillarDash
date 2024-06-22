@@ -103,6 +103,7 @@ final class Page
     ) : string
     {
         self::using_table();
+        $tid = "lay-dtable-" . $tid;
 
         ob_start();
         include __DIR__ . DIRECTORY_SEPARATOR . "template/datatable.inc";
