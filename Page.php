@@ -69,9 +69,8 @@ final class Page
             $asset = Layout::__assets__();
 
             Layout::__INT_SCRIPT__(
-                 $script->defer($defer)->src($asset . "plugins/custom/datatables/datatables.bundle.js")
-                . $script->defer($defer)->src($asset . "plugins/custom/datatables/datatables.bundle.js")
-                . $script->defer($defer)->src($asset . "../custom/datatable.js")
+                $script->defer($defer)->src($asset . "plugins/custom/datatables/datatables.bundle.js", false)
+                . $script->defer($defer)->src($asset . "../custom/datatable.js", false)
             );
 
         }
@@ -88,7 +87,7 @@ final class Page
      */
     public static function table(
         string $tid, array $thead, string|array|null
-        $tbody = null, bool $print_table = true,
+               $tbody = null, bool $print_table = true,
         #[ArrayShape([
             'sn' => 'bool',
             'checkbox' => 'bool',
