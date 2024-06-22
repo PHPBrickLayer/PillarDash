@@ -8,7 +8,7 @@ available on the web side of the framework, and not the server side.
 ### Get Started
 To get started, you need to link static assets to the ui folder of the domain you wish to use this package with, like this:
 ```shell
-php bob link:dir utils/Pillar/assets web/domains/Default/static/dev/ui/assets
+php bob link:dir utils/PillarDash/assets web/domains/Default/static/dev/ui/assets
 ```
 
 Then navigate to the `layout` folder and do the following in the appropriate files:
