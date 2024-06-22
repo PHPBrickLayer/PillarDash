@@ -1,6 +1,6 @@
 <?php
 
-namespace utils\Pillar;
+namespace utils\PillarDash;
 
 use BrickLayer\Lay\Core\View\DomainResource;
 use BrickLayer\Lay\Core\View\SrcFilter;

@@ -15,26 +15,27 @@ Then navigate to the `layout` folder and do the following in the appropriate fil
 
 ```php
 # /web/domains/Default/layout/head.inc
-\utils\Pillar\Layout::head();
+\utils\PillarDash\Layout::head();
 ```
 
 ```php
 # /web/domains/Default/layout/script.inc
-\utils\Pillar\Layout::script();
+\utils\PillarDash\Layout::script();
 ```
 
 ```php
 # /web/domains/Default/layout/body.inc
-\utils\Pillar\Layout::body();
+\utils\PillarDash\Layout::body();
 ```
 ### Creating Header Section
+
 ```php
 Layout::header(
-    \utils\Pillar\Header::logo(
+    \utils\PillarDash\Header::logo(
         "@shared_img/logo.png",
     ),
 
-    \utils\Pillar\Header::favourite(
+    \utils\PillarDash\Header::favourite(
         function (){ ?>
             <a href="blog/compose" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-warning">
@@ -66,7 +67,7 @@ Layout::header(
         <?php }
     ),
 
-    \utils\Pillar\Header::user_nav(
+    \utils\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
         "@ui/assets/media/avatars/300-2.jpg",
@@ -88,9 +89,10 @@ Layout::header(
 ```
 ### Creating Sidebar Menu
 To create a sidebar menu, do the following inside the `body.inc` file, right before `Layout::body()`
+
 ```php
-\utils\Pillar\Layout::sidebar(
-    \utils\Pillar\Menu::make(
+\utils\PillarDash\Layout::sidebar(
+    \utils\PillarDash\Menu::make(
         menu_name: "Blog",
         route_id: "blog",
         icon: "ki-message-edit",
