@@ -220,7 +220,8 @@ if(is_array($tbody)) {
 
     <div class="card-body py-4">
         <!--begin::Table-->
-        <table id="<?= $tid ?>" class="table align-middle table-row-dashed fs-6 gy-3  data-table table-striped table-row-bordered gs-7 border rounded">
+
+        <table id="<?= $tid ?>" class="table align-middle table-row-dashed fs-6 gy-3 data-table table-row-bordered gs-7 border rounded">
             <thead>
                 <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                     <?php if($serial_num && !$check_box): ?>
