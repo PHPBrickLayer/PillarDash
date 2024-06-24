@@ -11,6 +11,9 @@ use JetBrains\PhpStorm\ArrayShape;
 
 final class Page
 {
+    /**
+     * Attach this to the `->body_attr` method of a `Plaster` class
+     */
     public const E_ATTR = [
         "class" => "app-blank bgi-size-cover bgi-position-center bgi-no-repeat",
         "attr" => 'id="kt_body"',
@@ -47,19 +50,31 @@ final class Page
             </div>
         </div>
         PAGE;
-
     }
 
+    /**
+     * Render the error 404 page on a `.view` file
+     * @return string
+     */
     public static function e_404() : string
     {
         return self::e_template("404-error", "bg1");
     }
 
+    /**
+     * Render a generic error page on a `.view` file
+     * @return string
+     */
     public static function e_500() : string
     {
         return self::e_template("membership", "bg7");
     }
 
+    /**
+     * Use this to add datatable script on the page
+     * @param bool $defer
+     * @return void
+     */
     public static function using_table(bool $defer = true) : void
     {
         if(!self::$table_script_added) {
@@ -77,7 +92,7 @@ final class Page
     }
 
     /**
-     * Render datatable on a page
+     * Render datatable on a page; That is a `.view` file
      * @param string $tid
      * @param array $thead
      * @param string|array|null $tbody

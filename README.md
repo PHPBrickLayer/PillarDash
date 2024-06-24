@@ -1,9 +1,10 @@
-## How To Use
+## Introduction
+This is a dashboard created for use on [bricklayer/lay](https://github.com/PHPBrickLayer/lay) framework, and it was created using [metronic dashboard](https://keenthemes.com/metronic).
 
-**Please note:**\
-This package is to be used in the web side of the framework and not on the brick side;
-because some of the classes are being accessed like the `DomainResource` class are only 
-available on the web side of the framework, and not the server side.
+### How To Use
+This package is to be used on the `web` side of the framework and not on the `brick (server side)` side;
+because some of the classes used, like the `DomainResource` class are only 
+available on the `web` side of the framework, and not the server side.
 
 ### Get Started
 To get started, you need to link static __assets__ to the ui folder of the domain you wish to use this package with, like this:
