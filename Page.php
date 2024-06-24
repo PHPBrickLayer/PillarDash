@@ -101,8 +101,20 @@ final class Page
      * @return string
      */
     public static function table(
-        string $tid,        array $thead, string|array|null
-               $tbody = null,      bool $print_table = true,
+        string $tid,
+
+        // Example:
+        // 1.) ['Name', 'Date']
+        // 2.) ['Name', ['Date', 'text-end']]
+        array $thead,
+
+        // Example:
+        // 1.) [ ['Brownian Motion', '2024-06-24'], ['Brownian Motion 2', '2024-06-24'] ]
+        // 2.) [ ['Brownian Motion', '<span style="text: blue">Mon Jun 24, 2024</span>'], ['Brownian Motion 2', '<span style="text: blue">Mon Jun 24, 2024</span>'] ]
+        // 3.) '<tr><td>Brownian Motion</td><td>2024-06-24</td></tr> <tr><td>Brownian Motion 2</td><td>2024-06-24</td></tr>'
+        string|array|null   $tbody = null,
+
+        bool $print_table = true,
 
         // Every key that has `bool` or another `datatype`; accepts `false` or that `datatype`
         #[ArrayShape([
@@ -111,7 +123,7 @@ final class Page
             'export' => 'bool',
 
             // Example:
-            // [column, format]
+            // [`column`, `format`]
             // [3, 'YYYY-MM-DD']
             'date' => 'int|array',
 
