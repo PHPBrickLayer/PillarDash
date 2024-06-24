@@ -7,27 +7,25 @@ because some of the classes used, like the `DomainResource` class are only
 available on the `web` side of the framework, and not the server side.
 
 ### Get Started
-To get started, you need to link static __assets__ to the ui folder of the domain you wish to use this package with, like this:
-```shell
-php bob link:dir utils/PillarDash/static web/domains/Default/static/dev/ui/static
-```
-
-Then navigate to the `layout` folder and do the following in the appropriate files:
-
-```php
-# /web/domains/Default/layout/head.inc
-\utils\PillarDash\Layout::head();
-```
-
-```php
-# /web/domains/Default/layout/script.inc
-\utils\PillarDash\Layout::script();
-```
-
-```php
-# /web/domains/Default/layout/body.inc
-\utils\PillarDash\Layout::body();
-```
+To get started, follow these steps:
+- Clone this repo and move it into the `utils` folder.
+- Use the command below to link the __static__ directory to the __ui__ directory of the designated domain you're working with:
+    ```shell
+    php bob link:dir utils/PillarDash/static web/domains/Default/static/dev/ui/static
+    ```
+- Then navigate to the `layout` folder and do the following in the appropriate files as commented:
+    ```php
+    # /web/domains/Default/layout/head.inc
+    \utils\PillarDash\Layout::head();
+    ```
+    ```php
+    # /web/domains/Default/layout/script.inc
+    \utils\PillarDash\Layout::script();
+    ```
+    ```php
+    # /web/domains/Default/layout/body.inc
+    \utils\PillarDash\Layout::body();
+    ```
 ### Creating Header Section
 Open the `body.inc` file and do the following to set up the header, sidebar and every other required component
 
