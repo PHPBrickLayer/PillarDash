@@ -229,8 +229,8 @@ final class Menu
             $menu_entries .= self::class_menu_link($dto['name'], $dto['icon']) . $x;
         }
 
-        $is_1d = $is_1d ? "here" : "";
         $is_2d = $is_2d ? "here hover show" : "";
+        $is_1d = $is_1d || $is_2d ? "here" : "";
 
         self::$menu_store .= <<<STORE
         <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2 $is_1d">
