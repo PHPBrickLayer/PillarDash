@@ -20,7 +20,7 @@ final class Menu
         return Anchor::new()->href(...$args)->get_href();
     }
 
-    private static function set_route_data(string $route_id) : array
+    private static function set_route_data() : array
     {
         $domain = DomainResource::get()->domain;
 
@@ -28,7 +28,6 @@ final class Menu
             "route" => $domain->route,
             "route_as_array" => $domain->route_as_array,
             "domain_id" => $domain->domain_id,
-            "is_1d" => $domain->route_as_array[0] == $route_id ? "here" : "",
         ];
     }
 
@@ -180,15 +179,14 @@ final class Menu
      * Create menu sections on the sidebar. Each call to this method creates a new menu section
      *
      * @param string $menu_name
-     * @param string $route_id
      * @param string $icon
      * @param bool|null $permit
      * @param array ...$items
      * @return self
      */
     public static function make(
-        string $menu_name,  string $route_id,
-        string $icon,       ?bool $permit,
+        string     $menu_name,
+        string     $icon, ?bool $permit,
         #[ArrayShape([
             'name' => 'string',
             'title' => 'string',
@@ -204,11 +202,11 @@ final class Menu
         if ($permit === false)
             return self::new();
 
-        self::set_route_data($route_id);
+        self::set_route_data();
 
         $menu_entries = "<div>There is currently no menu entry</div>";
         $menu_still_blank = true;
-        $is_1d = self::$route_data['is_1d'];
+        $is_1d = false;
         $is_2d = null;
 
         foreach ($items as $d) {
@@ -223,7 +221,7 @@ final class Menu
             $menu_still_blank = false;
 
             if (!isset($d['sub'])) {
-                $menu_entries .= self::class_menu_item($dto);
+                $menu_entries .= self::class_menu_item($dto, $is_1d);
                 continue;
             }
 
@@ -231,6 +229,7 @@ final class Menu
             $menu_entries .= self::class_menu_link($dto['name'], $dto['icon']) . $x;
         }
 
+        $is_1d = $is_1d ? "here" : "";
         $is_2d = $is_2d ? "here hover show" : "";
 
         self::$menu_store .= <<<STORE
