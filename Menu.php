@@ -42,7 +42,10 @@ final class Menu
 
         $domain_id = $data['domain_id'] ?? self::$route_data['domain_id'];
 
-        if(self::$route_data['route'] == @$data['url'] && self::$route_data['domain_id'] == $domain_id)
+        if(
+            (self::$route_data['route'] == @$data['url'] && self::$route_data['domain_id'] == $domain_id)
+            || in_array(self::$route_data['route'], $data['alias'] ?? [])
+        )
             $active = "active";
 
         return [
@@ -191,6 +194,7 @@ final class Menu
             'name' => 'string',
             'title' => 'string',
             'url' => 'string',
+            'alias' => 'array',
             'sub' => 'array',
             'icon' => 'string',
             'permit' => 'bool',
