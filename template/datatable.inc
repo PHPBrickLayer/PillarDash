@@ -6,8 +6,8 @@
 
 $cols = "";
 
-  //                      //
- //  OPTIONS EXTRACTION  //
+//                      //
+//  OPTIONS EXTRACTION  //
 //                      //
 
 $serial_num = $topts['sn'] ?? true;
@@ -19,12 +19,12 @@ $export_opt = $topts['export'] ?? true;
  * ['column' => 'string', 'rules' => 'array']
  * @example
  * [
-     "column" => "Category",
-     "rules" => [
-        "ce12-dsi" => "News",
-        "222-ghg" => "Entertainment",
-    ]
-  ]
+"column" => "Category",
+"rules" => [
+"ce12-dsi" => "News",
+"222-ghg" => "Entertainment",
+]
+]
  */
 $table_filter = $topts['filter'] ?? false;
 
@@ -49,8 +49,8 @@ $toolbar = $topts['toolbar'] ?? <<<BAR
 BAR;
 $tbody ??= '<tr class="no-results-found"><td colspan="100%" style="text-align: center">There&apos;s nothing to show</td></tr>';
 
-  //                      //
- //  T-HEAD EXTRACTION   //
+//                      //
+//  T-HEAD EXTRACTION   //
 //                      //
 foreach ($thead as $th) {
     if(empty($th)) {
@@ -60,9 +60,10 @@ foreach ($thead as $th) {
 
     if(is_array($th)) {
         $th[1] ??= "";
+        $act = strtolower($th[0]);
 
-        if($th[0] == 'Actions') {
-            $th[0] = str_replace("Actions", '<i class="ki-outline ki-menu fs-2"></i>', $th[0]);
+        if($act == 'actions' || $act == 'action') {
+            $th[0] = str_replace($th[0], '<i class="ki-outline ki-menu fs-2"></i>', $th[0]);
             $th[1] .= " hide-on-export no-sort";
         }
 
@@ -71,17 +72,18 @@ foreach ($thead as $th) {
     }
 
     $class = "";
+    $act = strtolower($th);
 
-    if($th == 'Actions') {
+    if($act == 'action' || $act == 'actions') {
         $class = "hide-on-export no-sort text-end";
-        $th = str_replace("Actions", '<i class="ki-outline ki-menu fs-2"></i>', $th);
+        $th = str_replace($th, '<i class="ki-outline ki-menu fs-2"></i>', $th);
     }
 
     $cols .= "<th class='$class'>$th</th>";
 }
 
-  //                      //
- //  T-BODY EXTRACTION   //
+//                      //
+//  T-BODY EXTRACTION   //
 //                      //
 if(is_array($tbody)) {
     $x = $tbody;
@@ -97,7 +99,7 @@ if(is_array($tbody)) {
 
         if ($check_box)
             $sn .= (
-                '<td>
+            '<td>
                     <div class="form-check form-check-sm form-check-custom form-check-solid">
                         <input class="form-check-input" type="checkbox" value="1">
                     </div>
@@ -220,25 +222,24 @@ if(is_array($tbody)) {
 
     <div class="card-body py-4">
         <!--begin::Table-->
-
-        <table id="<?= $tid ?>" class="table align-middle table-row-dashed fs-6 gy-3 data-table table-row-bordered gs-7 border rounded">
+        <table id="<?= $tid ?>" class="table align-middle table-row-dashed fs-6 gy-3  data-table table-striped table-row-bordered gs-7 border rounded">
             <thead>
-                <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                    <?php if($serial_num && !$check_box): ?>
-                        <th><i class="ki-outline ki-graph fs-2"></i></th>
-                    <?php endif; ?>
+            <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                <?php if($serial_num && !$check_box): ?>
+                    <th><i class="ki-outline ki-graph fs-2"></i></th>
+                <?php endif; ?>
 
-                    <?php if($check_box): ?>
-                        <th class="w-10px pe-2">
-                            <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                <input class="form-check-input datatable-check-select-all" type="checkbox" data-kt-check="true" value="1" />
-                                <input type="hidden" class="datatable-check-select-all-cache" name="batch_action_values" />
-                            </div>
-                        </th>
-                    <?php endif; ?>
+                <?php if($check_box): ?>
+                    <th class="w-10px pe-2">
+                        <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                            <input class="form-check-input datatable-check-select-all" type="checkbox" data-kt-check="true" value="1" />
+                            <input type="hidden" class="datatable-check-select-all-cache" name="batch_action_values" />
+                        </div>
+                    </th>
+                <?php endif; ?>
 
-                    <?= $cols ?>
-                </tr>
+                <?= $cols ?>
+            </tr>
             </thead>
             <tbody class="text-gray-600 fw-semibold entry-table-body"><?= $tbody ?></tbody>
         </table>
