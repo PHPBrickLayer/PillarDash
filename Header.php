@@ -90,7 +90,7 @@ final class Header
             );
         };
         $crumbs_str = (
-            '<li class="breadcrumb-item text-muted">
+        '<li class="breadcrumb-item text-muted">
                 <a href="./" class="text-muted text-hover-primary">Home</a>
             </li>'
         );
@@ -192,11 +192,35 @@ final class Header
 
         $dp = SrcFilter::go($dp);
 
+        $img_only = <<<DP
+        <div class="cursor-pointer symbol symbol-40px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+            <img src="$dp" class="rounded-3" alt="User DP">
+        </div>
+        DP;
+
+        $img_and_name = <<<DP
+         <div class="cursor-pointer d-flex align-items-center border border-dashed border-gray-300 rounded p-2" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+        
+            <div class="symbol me-3 symbol-35px symbol-lg-45px">
+              <img class="rounded-3" src="$dp" alt="User DP">
+            </div>
+        
+            <div class="me-4">
+              <span class="text-dark fs-6 fw-bold">$name</span>
+              <span class="text-gray-400 fs-7 fw-bold d-block text-hover-primary" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis" title="$email">$email</span>
+            </div>
+        
+              <i class="ki-outline ki-down fs-2 text-gray-500 pt-1"></i>
+        
+        </div>
+        DP;
+
+
+        $usr_dp_nav = isset(self::$notification) ? $img_only : $img_and_name;
+
         self::$navbar = <<<NAV
         <div class="app-navbar-item" id="kt_header_user_menu_toggle">
-            <div class="cursor-pointer symbol symbol-40px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-                <img src="$dp" class="rounded-3" alt="user">
-            </div>
+            $usr_dp_nav
             <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px" data-kt-menu="true">
                 <div class="menu-item px-3">
                     <div class="menu-content d-flex align-items-center px-3">
