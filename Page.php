@@ -86,17 +86,34 @@ final class Page
      * @return string
      */
     public static function table(
-        string $tid, array $thead, string|array|null
-               $tbody = null, bool $print_table = true,
+        string $tid,        array $thead, string|array|null
+               $tbody = null,      bool $print_table = true,
+
+        // Every key that has `bool` or another `datatype`; accepts `false` or that `datatype`
         #[ArrayShape([
             'sn' => 'bool',
             'checkbox' => 'bool',
-            'date' => 'int|array',
             'export' => 'bool',
+
+            // Example:
+            // [column, format]
+            // [3, 'YYYY-MM-DD']
+            'date' => 'int|array',
+
+            // Example:
+            // ["column" => String, "rules" => Array<String>]
             'filter' => 'array|bool',
+
+            // HTML element of a button or whatever you want to use on the toolbar
             'toolbar' => 'string|bool',
+
+            // The action that should show when all check boxes are clicked
             'batch_action' => 'string',
+
+            // HTML element before the rendered table
             'table_top' => 'string',
+
+            // HTML element after the rendered table
             'table_bottom' => 'string',
         ])] array $topts = []
     ) : string
