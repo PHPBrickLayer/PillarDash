@@ -9,7 +9,7 @@ available on the `web` side of the framework, and not the server side.
 ### Get Started
 To get started, follow these steps:
 - Clone this repo and move it into the `utils` folder.
-- Use the command below to link the __static__ directory to the __ui__ directory of the designated domain you're working with:
+- Use the command below to link the `static` directory to the `ui` directory of the designated domain you're working with:
     ```shell
     php bob link:dir utils/PillarDash/static web/domains/Default/static/dev/ui/static
     ```
@@ -70,7 +70,7 @@ Layout::header(
     \utils\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
-        "@ui/__assets__/media/avatars/300-2.jpg",
+        "@ui/static/assets/media/avatars/300-2.jpg",
         [
             "name" => "Profile",
             "url" => "profile",
