@@ -144,10 +144,18 @@ if(is_array($tbody)) {
                 $date_range = !is_array($date_range) ? [
                     $date_range, "YYYY-MM-DD"
                 ] : $date_range;
+
+                $thead_name = $thead[$date_range[0]] ?? $thead[$date_range[0]][0];
+
+                if($serial_num || $check_box)
+                    $thead_name = $thead[$date_range[0] - 1] ?? $thead[$date_range[0] - 1][0];
                 ?>
                 <div class="input-group w-250px me-3">
-                    <input class="form-control form-control-solid rounded rounded-end-0 datatable-date-picker" data-column="<?= $date_range[0] ?>" data-format="<?= $date_range[1] ?>" placeholder="Pick date range" required>
-                    <button class="btn btn-icon btn-light datatable-date-clear">
+                    <button class="btn btn-icon btn-light datatable-date-goto-server" title="Search Date range on the server">
+                        <i class="ki-outline ki-cloud-change fs-2"></i>
+                    </button>
+                    <input class="form-control form-control-solid datatable-date-picker" data-column="<?= $date_range[0] ?>" data-format="<?= $date_range[1] ?>" placeholder="Range: (<?= $thead_name ?>)" required>
+                    <button class="btn btn-icon btn-light datatable-date-clear" title="Clear date range">
                         <i class="ki-outline ki-cross fs-2"></i>
                     </button>
                 </div>
