@@ -14,6 +14,7 @@ function dataTable({
 
     if (!$in($sel(".no-results-found"), tableEl))
         tableInstance = $(selector).DataTable({
+            destroy: true,
             retrieve: true,
             order: [],
             pageLength: 25,
@@ -319,7 +320,7 @@ function dataTable({
         let maxDate = null;
 
         // Datatable date filter --- more info: https://datatables.net/extensions/datetime/examples/integration/datatables.html
-        // Custom filtering function which will search data in column four between two values
+        // Custom filtering function which will search data in the specified column between two values
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
                 let min = minDate;
@@ -341,8 +342,8 @@ function dataTable({
             onChange: function (selectedDates, dateStr, instance) {
                 minDate = selectedDates[0] ? new Date(selectedDates[0]) : null;
                 maxDate = selectedDates[1] ? new Date(selectedDates[1]) : null;
-
-                tableInstance.draw();
+                // if(minDate && maxDate)
+                    tableInstance.draw();
             },
         });
 
@@ -390,7 +391,6 @@ function dataTable({
         $on(searchBar, "keyup", e => {
             if (searchTableFn && (e.key === "Enter" || e.keyCode === 13)) {
                 let value = searchBar.value
-                destroyTable()
                 searchTableFn(encodeURIComponent(value))
             }
         })
@@ -562,12 +562,6 @@ async function hookTableOnPage({
                 </tr>`
             );
         });
-
-        if(tableInstance)
-            dataTable({
-                tableInstance: tableInstance,
-                destroy: true
-            })
 
         $html(tableBody, "in", output)
 
