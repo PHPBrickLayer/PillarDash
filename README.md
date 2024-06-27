@@ -7,28 +7,53 @@ because some of the classes used, like the `DomainResource` class are only
 available on the `web` side of the framework, and not the server side.
 
 ### Get Started
-To get started, follow these steps:
+To get started, you need to clone this repo and move it into the `utils` folder of your application.
 
-- Clone this repo and move it into the `utils` folder.
+There are two (2) ways to get started after cloning; 
+1. **fall_from_sky** 
+2. **raw_doug** 
+
+Before making a choice, ensure you've created the domain entry you wish to use this dashboard on. If you haven't simply run the command 
+below. Please not I'm assuming the domain you will be creating here is `User` and the pattern is `user`; hence:
+
+```shell
+php bob make:domain User user
+```
+
+**Now you're ready to pick a _"get started"_ method.**
+**For the rest of this documentation, I will assume you're using a domain called `User`**
+
+### fall_from_sky (recommended)
+This is the easiest method as the name implies. Simply run the command below
+```shell
+php utils/PillarDash/cmd/init.php User
+```
+Now open your project and navigate to the user domain url, and that's all.
+
+### raw_doug
+Follow these processes closely to raw dog successfully.
+
 - Use the command below to link the `static` directory to the `ui` directory of the designated domain you're working with:
   ```shell
-  php bob link:dir utils/PillarDash/static web/domains/Default/static/dev/ui/static
+  php bob link:dir utils/PillarDash/static web/domains/User/static/dev/ui/static
   ```
 - Then navigate to the `layout` folder and do the following in the appropriate files as commented:
   ```php
-  # /web/domains/Default/layout/head.inc
+  # /web/domains/User/layout/head.inc
   \utils\PillarDash\Layout::head();
   ```
   ```php
-  # /web/domains/Default/layout/script.inc
+  # /web/domains/User/layout/script.inc
   \utils\PillarDash\Layout::script();
   ```
   ```php
-  # /web/domains/Default/layout/body.inc
+  # /web/domains/User/layout/body.inc
   \utils\PillarDash\Layout::body();
   ```
 ### Editing `body.inc`
-Open the `body.inc` file and do the following to set up the header, sidebar and every other required component.
+Open the `body.inc` file and do the following to set up the header, sidebar and every other required component. 
+Everything you will be doing on this `body.inc` file should happen before the declaration of `Layout::body()`, meaning
+`Layout::body()` should be the last statement on the page. This is because the method `Layout::body()` responsible for rendering the whole page.
 
 #### Outside Component
 This method is meant to preserve the active theme (light or dark) of the dashboard while ignoring the `header` and `sidebar` components.
@@ -151,12 +176,9 @@ To create a sidebar menu component, do the following inside the `body.inc` file.
 ```
 As you noticed, there are various keys you can pass to the `items` argument. Type hinting is enabled and will assist you along the way. You can also pass `Menu::make` multiple times. Whenever you call `Menu::make`, you create a new menu section.
 
-### NOTE
-All components inside the `body.inc` should be declared before calling `\utils\PillarDash\Layout::body();` because this is the method responsible for rendering the whole page.
-
 ### Editing `Plaster.php`
 ```php
-# /web/domains/Default/Plaster.php
+# /web/domains/User/Plaster.php
 
 public function init_pages(): void
 {
