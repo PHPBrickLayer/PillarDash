@@ -1,51 +1,54 @@
 function dataTable({
-   selector = 'table.data-table',
-   tableInstance,
-   destroy,
-   searchTableFn,
-   dateRangeObj = {api : "", headers: {}, then: () => null},
-   filterColumnIndex,
-   filterColumnOptions
-}) {
+                       selector = 'table.data-table',
+                       searchTableFn,
+                       dateRangeObj = {api : "", headers: {}, then: () => null},
+                       filterColumnIndex,
+                       filterColumnOptions
+                   }) {
     const tableEl = $sel(selector).closest(".table-wrap-container")
+    const tableID = "#" + tableEl.$sel("table").id;
 
-    if (destroy)
-        return destroyTable()
+    const tableInstance = $(selector).DataTable({
+        retrieve: true,
+        // destroy: true,
+        order: [],
+        pageLength: 25,
+        fixedHeader: {
+            "header": true,
+            "headerOffset": 5
+        },
+        columnDefs: [
+            {orderable: false, targets: [0, 'no-sort']},
+        ],
+        // responsive: true,
+        oLanguage: {
+            sInfo: "_START_ - _END_ of _TOTAL_",
+            sInfoEmpty: "0 entries",
+        },
+    })
 
-    if (!$in($sel(".no-results-found"), tableEl))
-        tableInstance = $(selector).DataTable({
-            destroy: true,
-            retrieve: true,
-            order: [],
-            pageLength: 25,
-            fixedHeader: {
-                "header": true,
-                "headerOffset": 5
-            },
-            columnDefs: [
-                {orderable: false, targets: [0, 'no-sort']},
-            ],
-            // responsive: true,
-            oLanguage: {
-                sInfo: "_START_ - _END_ of _TOTAL_",
-                sInfoEmpty: "0 entries",
-            },
+    if($sel(tableID).dataset.dtableInit) {
+        const data = []
+
+        tableEl.$sela("tbody tr").$loop(row => {
+            const rowData = [];
+            row.$sela('td').$loop((col) => rowData.push(col.$html()));
+
+            data.push(rowData);
         })
 
+        tableInstance.clear().draw()
+        tableInstance.rows.add(data).draw()
+        tableInstance.rows().invalidate().draw()
+    }
+
+    $sel(tableID).dataset.dtableInit = "true"
     searchOnServer()
     handleDateRange()
     handleFilterTable(filterColumnIndex, filterColumnOptions)
     handleSearchDatatable()
     exportButtons()
     checkBoxes()
-
-    function destroyTable() {
-        if (!tableInstance)
-            return;
-
-        tableInstance.clear().destroy()
-        tableEl.$sel('.entry-checkbox')?.click()
-    }
 
     function exportButtons() {
         const documentTitle = $lay.page.title;
@@ -216,12 +219,12 @@ function dataTable({
     }
 
     function handleFilterTable(columnIndex, columnOptions) {
-        const filterStatus = $sel('[data-kt-user-table-filter]');
+        const filterStatus = tableEl.$sel('[data-kt-user-table-filter]');
 
         if (!filterStatus)
             return;
 
-        $html(filterStatus, "beforeend", columnOptions)
+        filterStatus.$html('<option value="all">All</option>' + columnOptions)
 
         $(filterStatus).on('change', e => {
             let value = e.target.value;
@@ -316,21 +319,29 @@ function dataTable({
         if (!dateRange)
             return;
 
-        let minDate = null;
-        let maxDate = null;
-
         // Datatable date filter --- more info: https://datatables.net/extensions/datetime/examples/integration/datatables.html
         // Custom filtering function which will search data in the specified column between two values
         $.fn.dataTable.ext.search.push(
-            function (settings, data, dataIndex) {
-                let min = minDate;
-                let max = maxDate;
-                let date = new Date(moment(data[dateRange.dataset.column], dateRange.dataset.format));
+            function (settings, row) {
+                const date = new Date(moment(row[dateRange.dataset.column], dateRange.dataset.format));
 
-                return (min === null && max === null) ||
-                    (min === null && date <= max) ||
-                    (min <= date && max === null) ||
-                    (min <= date && date <= max);
+                const minDate = dateRange.dataset.min === "__" ? null : new Date(dateRange.dataset.min)
+                const maxDate = dateRange.dataset.max === "__" ? null : new Date(dateRange.dataset.max)
+
+                const isLowerBound = minDate ? minDate <= date : true
+                const isUpperBound = maxDate ? maxDate >= date : true
+
+                if(
+                    (!minDate  &&  !maxDate) ||
+                    (isLowerBound &&  isUpperBound)
+                )
+                    return true;
+
+                if(isLowerBound && !maxDate)
+                    return true;
+
+                if(!minDate  &&  isUpperBound)
+                    return true;
             }
         );
 
@@ -339,17 +350,19 @@ function dataTable({
             altFormat: "d/m/Y",
             dateFormat: "Y-m-d",
             mode: "range",
-            onChange: function (selectedDates, dateStr, instance) {
-                minDate = selectedDates[0] ? new Date(selectedDates[0]) : null;
-                maxDate = selectedDates[1] ? new Date(selectedDates[1]) : null;
-                // if(minDate && maxDate)
-                    tableInstance.draw();
+            onChange: function (selectedDates) {
+                dateRange.dataset.min = selectedDates[0] ?? "__"
+                dateRange.dataset.max = selectedDates[1] ?? "__"
+
+                tableInstance.draw();
             },
         });
 
         $on(tableEl.$sel('.datatable-date-clear'), "click", e => {
             e.preventDefault()
             datePicker.clear();
+            dateRange.dataset.min = "__"
+            dateRange.dataset.max = "__"
         });
 
         $on(tableEl.$sel('.datatable-date-goto-server'), "click", e => {
@@ -367,6 +380,9 @@ function dataTable({
 
             if(dateRangeObj.headers)
                 obj['headers'] = dateRangeObj.headers
+
+            if(!dateRangeObj.api)
+                return osNote("No dateRange api set. Please inspect your code and do the needful", "warn")
 
             $curl(dateRangeObj.api, obj)
                 .finally(() => $preloader("hide"))
@@ -400,14 +416,13 @@ function dataTable({
 }
 
 async function hookTableOnPage({
-   api,             form,
-   entry,           entryAction,
-   entryActionFn,   deleteMsg,
-   batch,           enableDelete = true,
-   ctrl,
-   tableBody = $sel(".entry-table-body"),
-}) {
-    let tableInstance
+                                   api,             form,
+                                   entry,           entryAction,
+                                   entryActionFn,   deleteMsg,
+                                   batch,           enableDelete = true,
+                                   ctrl,
+                                   tableBody = $sel(".entry-table-body"),
+                               }) {
     const tableContainer = tableBody.closest(".table-wrap-container")
     enableDelete = !api.delete ? false : enableDelete
     const addEntry = tableContainer.$sel(".add-new-entry")
@@ -461,7 +476,7 @@ async function hookTableOnPage({
         });
     }
 
-    function loadEntries(opts = {closeBox : true, preload : true}) {
+    function loadEntries(opts = {closeBox : true, preload : true, redraw: true}) {
         if(opts.closeOnBlur)
             CusWind.closeBox()
 
@@ -490,9 +505,6 @@ async function hookTableOnPage({
         let output = ""
         let filtersArray = [];
         let filters = "";
-
-        if(entry.filter)
-            tableContainer.$sel('[data-kt-user-table-filter]').options.forEach(opt => filtersArray.push(opt.value))
 
         $loop(response, (row, i) => {
             i++;
@@ -580,10 +592,10 @@ async function hookTableOnPage({
                 headers: {
                     "X-CSRF-TOKEN": getCsrf()
                 },
-                then: tableEntries
+                then: (res) => tableEntries(res)
             }
 
-        tableInstance = dataTable(tableObj)
+        dataTable(tableObj)
         entriesAction()
     }
 
