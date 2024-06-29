@@ -9,8 +9,8 @@
     $section  = $section == "auth" ? "flex-lg-row" : "flex-center";
 
     echo <<<DIV
-    <div class="d-flex flex-column flex-root $section" id="kt_app_root">
-        <div class="d-flex flex-column flex-center flex-column-fluid">$meta->body</div>
+    <div class="d-flex flex-column flex-root" id="kt_app_root">
+        <div class="d-flex flex-column $section flex-column-fluid">$meta->body</div>
     </div>
     DIV;
 
