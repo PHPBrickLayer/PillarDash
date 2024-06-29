@@ -22,7 +22,7 @@ $domain_dir = "web/domains/$domain/";
 
 $exec_code = (new BobExec(
     "link:dir utils/PillarDash/static {$domain_dir}static/dev/ui/static " . ($overwrite ? " --force" : ""),
-    false
+    true
 ))->response_code;
 
 $overwrite = $exec_code;
