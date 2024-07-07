@@ -142,6 +142,7 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
 To create a sidebar menu component, do the following inside the `body.inc` file.
 ```php
 \utils\PillarDash\Layout::sidebar(
+  "auto",
   \utils\PillarDash\Menu::make(
       "Dashboard",
       "ki-home-3",

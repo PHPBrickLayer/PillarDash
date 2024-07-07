@@ -37,7 +37,7 @@ final class Header
                         $breadcrumbs
                     
                         <div class="d-none d-md-block h-40px border-start border-gray-200 mx-10"></div>
-                        <div class="d-flex gap-3 gap-lg-8 justify-content-center">
+                        <div class="d-flex gap-3 gap-lg-7 justify-content-center">
                             $fav
                         </div>
                     </div>
