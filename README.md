@@ -286,6 +286,7 @@ Page::table(
 
 @script
 <script>
+	console.log("Initialized")
     dataTable({})
 </script>
 @endscript
