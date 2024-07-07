@@ -117,7 +117,7 @@ final class Menu
         return '<div class="menu-sub menu-sub-accordion ' . $d2 . '">' . $menu_items . '</div>';
     }
 
-    public static function render() : string
+    public static function __render__(string $width) : string
     {
         $made_menu = self::$menu_store;
 
@@ -125,7 +125,7 @@ final class Menu
         <div id="kt_app_sidebar"
              class="app-sidebar"                    data-kt-drawer="true"
              data-kt-drawer-name="app-sidebar"      data-kt-drawer-activate="{default: true, lg: false}"
-             data-kt-drawer-overlay="true"          data-kt-drawer-width="auto"
+             data-kt-drawer-overlay="true"          data-kt-drawer-width="$width"
              data-kt-drawer-direction="start"       data-kt-drawer-toggle="#kt_app_sidebar_mobile_toggle"
         >
             <div id="kt_aside_menu_wrapper"

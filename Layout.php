@@ -16,7 +16,7 @@ final class Layout
     private static string $sidebar;
     private static \Closure $outside_container;
     private static string $copyright = (
-        '<span class="text-muted fw-semibold me-1">2024 &copy;</span>
+    '<span class="text-muted fw-semibold me-1">2024 &copy;</span>
         <a href="https://lay.osaitech.dev" target="_blank" class="text-gray-800 text-hover-primary">Lay - a Lite PHP Framework</a>'
     );
 
@@ -140,10 +140,10 @@ final class Layout
                                     <span class="text-muted fw-semibold me-1">Powered by</span>
                                     <a href="https://www.osaitech.dev" target="_blank" class="text-gray-800 text-hover-primary">
                                         <img
-                                            src="https://www.osaitech.dev/shared/static/prod/images/favicon.webp"
-                                            style="width: 20px; height: 20px"
-                                            alt="Osai Technologies"
-                                            loading="lazy"
+                                                src="https://www.osaitech.dev/shared/static/prod/images/favicon.webp"
+                                                style="width: 20px; height: 20px"
+                                                alt="Osai Technologies"
+                                                loading="lazy"
                                         >
                                         Osai Technologies
                                     </a>
@@ -165,20 +165,21 @@ final class Layout
 
     /**
      * Create a sidebar by calling the `Menu::make` method
-     * @see Menu::make
+     * @param string $peek_width
      * @param Menu ...$menu
      * @return void
+     * @see Menu::make
      */
-    public static function sidebar(Menu ...$menu) : void
+    public static function sidebar(string $peek_width = "auto", Menu ...$menu) : void
     {
-        self::$sidebar = Menu::render();
+        self::$sidebar = Menu::__render__($peek_width);
     }
 
     public static function header(
         Header ...$args
     ) : void
     {
-        self::$header = Header::render();
+        self::$header = Header::__render__();
     }
 
 }

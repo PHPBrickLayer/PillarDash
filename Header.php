@@ -16,7 +16,7 @@ final class Header
     private static string $favourite;
     private static string $notification;
 
-    public static function render() : string
+    public static function __render__() : string
     {
         $logo_section = self::$logo_section;
         $navbar = self::$navbar;
