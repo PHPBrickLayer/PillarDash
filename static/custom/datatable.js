@@ -719,7 +719,7 @@ async function hookTableOnPage({
             if ($type(m) === "Array") {
                 $loop(m.submenu, sub => subMenu += link(sub))
                 menus += (
-                    `<div class="menu-item px-3" data-kt-menu-trigger="hover" data-kt-menu-placement="right-start">
+                    `<div class="menu-item px-3 text-start" data-kt-menu-trigger="hover" data-kt-menu-placement="right-start">
                         <a href="#" class="menu-link px-3">
                             <span class="menu-title">${m.name}</span>
                             <span class="menu-arrow"></span>
@@ -742,7 +742,7 @@ async function hookTableOnPage({
             <button type="button" class="btn btn-icon btn-color-gray-400 btn-active-color-primary justify-content-end" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                 <i class="ki-outline ki-dots-square fs-1 text-gray-400 me-n1"></i>
             </button>
-            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold mw-150px" data-kt-menu="true">
+            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-auto" data-kt-menu="true">
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
                     <div class="menu-content fs-6 text-dark fw-bold px-3 py-4 text-center">Actions</div>
