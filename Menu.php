@@ -211,7 +211,6 @@ final class Menu
         $menu_entries = "<div>There is currently no menu entry</div>";
         $menu_still_blank = true;
         $is_1d = false;
-        $is_2d = null;
 
         foreach ($items as $d) {
             $dto = self::dto($d);
@@ -230,11 +229,16 @@ final class Menu
             }
 
             $x = self::make_sub_menu($d['sub'], $is_2d);
-            $menu_entries .= self::class_menu_link($dto['name'], $dto['icon']) . $x;
+            $x = self::class_menu_link($dto['name'], $dto['icon']) . $x;
+            $is_2d = $is_2d ? "here hover show" : "";
+
+            if($is_2d)
+                $is_1d = true;
+
+            $menu_entries .= '<div class="menu-item menu-accordion ' . $is_2d . '" data-kt-menu-trigger="click">' . $x . '</div>';
         }
 
-        $is_2d = $is_2d ? "here hover show" : "";
-        $is_1d = $is_1d || $is_2d ? "here" : "";
+        $is_1d = $is_1d ? "here" : "";
 
         self::$menu_store .= <<<STORE
         <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="right-start" class="menu-item py-2 $is_1d">
@@ -250,9 +254,7 @@ final class Menu
                         <span class="menu-section fs-5 fw-bolder ps-1 py-1">$menu_name</span>
                     </div>
                 </div>
-                <div class="menu-item menu-accordion $is_2d" data-kt-menu-trigger="click">
-                    $menu_entries
-                </div>
+                $menu_entries
             </div>
         </div>
         STORE;
