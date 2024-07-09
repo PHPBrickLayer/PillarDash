@@ -121,6 +121,8 @@ final class Page
             'sn' => 'bool',
             'checkbox' => 'bool',
             'export' => 'bool',
+            'search' => 'bool|string',
+            'card_class' => 'string',
 
             // Example:
             // [`column`, `format`]
