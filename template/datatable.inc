@@ -50,7 +50,8 @@ $toolbar = $topts['toolbar'] ?? <<<BAR
         New Entry
     </button>
 BAR;
-$tbody ??= '<tr class="no-results-found"><td colspan="100%" style="text-align: center">There&apos;s nothing to show</td></tr>';
+
+$tbody = $tbody ?: '<tr class="no-results-found"><td colspan="100%" style="text-align: center">There&apos;s nothing to show</td></tr>';
 
 //                      //
 //  T-HEAD EXTRACTION   //
