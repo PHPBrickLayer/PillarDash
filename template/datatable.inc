@@ -35,6 +35,7 @@ $batch_act = $topts['batch_action'] ?? "Batch Action";
 $check_box = $topts['checkbox'] ?? false;
 
 $card_class = $topts['card_class'] ?? null;
+$card_attr = $topts['card_attr'] ?? null;
 $table_top = $topts['table_top'] ?? null;
 $table_bottom = $topts['table_bottom'] ?? null;
 
@@ -126,7 +127,7 @@ if(is_array($tbody)) {
 $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $toolbar;
 ?>
 
-<div class="card table-wrap-container <?= $card_class ?>">
+<div class="card table-wrap-container <?= $card_class ?>" <?= $card_attr ?>>
     <?= $table_top ?>
 
     <?php if($has_tools) : ?>
