@@ -36,6 +36,8 @@ $check_box = $topts['checkbox'] ?? false;
 
 $card_class = $topts['card_class'] ?? null;
 $card_attr = $topts['card_attr'] ?? null;
+$table_class = $topts['table_class'] ?? "table-striped table-row-bordered  border rounded";
+$table_attr = $topts['table_attr'] ?? null;
 $table_top = $topts['table_top'] ?? null;
 $table_bottom = $topts['table_bottom'] ?? null;
 
@@ -241,7 +243,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
 
     <div class="card-body py-4">
         <!--begin::Table-->
-        <table id="<?= $tid ?>" class="table align-middle table-row-dashed fs-6 gy-3  data-table table-striped table-row-bordered gs-7 border rounded">
+        <table id="<?= $tid ?>" class="table data-table align-middle table-row-dashed fs-6 gy-3 gs-7 <?= $table_class ?>" <?= $table_attr ?>>
             <thead>
             <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                 <?php if($serial_num && !$check_box): ?>

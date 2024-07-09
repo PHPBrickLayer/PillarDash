@@ -122,8 +122,12 @@ final class Page
             'checkbox' => 'bool',
             'export' => 'bool',
             'search' => 'bool|string',
+
             'card_class' => 'string',
             'card_attr' => 'string',
+
+            'table_class' => 'string',
+            'table_attr' => 'string',
 
             // Example:
             // [`column`, `format`]
