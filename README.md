@@ -108,7 +108,7 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
             </a>
             <a href="blog/search" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-primary">
-                    <i class="ki-outline ki-search-list fs-2 text-inverse-primary"></i>
+                    <i class="ki-outline ki-search-get_published fs-2 text-inverse-primary"></i>
                 </div>
                 <div class="d-flex flex-column">
                     <span class="fw-bold fs-base text-gray-900 text-center text-md-start">Blog Search</span>
