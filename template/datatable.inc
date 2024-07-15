@@ -152,7 +152,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
             </div>
 
             <div class="card-toolbar ms-auto" data-kt-docs-table-toolbar="base">
-                <?php if($date_range) :
+                <?php if($date_range !== false) :
                     $date_range = !is_array($date_range) ? [
                         $date_range, "YYYY-MM-DD"
                     ] : $date_range;

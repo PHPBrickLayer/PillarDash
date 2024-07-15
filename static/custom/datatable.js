@@ -325,6 +325,21 @@ function dataTable({
             function (settings, row) {
                 const date = new Date(moment(row[dateRange.dataset.column], dateRange.dataset.format));
 
+                if(isNaN(date) && !dateRange.dataset.reported) {
+                    dateRange.dataset.reported = "1"
+                    datePicker.close()
+                    datePicker.clear()
+
+                    return osNote(
+                        `An invalid date was received! Please check your date format and try again. 
+                        <p class="m-0 p-0">
+                            Current Format: <b>${dateRange.dataset.format}</b> <br> 
+                            Table Date: <b>${row[dateRange.dataset.column]}</b>
+                        </p>`,
+                        "warn", { duration: -1 }
+                    )
+                }
+
                 const minDate = dateRange.dataset.min === "__" ? null : new Date(dateRange.dataset.min)
                 const maxDate = dateRange.dataset.max === "__" ? null : new Date(dateRange.dataset.max)
 
