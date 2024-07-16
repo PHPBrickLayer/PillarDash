@@ -173,11 +173,15 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
                     </div>
                 <?php endif ?>
 
-                <?php if($table_filter && is_array($table_filter)) : ?>
+                <?php if($table_filter !== false) :
+                    $table_filter = is_array($table_filter) ? $table_filter : [
+                        "column" => $table_filter,
+                        "rules" => []
+                    ];
+                    ?>
                     <div class="d-flex justify-content-end me-2">
                         <div class="w-100 mw-250px">
-                            <select class="form-select form-select-solid data-table-filter" data-width="150" data-control="select2" data-hide-search="true" data-placeholder="<?= $table_filter['column'] ?>" data-kt-user-table-filter="<?= $table_filter['column'] ?>">
-                                <option></option>
+                            <select class="form-select form-select-solid data-table-filter" data-width="150" data-control="select2" data-hide-search="true" data-filter-column="<?= $table_filter['column'] ?>">
                                 <option value="all">All</option>
                                 <?php foreach ($table_filter['rules'] as $k => $f) : ?>
                                     <option value="<?= $k ?>"><?= $f ?></option>

@@ -45,7 +45,7 @@ function dataTable({
     $sel(tableID).dataset.dtableInit = "true"
     searchOnServer()
     handleDateRange()
-    handleFilterTable(filterColumnIndex, filterColumnOptions)
+    handleFilterTable(filterColumnOptions, filterColumnIndex)
     handleSearchDatatable()
     exportButtons()
     checkBoxes()
@@ -218,20 +218,22 @@ function dataTable({
         });
     }
 
-    function handleFilterTable(columnIndex, columnOptions) {
-        const filterStatus = tableEl.$sel('[data-kt-user-table-filter]');
-
-        if (!filterStatus)
+    function handleFilterTable(columnOptions, columnIndex) {
+        const filterElement = tableEl.$sel('[data-filter-column]');
+        if (!filterElement)
             return;
 
-        filterStatus.$html('<option value="all">All</option>' + columnOptions)
+        columnIndex = columnIndex ?? filterElement.dataset.filterColumn
 
-        $(filterStatus).on('change', e => {
+        filterElement.$html('<option value="all">All</option>' + columnOptions)
+
+        $(filterElement).on('change', e => {
             let value = e.target.value;
 
             if (value === 'all') {
                 value = '';
             }
+
             tableInstance.column(columnIndex).search(value).draw();
         });
     }
