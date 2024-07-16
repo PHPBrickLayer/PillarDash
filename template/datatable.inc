@@ -202,25 +202,25 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
                         </button>
                         <div id="kt_datatable_example_export_menu" class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
                             <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-kt-export="copy">
+                                <a href="javascript:void(0)" class="menu-link px-3" data-kt-export="copy">
                                     Copy to clipboard
                                 </a>
                             </div>
 
                             <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-kt-export="excel">
+                                <a href="javascript:void(0)" class="menu-link px-3" data-kt-export="excel">
                                     Export as Excel
                                 </a>
                             </div>
 
                             <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-kt-export="csv">
+                                <a href="javascript:void(0)" class="menu-link px-3" data-kt-export="csv">
                                     Export as CSV
                                 </a>
                             </div>
 
                             <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-kt-export="pdf">
+                                <a href="javascript:void(0)" class="menu-link px-3" data-kt-export="pdf">
                                     Export as PDF
                                 </a>
                             </div>

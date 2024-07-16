@@ -230,9 +230,10 @@ function dataTable({
         $(filterElement).on('change', e => {
             let value = e.target.value;
 
-            if (value === 'all') {
+            if (value === 'all')
                 value = '';
-            }
+            else
+                value = e.target.options[e.target.selectedIndex].innerText
 
             tableInstance.column(columnIndex).search(value).draw();
         });
@@ -433,13 +434,13 @@ function dataTable({
 }
 
 async function hookTableOnPage({
-                                   api,             form,
-                                   entry,           entryAction,
-                                   entryActionFn,   deleteMsg,
-                                   batch,           enableDelete = true,
-                                   ctrl,
-                                   tableBody = $sel(".entry-table-body"),
-                               }) {
+       api,             form,
+       entry,           entryAction,
+       entryActionFn,   deleteMsg,
+       batch,           enableDelete = true,
+       ctrl,
+       tableBody = $sel(".entry-table-body"),
+   }) {
     const tableContainer = tableBody.closest(".table-wrap-container")
     enableDelete = !api.delete ? false : enableDelete
     const addEntry = tableContainer.$sel(".add-new-entry")
@@ -528,7 +529,7 @@ async function hookTableOnPage({
 
             if(entry.filter) {
                 const filterName = row[entry.filter.name]
-                const filterValue = row[entry.filter.value]
+                const filterValue = row[entry.filter.value] ?? filterName
 
                 if (!filtersArray.includes(filterName)) {
                     filtersArray.push(filterName)
