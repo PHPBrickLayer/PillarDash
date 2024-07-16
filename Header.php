@@ -194,7 +194,7 @@ final class Header
 
         $img_only = <<<DP
         <div class="cursor-pointer symbol symbol-40px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-            <img src="$dp" class="rounded-3" alt="User DP">
+            <img src="$dp" style="object-position: top" class="rounded-3 object-fit-cover" alt="User DP">
         </div>
         DP;
 
@@ -202,7 +202,7 @@ final class Header
          <div class="cursor-pointer d-flex align-items-center border border-dashed border-gray-300 rounded p-2" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
         
             <div class="symbol me-3 symbol-35px symbol-lg-45px">
-              <img class="rounded-3" src="$dp" alt="User DP">
+              <img src="$dp" style="object-position: top" class="rounded-3 object-fit-cover" alt="User DP">
             </div>
         
             <div class="me-4">
@@ -225,7 +225,7 @@ final class Header
                 <div class="menu-item px-3">
                     <div class="menu-content d-flex align-items-center px-3">
                         <div class="symbol symbol-50px me-5">
-                            <img alt="Logo" loading="lazy" src="$dp">
+                            <img src="$dp" style="object-position: top" loading="lazy" class="object-fit-cover" alt="User DP">
                         </div>
                         <div class="d-flex flex-column overflow-hidden">
                             <div class="fw-bold d-flex align-items-center fs-5">$name

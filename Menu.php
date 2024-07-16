@@ -12,6 +12,7 @@ final class Menu
     use IsSingleton;
 
     private static string $menu_store = "";
+    private static string $bound_route;
 
     private static array $route_data;
 
@@ -41,10 +42,11 @@ final class Menu
             $data['url'] = "index";
 
         $domain_id = $data['domain_id'] ?? self::$route_data['domain_id'];
+        $current_route = self::$bound_route ?? self::$route_data['route'];
 
         if(
-            (self::$route_data['route'] == @$data['url'] && self::$route_data['domain_id'] == $domain_id)
-            || in_array(self::$route_data['route'], $data['alias'] ?? [])
+            ($current_route == @$data['url'] && self::$route_data['domain_id'] == $domain_id)
+            || in_array($current_route, $data['alias'] ?? [])
         )
             $active = "active";
 
@@ -260,5 +262,10 @@ final class Menu
         STORE;
 
         return self::new();
+    }
+
+    public static function bind_to_route(string $route) : void
+    {
+        self::$bound_route = $route;
     }
 }
