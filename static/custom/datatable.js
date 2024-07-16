@@ -1,10 +1,10 @@
 function dataTable({
-                       selector = 'table.data-table',
-                       searchTableFn,
-                       dateRangeObj = {api : "", headers: {}, then: () => null},
-                       filterColumnIndex,
-                       filterColumnOptions
-                   }) {
+       selector = 'table.data-table',
+       searchTableFn,
+       dateRangeObj = {api : "", headers: {}, then: () => null},
+       filterColumnIndex,
+       filterColumnOptions
+   }) {
     const tableEl = $sel(selector).closest(".table-wrap-container")
     const tableID = "#" + tableEl.$sel("table").id;
 
@@ -220,17 +220,18 @@ function dataTable({
 
     function handleFilterTable(columnOptions, columnIndex) {
         const filterElement = tableEl.$sel('[data-filter-column]');
+
         if (!filterElement)
             return;
 
         columnIndex = columnIndex ?? filterElement.dataset.filterColumn
 
-        filterElement.$html('<option value="all">All</option>' + columnOptions)
+        filterElement.$html('<option value="__ALL__">All</option>' + columnOptions)
 
         $(filterElement).on('change', e => {
             let value = e.target.value;
 
-            if (value === 'all')
+            if (value === '__ALL__')
                 value = '';
             else
                 value = e.target.options[e.target.selectedIndex].innerText
@@ -528,8 +529,9 @@ async function hookTableOnPage({
             i++;
 
             if(entry.filter) {
-                const filterName = row[entry.filter.name]
-                const filterValue = row[entry.filter.value] ?? filterName
+                const fil = entry.filter(row)
+                const filterName = fil.name
+                const filterValue = fil.value ?? fil.name
 
                 if (!filtersArray.includes(filterName)) {
                     filtersArray.push(filterName)
