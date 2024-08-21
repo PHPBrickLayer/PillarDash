@@ -52,14 +52,14 @@ final class Header
         CONT;
     }
 
-    public static function logo(?string $src = null) : self
+    public static function logo(?string $src = null, string $class = "mh-25px mw-100 p-2", string $style = "") : self
     {
         $src = $src ? SrcFilter::go($src) : $src;
 
         self::$logo_section = <<<LOGO
         <div class="app-header-logo d-flex flex-center">
             <a href="./">
-                <img alt="Logo" src="$src" class="mh-25px" />
+                <img alt="Logo" src="$src" class="$class" style="$style"/>
             </a>
             <button class="btn btn-icon btn-sm btn-active-color-primary d-flex d-lg-none" id="kt_app_sidebar_mobile_toggle">
                 <i class="ki-outline ki-abstract-14 fs-1"></i>
