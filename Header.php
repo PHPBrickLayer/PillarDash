@@ -20,7 +20,7 @@ final class Header
     {
         $logo_section = self::$logo_section;
         $navbar = self::$navbar;
-        $fav = self::$favourite;
+        $fav = self::$favourite ?? "";
         $notify = self::$notification ?? "";
 
         if(!isset(self::$breadcrumbs))
