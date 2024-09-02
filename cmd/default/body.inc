@@ -75,6 +75,7 @@
 );
 
 \utils\PillarDash\Layout::sidebar(
+    "auto",
     \utils\PillarDash\Menu::make(
         "Dashboard",
         "ki-home-3",
