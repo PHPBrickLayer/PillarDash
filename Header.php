@@ -206,7 +206,7 @@ final class Header
             </div>
         
             <div class="me-4">
-              <span class="text-dark fs-6 fw-bold" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">$name</span>
+              <span class="fs-6 fw-bold" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">$name</span>
               <span class="text-gray-400 fs-7 fw-bold text-hover-primary" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis" title="$email">$email</span>
             </div>
         

@@ -765,7 +765,7 @@ async function hookTableOnPage({
             <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-auto" data-kt-menu="true">
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                    <div class="menu-content fs-6 text-dark fw-bold px-3 py-4 text-center">Actions</div>
+                    <div class="menu-content fs-6 fw-bold px-3 py-4 text-center">Actions</div>
                 </div>
                 
                 ${menus}
@@ -784,7 +784,7 @@ async function hookTableOnPage({
                 size: "lg",
                 body: (
                     `<form>
-                    <p class="d-flex align-items-center g-2 flex-wrap text-dark">
+                    <p class="d-flex align-items-center g-2 flex-wrap">
                         Download the 
                         <a href="${csvLocation + csv}" class="fw-bold text-gray-800 text-hover-primary d-inline-flex align-items-center mx-2" download>
                             <span class="icon-wrapper">
@@ -986,7 +986,7 @@ function callDropFile({id = "drag-drop-place", maxFileSize = 1 }){
                 <div class="dropzone-items wm-200px">
                     <div class="dropzone-item p-5" style="display:none">
                         <div class="dropzone-file">
-                            <div class="dropzone-filename text-dark" title="some_image_file_name.jpg">
+                            <div class="dropzone-filename" title="some_image_file_name.jpg">
                                 <span data-dz-name="">some_image_file_name.jpg</span>
                                 <strong>(
                                     <span data-dz-size="">340kb</span>)</strong>
