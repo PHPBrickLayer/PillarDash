@@ -1,6 +1,140 @@
 "use strict";
 
 // Class definition
+var KTFormsWidget1 = (function () {
+    // Private methods
+    var initForm1 = function () {
+        var element = document.querySelector('#kt_forms_widget_1_select_1');
+
+        if ( !element ) {
+            return;
+        }
+
+        var optionFormat = function(item) {
+            if ( !item.id ) {
+                return item.text;
+            }
+
+            var span = document.createElement('span');
+            var template = '';
+
+            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
+            template += item.text;
+
+            span.innerHTML = template;
+
+            return $(span);
+        }
+
+        // Init Select2 --- more info: https://select2.org/
+        $(element).select2({
+            placeholder: "Select coin",
+            minimumResultsForSearch: Infinity,
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+    };
+
+    var initForm2 = function () {
+        var element = document.querySelector('#kt_forms_widget_1_select_2');
+
+        if ( !element ) {
+            return;
+        }
+
+        var optionFormat = function(item) {
+            if ( !item.id ) {
+                return item.text;
+            }
+
+            var span = document.createElement('span');
+            var template = '';
+
+            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
+            template += item.text;
+
+            span.innerHTML = template;
+
+            return $(span);
+        }
+
+        // Init Select2 --- more info: https://select2.org/
+        $(element).select2({
+            placeholder: "Select coin",
+            minimumResultsForSearch: Infinity,
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+    };
+
+    // Public methods
+    return {
+        init: function () {
+            initForm1();
+            initForm2();
+        },
+    };
+})();
+
+// Webpack support
+if (typeof module !== "undefined") {
+    module.exports = KTFormsWidget1;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTFormsWidget1.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTimelineWidget24 = function () {
+    // Private methods
+    var handleActions = function() {
+        var card = document.querySelector('#kt_list_widget_24');        
+        
+        if ( !card ) {
+            return;
+        }
+
+        // Checkbox Handler
+        KTUtil.on(card, '[data-kt-element="follow"]', 'click', function (e) {
+            if ( this.innerText === 'Following' ) {
+                this.innerText = 'Follow';
+                this.classList.add('btn-light-primary');
+                this.classList.remove('btn-primary');
+                this.blur();
+            } else {
+                this.innerText = 'Following';
+                this.classList.add('btn-primary');
+                this.classList.remove('btn-light-primary');
+                this.blur();
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {           
+            handleActions();             
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTimelineWidget24;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTimelineWidget24.init();
+}); 
+
+"use strict";
+
+// Class definition
 var KTCardsWidget1 = function () {
     // Private methods
     var initChart = function() {
@@ -1348,137 +1482,205 @@ KTUtil.onDOMContentLoaded(function() {
 "use strict";
 
 // Class definition
-var KTFormsWidget1 = (function () {
+var KTPlayersWidget1 = function () {
     // Private methods
-    var initForm1 = function () {
-        var element = document.querySelector('#kt_forms_widget_1_select_1');
+    var initPlayers = function() {
+        // https://www.w3schools.com/jsref/dom_obj_audio.asp
+        // Toggle Handler
+        KTUtil.on(document.body, '[data-kt-element="list-play-button"]', 'click', function (e) {
+            var currentButton = this;
 
-        if ( !element ) {
-            return;
-        }
+            var audio = document.querySelector('[data-kt-element="audio-track-1"]');
+            var playIcon = this.querySelector('[data-kt-element="list-play-icon"]');
+            var pauseIcon = this.querySelector('[data-kt-element="list-pause-icon"]');
 
-        var optionFormat = function(item) {
-            if ( !item.id ) {
-                return item.text;
-            }
+            if (pauseIcon.classList.contains('d-none')) {
+                audio.play();
 
-            var span = document.createElement('span');
-            var template = '';
-
-            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
-            template += item.text;
-
-            span.innerHTML = template;
-
-            return $(span);
-        }
-
-        // Init Select2 --- more info: https://select2.org/
-        $(element).select2({
-            placeholder: "Select coin",
-            minimumResultsForSearch: Infinity,
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-    };
-
-    var initForm2 = function () {
-        var element = document.querySelector('#kt_forms_widget_1_select_2');
-
-        if ( !element ) {
-            return;
-        }
-
-        var optionFormat = function(item) {
-            if ( !item.id ) {
-                return item.text;
-            }
-
-            var span = document.createElement('span');
-            var template = '';
-
-            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
-            template += item.text;
-
-            span.innerHTML = template;
-
-            return $(span);
-        }
-
-        // Init Select2 --- more info: https://select2.org/
-        $(element).select2({
-            placeholder: "Select coin",
-            minimumResultsForSearch: Infinity,
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-    };
-
-    // Public methods
-    return {
-        init: function () {
-            initForm1();
-            initForm2();
-        },
-    };
-})();
-
-// Webpack support
-if (typeof module !== "undefined") {
-    module.exports = KTFormsWidget1;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTFormsWidget1.init();
-});
-
-"use strict";
-
-// Class definition
-var KTTimelineWidget24 = function () {
-    // Private methods
-    var handleActions = function() {
-        var card = document.querySelector('#kt_list_widget_24');        
-        
-        if ( !card ) {
-            return;
-        }
-
-        // Checkbox Handler
-        KTUtil.on(card, '[data-kt-element="follow"]', 'click', function (e) {
-            if ( this.innerText === 'Following' ) {
-                this.innerText = 'Follow';
-                this.classList.add('btn-light-primary');
-                this.classList.remove('btn-primary');
-                this.blur();
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
             } else {
-                this.innerText = 'Following';
-                this.classList.add('btn-primary');
-                this.classList.remove('btn-light-primary');
-                this.blur();
+                audio.pause();
+
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
             }
+            
+            var buttons = [].slice.call(document.querySelectorAll('[data-kt-element="list-play-button"]'));
+            buttons.map(function (button) {
+                if (button !== currentButton) {
+                    var playIcon = button.querySelector('[data-kt-element="list-play-icon"]');
+                    var pauseIcon = button.querySelector('[data-kt-element="list-pause-icon"]');
+
+                    playIcon.classList.remove('d-none');
+                    pauseIcon.classList.add('d-none');
+                }
+            });
         });
     }
 
     // Public methods
     return {
-        init: function () {           
-            handleActions();             
+        init: function () {
+            initPlayers();
         }   
     }
 }();
 
 // Webpack support
 if (typeof module !== 'undefined') {
-    module.exports = KTTimelineWidget24;
+    module.exports = KTPlayersWidget1;
 }
 
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTimelineWidget24.init();
+// Window load
+window.addEventListener("load", function() {
+    KTPlayersWidget1.init();
 }); 
+        
+        
+        
+           
+"use strict";
 
+// Class definition
+var KTPlayersWidget2 = function () {
+    // Private methods
+    var initPlayer = function() {
+        // https://www.w3schools.com/jsref/dom_obj_audio.asp
+        var element = document.getElementById("kt_player_widget_2");
+
+        if ( !element ) {
+            return;
+        }
+
+        var audio = element.querySelector('[data-kt-element="audio-track-1"]');
+        var progress = element.querySelector('[data-kt-element="progress"]');        
+        var currentTime = element.querySelector('[data-kt-element="current-time"]');
+        var duration = element.querySelector('[data-kt-element="duration"]');
+        var playButton = element.querySelector('[data-kt-element="play-button"]');
+        var playIcon = element.querySelector('[data-kt-element="play-icon"]');
+        var pauseIcon = element.querySelector('[data-kt-element="pause-icon"]');
+
+        var replayButton = element.querySelector('[data-kt-element="replay-button"]');
+        var shuffleButton = element.querySelector('[data-kt-element="shuffle-button"]');
+        var playNextButton = element.querySelector('[data-kt-element="play-next-button"]');
+        var playPrevButton = element.querySelector('[data-kt-element="play-prev-button"]');
+
+        var formatTime = function(time) {
+            var s = parseInt(time % 60);
+            var m = parseInt((time / 60) % 60);
+
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        // Duration
+        duration.innerHTML = formatTime(audio.duration); 
+
+        // Update progress
+        var setBarProgress = function() {
+            progress.value = (audio.currentTime / audio.duration) * 100;
+        }
+        
+        // Handle audio update
+        var handleAudioUpdate = function() {
+            currentTime.innerHTML = formatTime(audio.currentTime);
+
+            setBarProgress();
+
+            if (this.ended) {
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
+            }
+        }
+
+        audio.addEventListener('timeupdate', handleAudioUpdate);
+
+        // Handle play
+        playButton.addEventListener('click', function() {
+            if (audio.duration > 0 && !audio.paused) {
+                audio.pause();
+
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
+            } else if (audio.readyState >= 2) {
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle replay
+        replayButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle prev play
+        playPrevButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle next play
+        playNextButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Shuffle replay
+        shuffleButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle track change
+        progress.addEventListener('change', function() {
+            audio.currentTime = progress.value;
+
+            playIcon.classList.add('d-none');
+            pauseIcon.classList.remove('d-none');
+            audio.play();
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            initPlayer();
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTPlayersWidget2;
+}
+
+// Window load
+window.addEventListener("load", function() {
+    KTPlayersWidget2.init();
+}); 
 "use strict";
 
 // Class definition
@@ -1982,208 +2184,6 @@ KTUtil.onDOMContentLoaded(function() {
         
         
            
-"use strict";
-
-// Class definition
-var KTPlayersWidget1 = function () {
-    // Private methods
-    var initPlayers = function() {
-        // https://www.w3schools.com/jsref/dom_obj_audio.asp
-        // Toggle Handler
-        KTUtil.on(document.body, '[data-kt-element="list-play-button"]', 'click', function (e) {
-            var currentButton = this;
-
-            var audio = document.querySelector('[data-kt-element="audio-track-1"]');
-            var playIcon = this.querySelector('[data-kt-element="list-play-icon"]');
-            var pauseIcon = this.querySelector('[data-kt-element="list-pause-icon"]');
-
-            if (pauseIcon.classList.contains('d-none')) {
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            } else {
-                audio.pause();
-
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            }
-            
-            var buttons = [].slice.call(document.querySelectorAll('[data-kt-element="list-play-button"]'));
-            buttons.map(function (button) {
-                if (button !== currentButton) {
-                    var playIcon = button.querySelector('[data-kt-element="list-play-icon"]');
-                    var pauseIcon = button.querySelector('[data-kt-element="list-pause-icon"]');
-
-                    playIcon.classList.remove('d-none');
-                    pauseIcon.classList.add('d-none');
-                }
-            });
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initPlayers();
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTPlayersWidget1;
-}
-
-// Window load
-window.addEventListener("load", function() {
-    KTPlayersWidget1.init();
-}); 
-        
-        
-        
-           
-"use strict";
-
-// Class definition
-var KTPlayersWidget2 = function () {
-    // Private methods
-    var initPlayer = function() {
-        // https://www.w3schools.com/jsref/dom_obj_audio.asp
-        var element = document.getElementById("kt_player_widget_2");
-
-        if ( !element ) {
-            return;
-        }
-
-        var audio = element.querySelector('[data-kt-element="audio-track-1"]');
-        var progress = element.querySelector('[data-kt-element="progress"]');        
-        var currentTime = element.querySelector('[data-kt-element="current-time"]');
-        var duration = element.querySelector('[data-kt-element="duration"]');
-        var playButton = element.querySelector('[data-kt-element="play-button"]');
-        var playIcon = element.querySelector('[data-kt-element="play-icon"]');
-        var pauseIcon = element.querySelector('[data-kt-element="pause-icon"]');
-
-        var replayButton = element.querySelector('[data-kt-element="replay-button"]');
-        var shuffleButton = element.querySelector('[data-kt-element="shuffle-button"]');
-        var playNextButton = element.querySelector('[data-kt-element="play-next-button"]');
-        var playPrevButton = element.querySelector('[data-kt-element="play-prev-button"]');
-
-        var formatTime = function(time) {
-            var s = parseInt(time % 60);
-            var m = parseInt((time / 60) % 60);
-
-            return m + ':' + (s < 10 ? '0' : '') + s;
-        }
-
-        // Duration
-        duration.innerHTML = formatTime(audio.duration); 
-
-        // Update progress
-        var setBarProgress = function() {
-            progress.value = (audio.currentTime / audio.duration) * 100;
-        }
-        
-        // Handle audio update
-        var handleAudioUpdate = function() {
-            currentTime.innerHTML = formatTime(audio.currentTime);
-
-            setBarProgress();
-
-            if (this.ended) {
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            }
-        }
-
-        audio.addEventListener('timeupdate', handleAudioUpdate);
-
-        // Handle play
-        playButton.addEventListener('click', function() {
-            if (audio.duration > 0 && !audio.paused) {
-                audio.pause();
-
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            } else if (audio.readyState >= 2) {
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle replay
-        replayButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle prev play
-        playPrevButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle next play
-        playNextButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Shuffle replay
-        shuffleButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle track change
-        progress.addEventListener('change', function() {
-            audio.currentTime = progress.value;
-
-            playIcon.classList.add('d-none');
-            pauseIcon.classList.remove('d-none');
-            audio.play();
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initPlayer();
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTPlayersWidget2;
-}
-
-// Window load
-window.addEventListener("load", function() {
-    KTPlayersWidget2.init();
-}); 
 "use strict";
 
 // Class definition
