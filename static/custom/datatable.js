@@ -243,7 +243,11 @@ function dataTable({
     function handleSearchDatatable() {
         tableEl.closest(".table-wrap-container").$sel('[data-kt-user-table-search="search"]').$on(
             'input',
-            (e, field) => tableInstance.search(field.value).draw(),
+            (e, field) => {
+                $debounce(() => {
+                    tableInstance.search(field.value).draw()
+                }, 100)
+            },
         )
     }
 
@@ -319,50 +323,10 @@ function dataTable({
 
     function handleDateRange(){
         const dateRange = tableEl.$sel(".datatable-date-picker");
+        let rangeExtSet = false
 
         if (!dateRange)
             return;
-
-        // Datatable date filter --- more info: https://datatables.net/extensions/datetime/examples/integration/datatables.html
-        // Custom filtering function which will search data in the specified column between two values
-        $.fn.dataTable.ext.search.push(
-            function (settings, row) {
-                const date = new Date(moment(row[dateRange.dataset.column], dateRange.dataset.format));
-
-                if(isNaN(date) && !dateRange.dataset.reported) {
-                    dateRange.dataset.reported = "1"
-                    datePicker.close()
-                    datePicker.clear()
-
-                    return osNote(
-                        `An invalid date was received! Please check your date format and try again. 
-                        <p class="m-0 p-0">
-                            Current Format: <b>${dateRange.dataset.format}</b> <br> 
-                            Table Date: <b>${row[dateRange.dataset.column]}</b>
-                        </p>`,
-                        "warn", { duration: -1 }
-                    )
-                }
-
-                const minDate = dateRange.dataset.min === "__" ? null : new Date(dateRange.dataset.min)
-                const maxDate = dateRange.dataset.max === "__" ? null : new Date(dateRange.dataset.max)
-
-                const isLowerBound = minDate ? minDate <= date : true
-                const isUpperBound = maxDate ? maxDate >= date : true
-
-                if(
-                    (!minDate  &&  !maxDate) ||
-                    (isLowerBound &&  isUpperBound)
-                )
-                    return true;
-
-                if(isLowerBound && !maxDate)
-                    return true;
-
-                if(!minDate  &&  isUpperBound)
-                    return true;
-            }
-        );
 
         const datePicker = $(dateRange).flatpickr({
             altInput: true,
@@ -370,6 +334,51 @@ function dataTable({
             dateFormat: "Y-m-d",
             mode: "range",
             onChange: function (selectedDates) {
+                if(!rangeExtSet) {
+                    $.fn.dataTable.ext.search.push(
+                        function (settings, row, dataIndex) {
+                            const date = new Date(moment(row[dateRange.dataset.column], dateRange.dataset.format));
+
+                            if (isNaN(date) && !dateRange.dataset.reported) {
+                                dateRange.dataset.reported = "1"
+                                datePicker.close()
+                                datePicker.clear()
+
+                                return osNote(
+                                    `An invalid date was received! Please check your date format and try again.
+                            <p class="m-0 p-0">
+                                Current Format: <b>${dateRange.dataset.format}</b> <br>
+                                Table Date: <b>${row[dateRange.dataset.column]}</b>
+                            </p>`,
+                                    "warn", {duration: -1}
+                                )
+                            }
+
+                            const minDate = dateRange.dataset.min === "__" ? null : new Date(dateRange.dataset.min)
+                            const maxDate = dateRange.dataset.max === "__" ? null : new Date(dateRange.dataset.max)
+
+                            const isLowerBound = minDate ? minDate <= date : true
+                            const isUpperBound = maxDate ? maxDate >= date : true
+
+                            if (
+                                (!minDate && !maxDate) ||
+                                (isLowerBound && isUpperBound)
+                            )
+                                return true;
+
+                            if (isLowerBound && !maxDate)
+                                return true;
+
+                            if (!minDate && isUpperBound)
+                                return true;
+
+                            return false
+                        }
+                    );
+
+                    rangeExtSet = true
+                }
+
                 dateRange.dataset.min = selectedDates[0] ?? "__"
                 dateRange.dataset.max = selectedDates[1] ?? "__"
 
