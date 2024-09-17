@@ -1,6 +1,6 @@
 <?php
 
-namespace utils\PillarDash;
+namespace Utils\PillarDash;
 
 use BrickLayer\Lay\Core\Traits\IsSingleton;
 use BrickLayer\Lay\Core\View\DomainResource;

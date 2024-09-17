@@ -1,6 +1,6 @@
 <?php
 
-namespace utils\PillarDash;
+namespace Utils\PillarDash;
 
 use BrickLayer\Lay\Core\View\DomainResource;
 use BrickLayer\Lay\Core\View\SrcFilter;
@@ -8,6 +8,7 @@ use BrickLayer\Lay\Core\View\Tags\Anchor;
 use BrickLayer\Lay\Core\View\Tags\Img;
 use BrickLayer\Lay\Core\View\Tags\Script;
 use JetBrains\PhpStorm\ArrayShape;
+use Utils\PillarDash\Layout;
 
 final class Page
 {

@@ -40,15 +40,16 @@ Follow these processes closely to raw dog successfully.
 - Then navigate to the `layout` folder and do the following in the appropriate files as commented:
   ```php
   # /web/domains/User/layout/head.inc
-  \utils\PillarDash\Layout::head();
+\Util\PillarDash\Layout::head();
   ```
   ```php
   # /web/domains/User/layout/script.inc
-  \utils\PillarDash\Layout::script();
+\Util\PillarDash\Layout::script();
   ```
+
   ```php
   # /web/domains/User/layout/body.inc
-  \utils\PillarDash\Layout::body();
+\Utils\PillarDash\Layout::body();
   ```
 ### Editing `body.inc`
 Open the `body.inc` file and do the following to set up the header, sidebar and every other required component. 
@@ -61,7 +62,7 @@ Use this when rendering the **error** and **auth** pages.\
 Ensure to pass `->local("section", "error")` for error pages or `->local("section", "auth")` for auth pages.
 
 ```php
-\utils\PillarDash\Layout::outside(function () {
+\Utils\PillarDash\Layout::outside(function () {
     $meta = \BrickLayer\Lay\Core\View\DomainResource::plaster();
     $section = $meta->local->section;
   
@@ -80,13 +81,14 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
 });
 ```
 #### Header Component
+
 ```php
-\utils\PillarDash\Layout::header(
-    \utils\PillarDash\Header::logo(
+\Utils\PillarDash\Layout::header(
+    \Utils\PillarDash\Header::logo(
         "@shared_img/logo.png",
     ),
 
-    \utils\PillarDash\Header::favourite(
+    \Utils\PillarDash\Header::favourite(
         function (){ ?>
             <a href="blog/compose" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-warning">
@@ -118,7 +120,7 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
         <?php }
     ),
 
-    \utils\PillarDash\Header::user_nav(
+    \Utils\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
         "@ui/static/assets/media/avatars/300-2.jpg",
@@ -140,10 +142,11 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
 ```
 #### Sidebar Component
 To create a sidebar menu component, do the following inside the `body.inc` file.
+
 ```php
-\utils\PillarDash\Layout::sidebar(
+\Utils\PillarDash\Layout::sidebar(
   "auto",
-  \utils\PillarDash\Menu::make(
+  \Utils\PillarDash\Menu::make(
       "Dashboard",
       "ki-home-3",
       true,
@@ -153,7 +156,7 @@ To create a sidebar menu component, do the following inside the `body.inc` file.
             "title" => "This page consists of all published articles"
         ],
     ),
-    \utils\PillarDash\Menu::make(
+    \Utils\PillarDash\Menu::make(
         "Blog",
         "ki-message-edit",
         true,
@@ -178,13 +181,14 @@ To create a sidebar menu component, do the following inside the `body.inc` file.
 As you noticed, there are various keys you can pass to the `items` argument. Type hinting is enabled and will assist you along the way. You can also pass `Menu::make` multiple times. Whenever you call `Menu::make`, you create a new menu section.
 
 ### Editing `Plaster.php`
+
 ```php
 # /web/domains/User/Plaster.php
 
 public function init_pages(): void
 {
     $this->builder->init_start()
-        ->body_attr(\utils\PillarDash\Layout::BODY_ATTR['class'], \utils\PillarDash\Layout::BODY_ATTR['attr'])
+        ->body_attr(\Utils\PillarDash\Layout::BODY_ATTR['class'], \Utils\PillarDash\Layout::BODY_ATTR['attr'])
         ->local("section", "app")
     ->init_end();
 }
@@ -213,10 +217,11 @@ public function default(): void {
 ```
 
 ### Editing `homepage.view`
+
 ```php
 <?php
 
-use utils\PillarDash\Page;
+use Utils\PillarDash\Page;
 
 // This is only used here because of the script tag at the bottom of the page
 Page::using_table(false);

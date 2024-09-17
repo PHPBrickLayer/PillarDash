@@ -1,8 +1,10 @@
 <?php
 /**
  * All undefined variables on this page come from the `Page::table` method
- * @see Page::table()
+ * @see \Utils\PillarDash\Page::table()
  */
+
+use Utils\PillarDash\Page;
 
 $cols = "";
 
