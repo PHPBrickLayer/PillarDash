@@ -47407,268 +47407,6 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
-    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var applyListFormat = function (editor, listName, styleValue) {
-      var cmd = listName === 'UL' ? 'InsertUnorderedList' : 'InsertOrderedList';
-      editor.execCommand(cmd, false, styleValue === false ? null : { 'list-style-type': styleValue });
-    };
-
-    var register$1 = function (editor) {
-      editor.addCommand('ApplyUnorderedListStyle', function (ui, value) {
-        applyListFormat(editor, 'UL', value['list-style-type']);
-      });
-      editor.addCommand('ApplyOrderedListStyle', function (ui, value) {
-        applyListFormat(editor, 'OL', value['list-style-type']);
-      });
-    };
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var getNumberStyles = function (editor) {
-      var styles = editor.getParam('advlist_number_styles', 'default,lower-alpha,lower-greek,lower-roman,upper-alpha,upper-roman');
-      return styles ? styles.split(/[ ,]/) : [];
-    };
-    var getBulletStyles = function (editor) {
-      var styles = editor.getParam('advlist_bullet_styles', 'default,circle,square');
-      return styles ? styles.split(/[ ,]/) : [];
-    };
-
-    var noop = function () {
-    };
-    var constant = function (value) {
-      return function () {
-        return value;
-      };
-    };
-    var identity = function (x) {
-      return x;
-    };
-    var never = constant(false);
-    var always = constant(true);
-
-    var none = function () {
-      return NONE;
-    };
-    var NONE = function () {
-      var call = function (thunk) {
-        return thunk();
-      };
-      var id = identity;
-      var me = {
-        fold: function (n, _s) {
-          return n();
-        },
-        isSome: never,
-        isNone: always,
-        getOr: id,
-        getOrThunk: call,
-        getOrDie: function (msg) {
-          throw new Error(msg || 'error: getOrDie called on none.');
-        },
-        getOrNull: constant(null),
-        getOrUndefined: constant(undefined),
-        or: id,
-        orThunk: call,
-        map: none,
-        each: noop,
-        bind: none,
-        exists: never,
-        forall: always,
-        filter: function () {
-          return none();
-        },
-        toArray: function () {
-          return [];
-        },
-        toString: constant('none()')
-      };
-      return me;
-    }();
-    var some = function (a) {
-      var constant_a = constant(a);
-      var self = function () {
-        return me;
-      };
-      var bind = function (f) {
-        return f(a);
-      };
-      var me = {
-        fold: function (n, s) {
-          return s(a);
-        },
-        isSome: always,
-        isNone: never,
-        getOr: constant_a,
-        getOrThunk: constant_a,
-        getOrDie: constant_a,
-        getOrNull: constant_a,
-        getOrUndefined: constant_a,
-        or: self,
-        orThunk: self,
-        map: function (f) {
-          return some(f(a));
-        },
-        each: function (f) {
-          f(a);
-        },
-        bind: bind,
-        exists: bind,
-        forall: bind,
-        filter: function (f) {
-          return f(a) ? me : NONE;
-        },
-        toArray: function () {
-          return [a];
-        },
-        toString: function () {
-          return 'some(' + a + ')';
-        }
-      };
-      return me;
-    };
-    var from = function (value) {
-      return value === null || value === undefined ? NONE : some(value);
-    };
-    var Optional = {
-      some: some,
-      none: none,
-      from: from
-    };
-
-    var isChildOfBody = function (editor, elm) {
-      return editor.$.contains(editor.getBody(), elm);
-    };
-    var isTableCellNode = function (node) {
-      return node && /^(TH|TD)$/.test(node.nodeName);
-    };
-    var isListNode = function (editor) {
-      return function (node) {
-        return node && /^(OL|UL|DL)$/.test(node.nodeName) && isChildOfBody(editor, node);
-      };
-    };
-    var getSelectedStyleType = function (editor) {
-      var listElm = editor.dom.getParent(editor.selection.getNode(), 'ol,ul');
-      var style = editor.dom.getStyle(listElm, 'listStyleType');
-      return Optional.from(style);
-    };
-
-    var findIndex = function (list, predicate) {
-      for (var index = 0; index < list.length; index++) {
-        var element = list[index];
-        if (predicate(element)) {
-          return index;
-        }
-      }
-      return -1;
-    };
-    var styleValueToText = function (styleValue) {
-      return styleValue.replace(/\-/g, ' ').replace(/\b\w/g, function (chr) {
-        return chr.toUpperCase();
-      });
-    };
-    var isWithinList = function (editor, e, nodeName) {
-      var tableCellIndex = findIndex(e.parents, isTableCellNode);
-      var parents = tableCellIndex !== -1 ? e.parents.slice(0, tableCellIndex) : e.parents;
-      var lists = global.grep(parents, isListNode(editor));
-      return lists.length > 0 && lists[0].nodeName === nodeName;
-    };
-    var makeSetupHandler = function (editor, nodeName) {
-      return function (api) {
-        var nodeChangeHandler = function (e) {
-          api.setActive(isWithinList(editor, e, nodeName));
-        };
-        editor.on('NodeChange', nodeChangeHandler);
-        return function () {
-          return editor.off('NodeChange', nodeChangeHandler);
-        };
-      };
-    };
-    var addSplitButton = function (editor, id, tooltip, cmd, nodeName, styles) {
-      editor.ui.registry.addSplitButton(id, {
-        tooltip: tooltip,
-        icon: nodeName === 'OL' ? 'ordered-list' : 'unordered-list',
-        presets: 'listpreview',
-        columns: 3,
-        fetch: function (callback) {
-          var items = global.map(styles, function (styleValue) {
-            var iconStyle = nodeName === 'OL' ? 'num' : 'bull';
-            var iconName = styleValue === 'disc' || styleValue === 'decimal' ? 'default' : styleValue;
-            var itemValue = styleValue === 'default' ? '' : styleValue;
-            var displayText = styleValueToText(styleValue);
-            return {
-              type: 'choiceitem',
-              value: itemValue,
-              icon: 'list-' + iconStyle + '-' + iconName,
-              text: displayText
-            };
-          });
-          callback(items);
-        },
-        onAction: function () {
-          return editor.execCommand(cmd);
-        },
-        onItemAction: function (_splitButtonApi, value) {
-          applyListFormat(editor, nodeName, value);
-        },
-        select: function (value) {
-          var listStyleType = getSelectedStyleType(editor);
-          return listStyleType.map(function (listStyle) {
-            return value === listStyle;
-          }).getOr(false);
-        },
-        onSetup: makeSetupHandler(editor, nodeName)
-      });
-    };
-    var addButton = function (editor, id, tooltip, cmd, nodeName, _styles) {
-      editor.ui.registry.addToggleButton(id, {
-        active: false,
-        tooltip: tooltip,
-        icon: nodeName === 'OL' ? 'ordered-list' : 'unordered-list',
-        onSetup: makeSetupHandler(editor, nodeName),
-        onAction: function () {
-          return editor.execCommand(cmd);
-        }
-      });
-    };
-    var addControl = function (editor, id, tooltip, cmd, nodeName, styles) {
-      if (styles.length > 1) {
-        addSplitButton(editor, id, tooltip, cmd, nodeName, styles);
-      } else {
-        addButton(editor, id, tooltip, cmd, nodeName);
-      }
-    };
-    var register = function (editor) {
-      addControl(editor, 'numlist', 'Numbered list', 'InsertOrderedList', 'OL', getNumberStyles(editor));
-      addControl(editor, 'bullist', 'Bullet list', 'InsertUnorderedList', 'UL', getBulletStyles(editor));
-    };
-
-    function Plugin () {
-      global$1.add('advlist', function (editor) {
-        if (editor.hasPlugin('lists')) {
-          register(editor);
-          register$1(editor);
-        } else {
-          console.error('Please use the Lists plugin together with the Advanced List plugin.');
-        }
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
     var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.dom.RangeUtils');
@@ -48100,6 +47838,268 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
+    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var applyListFormat = function (editor, listName, styleValue) {
+      var cmd = listName === 'UL' ? 'InsertUnorderedList' : 'InsertOrderedList';
+      editor.execCommand(cmd, false, styleValue === false ? null : { 'list-style-type': styleValue });
+    };
+
+    var register$1 = function (editor) {
+      editor.addCommand('ApplyUnorderedListStyle', function (ui, value) {
+        applyListFormat(editor, 'UL', value['list-style-type']);
+      });
+      editor.addCommand('ApplyOrderedListStyle', function (ui, value) {
+        applyListFormat(editor, 'OL', value['list-style-type']);
+      });
+    };
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var getNumberStyles = function (editor) {
+      var styles = editor.getParam('advlist_number_styles', 'default,lower-alpha,lower-greek,lower-roman,upper-alpha,upper-roman');
+      return styles ? styles.split(/[ ,]/) : [];
+    };
+    var getBulletStyles = function (editor) {
+      var styles = editor.getParam('advlist_bullet_styles', 'default,circle,square');
+      return styles ? styles.split(/[ ,]/) : [];
+    };
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var identity = function (x) {
+      return x;
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = identity;
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || 'error: getOrDie called on none.');
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: function () {
+          return none();
+        },
+        toArray: function () {
+          return [];
+        },
+        toString: constant('none()')
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return 'some(' + a + ')';
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Optional = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var isChildOfBody = function (editor, elm) {
+      return editor.$.contains(editor.getBody(), elm);
+    };
+    var isTableCellNode = function (node) {
+      return node && /^(TH|TD)$/.test(node.nodeName);
+    };
+    var isListNode = function (editor) {
+      return function (node) {
+        return node && /^(OL|UL|DL)$/.test(node.nodeName) && isChildOfBody(editor, node);
+      };
+    };
+    var getSelectedStyleType = function (editor) {
+      var listElm = editor.dom.getParent(editor.selection.getNode(), 'ol,ul');
+      var style = editor.dom.getStyle(listElm, 'listStyleType');
+      return Optional.from(style);
+    };
+
+    var findIndex = function (list, predicate) {
+      for (var index = 0; index < list.length; index++) {
+        var element = list[index];
+        if (predicate(element)) {
+          return index;
+        }
+      }
+      return -1;
+    };
+    var styleValueToText = function (styleValue) {
+      return styleValue.replace(/\-/g, ' ').replace(/\b\w/g, function (chr) {
+        return chr.toUpperCase();
+      });
+    };
+    var isWithinList = function (editor, e, nodeName) {
+      var tableCellIndex = findIndex(e.parents, isTableCellNode);
+      var parents = tableCellIndex !== -1 ? e.parents.slice(0, tableCellIndex) : e.parents;
+      var lists = global.grep(parents, isListNode(editor));
+      return lists.length > 0 && lists[0].nodeName === nodeName;
+    };
+    var makeSetupHandler = function (editor, nodeName) {
+      return function (api) {
+        var nodeChangeHandler = function (e) {
+          api.setActive(isWithinList(editor, e, nodeName));
+        };
+        editor.on('NodeChange', nodeChangeHandler);
+        return function () {
+          return editor.off('NodeChange', nodeChangeHandler);
+        };
+      };
+    };
+    var addSplitButton = function (editor, id, tooltip, cmd, nodeName, styles) {
+      editor.ui.registry.addSplitButton(id, {
+        tooltip: tooltip,
+        icon: nodeName === 'OL' ? 'ordered-list' : 'unordered-list',
+        presets: 'listpreview',
+        columns: 3,
+        fetch: function (callback) {
+          var items = global.map(styles, function (styleValue) {
+            var iconStyle = nodeName === 'OL' ? 'num' : 'bull';
+            var iconName = styleValue === 'disc' || styleValue === 'decimal' ? 'default' : styleValue;
+            var itemValue = styleValue === 'default' ? '' : styleValue;
+            var displayText = styleValueToText(styleValue);
+            return {
+              type: 'choiceitem',
+              value: itemValue,
+              icon: 'list-' + iconStyle + '-' + iconName,
+              text: displayText
+            };
+          });
+          callback(items);
+        },
+        onAction: function () {
+          return editor.execCommand(cmd);
+        },
+        onItemAction: function (_splitButtonApi, value) {
+          applyListFormat(editor, nodeName, value);
+        },
+        select: function (value) {
+          var listStyleType = getSelectedStyleType(editor);
+          return listStyleType.map(function (listStyle) {
+            return value === listStyle;
+          }).getOr(false);
+        },
+        onSetup: makeSetupHandler(editor, nodeName)
+      });
+    };
+    var addButton = function (editor, id, tooltip, cmd, nodeName, _styles) {
+      editor.ui.registry.addToggleButton(id, {
+        active: false,
+        tooltip: tooltip,
+        icon: nodeName === 'OL' ? 'ordered-list' : 'unordered-list',
+        onSetup: makeSetupHandler(editor, nodeName),
+        onAction: function () {
+          return editor.execCommand(cmd);
+        }
+      });
+    };
+    var addControl = function (editor, id, tooltip, cmd, nodeName, styles) {
+      if (styles.length > 1) {
+        addSplitButton(editor, id, tooltip, cmd, nodeName, styles);
+      } else {
+        addButton(editor, id, tooltip, cmd, nodeName);
+      }
+    };
+    var register = function (editor) {
+      addControl(editor, 'numlist', 'Numbered list', 'InsertOrderedList', 'OL', getNumberStyles(editor));
+      addControl(editor, 'bullist', 'Bullet list', 'InsertUnorderedList', 'UL', getBulletStyles(editor));
+    };
+
+    function Plugin () {
+      global$1.add('advlist', function (editor) {
+        if (editor.hasPlugin('lists')) {
+          register(editor);
+          register$1(editor);
+        } else {
+          console.error('Please use the Lists plugin together with the Advanced List plugin.');
+        }
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
     var Cell = function (initial) {
       var value = initial;
       var get = function () {
@@ -48267,6 +48267,106 @@ tinymce.IconManager.add('default', {
           register(editor, oldSize);
           setup(editor, oldSize);
         }
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var html2bbcode = function (s) {
+      s = global.trim(s);
+      var rep = function (re, str) {
+        s = s.replace(re, str);
+      };
+      rep(/<a.*?href=\"(.*?)\".*?>(.*?)<\/a>/gi, '[url=$1]$2[/url]');
+      rep(/<font.*?color=\"(.*?)\".*?class=\"codeStyle\".*?>(.*?)<\/font>/gi, '[code][color=$1]$2[/color][/code]');
+      rep(/<font.*?color=\"(.*?)\".*?class=\"quoteStyle\".*?>(.*?)<\/font>/gi, '[quote][color=$1]$2[/color][/quote]');
+      rep(/<font.*?class=\"codeStyle\".*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[code][color=$1]$2[/color][/code]');
+      rep(/<font.*?class=\"quoteStyle\".*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[quote][color=$1]$2[/color][/quote]');
+      rep(/<span style=\"color: ?(.*?);\">(.*?)<\/span>/gi, '[color=$1]$2[/color]');
+      rep(/<font.*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[color=$1]$2[/color]');
+      rep(/<span style=\"font-size:(.*?);\">(.*?)<\/span>/gi, '[size=$1]$2[/size]');
+      rep(/<font>(.*?)<\/font>/gi, '$1');
+      rep(/<img.*?src=\"(.*?)\".*?\/>/gi, '[img]$1[/img]');
+      rep(/<span class=\"codeStyle\">(.*?)<\/span>/gi, '[code]$1[/code]');
+      rep(/<span class=\"quoteStyle\">(.*?)<\/span>/gi, '[quote]$1[/quote]');
+      rep(/<strong class=\"codeStyle\">(.*?)<\/strong>/gi, '[code][b]$1[/b][/code]');
+      rep(/<strong class=\"quoteStyle\">(.*?)<\/strong>/gi, '[quote][b]$1[/b][/quote]');
+      rep(/<em class=\"codeStyle\">(.*?)<\/em>/gi, '[code][i]$1[/i][/code]');
+      rep(/<em class=\"quoteStyle\">(.*?)<\/em>/gi, '[quote][i]$1[/i][/quote]');
+      rep(/<u class=\"codeStyle\">(.*?)<\/u>/gi, '[code][u]$1[/u][/code]');
+      rep(/<u class=\"quoteStyle\">(.*?)<\/u>/gi, '[quote][u]$1[/u][/quote]');
+      rep(/<\/(strong|b)>/gi, '[/b]');
+      rep(/<(strong|b)>/gi, '[b]');
+      rep(/<\/(em|i)>/gi, '[/i]');
+      rep(/<(em|i)>/gi, '[i]');
+      rep(/<\/u>/gi, '[/u]');
+      rep(/<span style=\"text-decoration: ?underline;\">(.*?)<\/span>/gi, '[u]$1[/u]');
+      rep(/<u>/gi, '[u]');
+      rep(/<blockquote[^>]*>/gi, '[quote]');
+      rep(/<\/blockquote>/gi, '[/quote]');
+      rep(/<br \/>/gi, '\n');
+      rep(/<br\/>/gi, '\n');
+      rep(/<br>/gi, '\n');
+      rep(/<p>/gi, '');
+      rep(/<\/p>/gi, '\n');
+      rep(/&nbsp;|\u00a0/gi, ' ');
+      rep(/&quot;/gi, '"');
+      rep(/&lt;/gi, '<');
+      rep(/&gt;/gi, '>');
+      rep(/&amp;/gi, '&');
+      return s;
+    };
+    var bbcode2html = function (s) {
+      s = global.trim(s);
+      var rep = function (re, str) {
+        s = s.replace(re, str);
+      };
+      rep(/\n/gi, '<br />');
+      rep(/\[b\]/gi, '<strong>');
+      rep(/\[\/b\]/gi, '</strong>');
+      rep(/\[i\]/gi, '<em>');
+      rep(/\[\/i\]/gi, '</em>');
+      rep(/\[u\]/gi, '<u>');
+      rep(/\[\/u\]/gi, '</u>');
+      rep(/\[url=([^\]]+)\](.*?)\[\/url\]/gi, '<a href="$1">$2</a>');
+      rep(/\[url\](.*?)\[\/url\]/gi, '<a href="$1">$1</a>');
+      rep(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
+      rep(/\[color=(.*?)\](.*?)\[\/color\]/gi, '<font color="$1">$2</font>');
+      rep(/\[code\](.*?)\[\/code\]/gi, '<span class="codeStyle">$1</span>&nbsp;');
+      rep(/\[quote.*?\](.*?)\[\/quote\]/gi, '<span class="quoteStyle">$1</span>&nbsp;');
+      return s;
+    };
+
+    function Plugin () {
+      global$1.add('bbcode', function (editor) {
+        editor.on('BeforeSetContent', function (e) {
+          e.content = bbcode2html(e.content);
+        });
+        editor.on('PostProcess', function (e) {
+          if (e.set) {
+            e.content = bbcode2html(e.content);
+          }
+          if (e.get) {
+            e.content = html2bbcode(e.content);
+          }
+        });
       });
     }
 
@@ -48480,106 +48580,6 @@ tinymce.IconManager.add('default', {
           }
         });
         return get(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var html2bbcode = function (s) {
-      s = global.trim(s);
-      var rep = function (re, str) {
-        s = s.replace(re, str);
-      };
-      rep(/<a.*?href=\"(.*?)\".*?>(.*?)<\/a>/gi, '[url=$1]$2[/url]');
-      rep(/<font.*?color=\"(.*?)\".*?class=\"codeStyle\".*?>(.*?)<\/font>/gi, '[code][color=$1]$2[/color][/code]');
-      rep(/<font.*?color=\"(.*?)\".*?class=\"quoteStyle\".*?>(.*?)<\/font>/gi, '[quote][color=$1]$2[/color][/quote]');
-      rep(/<font.*?class=\"codeStyle\".*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[code][color=$1]$2[/color][/code]');
-      rep(/<font.*?class=\"quoteStyle\".*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[quote][color=$1]$2[/color][/quote]');
-      rep(/<span style=\"color: ?(.*?);\">(.*?)<\/span>/gi, '[color=$1]$2[/color]');
-      rep(/<font.*?color=\"(.*?)\".*?>(.*?)<\/font>/gi, '[color=$1]$2[/color]');
-      rep(/<span style=\"font-size:(.*?);\">(.*?)<\/span>/gi, '[size=$1]$2[/size]');
-      rep(/<font>(.*?)<\/font>/gi, '$1');
-      rep(/<img.*?src=\"(.*?)\".*?\/>/gi, '[img]$1[/img]');
-      rep(/<span class=\"codeStyle\">(.*?)<\/span>/gi, '[code]$1[/code]');
-      rep(/<span class=\"quoteStyle\">(.*?)<\/span>/gi, '[quote]$1[/quote]');
-      rep(/<strong class=\"codeStyle\">(.*?)<\/strong>/gi, '[code][b]$1[/b][/code]');
-      rep(/<strong class=\"quoteStyle\">(.*?)<\/strong>/gi, '[quote][b]$1[/b][/quote]');
-      rep(/<em class=\"codeStyle\">(.*?)<\/em>/gi, '[code][i]$1[/i][/code]');
-      rep(/<em class=\"quoteStyle\">(.*?)<\/em>/gi, '[quote][i]$1[/i][/quote]');
-      rep(/<u class=\"codeStyle\">(.*?)<\/u>/gi, '[code][u]$1[/u][/code]');
-      rep(/<u class=\"quoteStyle\">(.*?)<\/u>/gi, '[quote][u]$1[/u][/quote]');
-      rep(/<\/(strong|b)>/gi, '[/b]');
-      rep(/<(strong|b)>/gi, '[b]');
-      rep(/<\/(em|i)>/gi, '[/i]');
-      rep(/<(em|i)>/gi, '[i]');
-      rep(/<\/u>/gi, '[/u]');
-      rep(/<span style=\"text-decoration: ?underline;\">(.*?)<\/span>/gi, '[u]$1[/u]');
-      rep(/<u>/gi, '[u]');
-      rep(/<blockquote[^>]*>/gi, '[quote]');
-      rep(/<\/blockquote>/gi, '[/quote]');
-      rep(/<br \/>/gi, '\n');
-      rep(/<br\/>/gi, '\n');
-      rep(/<br>/gi, '\n');
-      rep(/<p>/gi, '');
-      rep(/<\/p>/gi, '\n');
-      rep(/&nbsp;|\u00a0/gi, ' ');
-      rep(/&quot;/gi, '"');
-      rep(/&lt;/gi, '<');
-      rep(/&gt;/gi, '>');
-      rep(/&amp;/gi, '&');
-      return s;
-    };
-    var bbcode2html = function (s) {
-      s = global.trim(s);
-      var rep = function (re, str) {
-        s = s.replace(re, str);
-      };
-      rep(/\n/gi, '<br />');
-      rep(/\[b\]/gi, '<strong>');
-      rep(/\[\/b\]/gi, '</strong>');
-      rep(/\[i\]/gi, '<em>');
-      rep(/\[\/i\]/gi, '</em>');
-      rep(/\[u\]/gi, '<u>');
-      rep(/\[\/u\]/gi, '</u>');
-      rep(/\[url=([^\]]+)\](.*?)\[\/url\]/gi, '<a href="$1">$2</a>');
-      rep(/\[url\](.*?)\[\/url\]/gi, '<a href="$1">$1</a>');
-      rep(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" />');
-      rep(/\[color=(.*?)\](.*?)\[\/color\]/gi, '<font color="$1">$2</font>');
-      rep(/\[code\](.*?)\[\/code\]/gi, '<span class="codeStyle">$1</span>&nbsp;');
-      rep(/\[quote.*?\](.*?)\[\/quote\]/gi, '<span class="quoteStyle">$1</span>&nbsp;');
-      return s;
-    };
-
-    function Plugin () {
-      global$1.add('bbcode', function (editor) {
-        editor.on('BeforeSetContent', function (e) {
-          e.content = bbcode2html(e.content);
-        });
-        editor.on('PostProcess', function (e) {
-          if (e.set) {
-            e.content = bbcode2html(e.content);
-          }
-          if (e.get) {
-            e.content = html2bbcode(e.content);
-          }
-        });
       });
     }
 
@@ -50369,6 +50369,1141 @@ tinymce.IconManager.add('default', {
         register$1(editor);
         register(editor);
         return {};
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    function Plugin () {
+      global.add('colorpicker', function () {
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    function Plugin () {
+      global.add('contextmenu', function () {
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var eq = function (t) {
+      return function (a) {
+        return t === a;
+      };
+    };
+    var isNull = eq(null);
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var identity = function (x) {
+      return x;
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = identity;
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || 'error: getOrDie called on none.');
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: function () {
+          return none();
+        },
+        toArray: function () {
+          return [];
+        },
+        toString: constant('none()')
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return 'some(' + a + ')';
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Optional = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var exists = function (xs, pred) {
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (pred(x, i)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    var map$1 = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+    var each$1 = function (xs, f) {
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        f(x, i);
+      }
+    };
+
+    var Cell = function (initial) {
+      var value = initial;
+      var get = function () {
+        return value;
+      };
+      var set = function (v) {
+        value = v;
+      };
+      return {
+        get: get,
+        set: set
+      };
+    };
+
+    var last = function (fn, rate) {
+      var timer = null;
+      var cancel = function () {
+        if (!isNull(timer)) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      };
+      var throttle = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+          args[_i] = arguments[_i];
+        }
+        cancel();
+        timer = setTimeout(function () {
+          timer = null;
+          fn.apply(null, args);
+        }, rate);
+      };
+      return {
+        cancel: cancel,
+        throttle: throttle
+      };
+    };
+
+    var insertEmoticon = function (editor, ch) {
+      editor.insertContent(ch);
+    };
+
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+
+    var keys = Object.keys;
+    var hasOwnProperty = Object.hasOwnProperty;
+    var each = function (obj, f) {
+      var props = keys(obj);
+      for (var k = 0, len = props.length; k < len; k++) {
+        var i = props[k];
+        var x = obj[i];
+        f(x, i);
+      }
+    };
+    var map = function (obj, f) {
+      return tupleMap(obj, function (x, i) {
+        return {
+          k: i,
+          v: f(x, i)
+        };
+      });
+    };
+    var tupleMap = function (obj, f) {
+      var r = {};
+      each(obj, function (x, i) {
+        var tuple = f(x, i);
+        r[tuple.k] = tuple.v;
+      });
+      return r;
+    };
+    var has = function (obj, key) {
+      return hasOwnProperty.call(obj, key);
+    };
+
+    var shallow = function (old, nu) {
+      return nu;
+    };
+    var baseMerge = function (merger) {
+      return function () {
+        var objects = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+          objects[_i] = arguments[_i];
+        }
+        if (objects.length === 0) {
+          throw new Error('Can\'t merge zero objects');
+        }
+        var ret = {};
+        for (var j = 0; j < objects.length; j++) {
+          var curObject = objects[j];
+          for (var key in curObject) {
+            if (has(curObject, key)) {
+              ret[key] = merger(ret[key], curObject[key]);
+            }
+          }
+        }
+        return ret;
+      };
+    };
+    var merge = baseMerge(shallow);
+
+    var singleton = function (doRevoke) {
+      var subject = Cell(Optional.none());
+      var revoke = function () {
+        return subject.get().each(doRevoke);
+      };
+      var clear = function () {
+        revoke();
+        subject.set(Optional.none());
+      };
+      var isSet = function () {
+        return subject.get().isSome();
+      };
+      var get = function () {
+        return subject.get();
+      };
+      var set = function (s) {
+        revoke();
+        subject.set(Optional.some(s));
+      };
+      return {
+        clear: clear,
+        isSet: isSet,
+        get: get,
+        set: set
+      };
+    };
+    var value = function () {
+      var subject = singleton(noop);
+      var on = function (f) {
+        return subject.get().each(f);
+      };
+      return __assign(__assign({}, subject), { on: on });
+    };
+
+    var checkRange = function (str, substr, start) {
+      return substr === '' || str.length >= substr.length && str.substr(start, start + substr.length) === substr;
+    };
+    var contains = function (str, substr) {
+      return str.indexOf(substr) !== -1;
+    };
+    var startsWith = function (str, prefix) {
+      return checkRange(str, prefix, 0);
+    };
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.Resource');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Delay');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Promise');
+
+    var DEFAULT_ID = 'tinymce.plugins.emoticons';
+    var getEmoticonDatabase = function (editor) {
+      return editor.getParam('emoticons_database', 'emojis', 'string');
+    };
+    var getEmoticonDatabaseUrl = function (editor, pluginUrl) {
+      var database = getEmoticonDatabase(editor);
+      return editor.getParam('emoticons_database_url', pluginUrl + '/js/' + database + editor.suffix + '.js', 'string');
+    };
+    var getEmoticonDatabaseId = function (editor) {
+      return editor.getParam('emoticons_database_id', DEFAULT_ID, 'string');
+    };
+    var getAppendedEmoticons = function (editor) {
+      return editor.getParam('emoticons_append', {}, 'object');
+    };
+    var getEmotionsImageUrl = function (editor) {
+      return editor.getParam('emoticons_images_url', 'https://twemoji.maxcdn.com/v/13.0.1/72x72/', 'string');
+    };
+
+    var ALL_CATEGORY = 'All';
+    var categoryNameMap = {
+      symbols: 'Symbols',
+      people: 'People',
+      animals_and_nature: 'Animals and Nature',
+      food_and_drink: 'Food and Drink',
+      activity: 'Activity',
+      travel_and_places: 'Travel and Places',
+      objects: 'Objects',
+      flags: 'Flags',
+      user: 'User Defined'
+    };
+    var translateCategory = function (categories, name) {
+      return has(categories, name) ? categories[name] : name;
+    };
+    var getUserDefinedEmoticons = function (editor) {
+      var userDefinedEmoticons = getAppendedEmoticons(editor);
+      return map(userDefinedEmoticons, function (value) {
+        return __assign({
+          keywords: [],
+          category: 'user'
+        }, value);
+      });
+    };
+    var initDatabase = function (editor, databaseUrl, databaseId) {
+      var categories = value();
+      var all = value();
+      var emojiImagesUrl = getEmotionsImageUrl(editor);
+      var getEmoji = function (lib) {
+        if (startsWith(lib.char, '<img')) {
+          return lib.char.replace(/src="([^"]+)"/, function (match, url) {
+            return 'src="' + emojiImagesUrl + url + '"';
+          });
+        } else {
+          return lib.char;
+        }
+      };
+      var processEmojis = function (emojis) {
+        var cats = {};
+        var everything = [];
+        each(emojis, function (lib, title) {
+          var entry = {
+            title: title,
+            keywords: lib.keywords,
+            char: getEmoji(lib),
+            category: translateCategory(categoryNameMap, lib.category)
+          };
+          var current = cats[entry.category] !== undefined ? cats[entry.category] : [];
+          cats[entry.category] = current.concat([entry]);
+          everything.push(entry);
+        });
+        categories.set(cats);
+        all.set(everything);
+      };
+      editor.on('init', function () {
+        global$2.load(databaseId, databaseUrl).then(function (emojis) {
+          var userEmojis = getUserDefinedEmoticons(editor);
+          processEmojis(merge(emojis, userEmojis));
+        }, function (err) {
+          console.log('Failed to load emoticons: ' + err);
+          categories.set({});
+          all.set([]);
+        });
+      });
+      var listCategory = function (category) {
+        if (category === ALL_CATEGORY) {
+          return listAll();
+        }
+        return categories.get().bind(function (cats) {
+          return Optional.from(cats[category]);
+        }).getOr([]);
+      };
+      var listAll = function () {
+        return all.get().getOr([]);
+      };
+      var listCategories = function () {
+        return [ALL_CATEGORY].concat(keys(categories.get().getOr({})));
+      };
+      var waitForLoad = function () {
+        if (hasLoaded()) {
+          return global.resolve(true);
+        } else {
+          return new global(function (resolve, reject) {
+            var numRetries = 15;
+            var interval = global$1.setInterval(function () {
+              if (hasLoaded()) {
+                global$1.clearInterval(interval);
+                resolve(true);
+              } else {
+                numRetries--;
+                if (numRetries < 0) {
+                  console.log('Could not load emojis from url: ' + databaseUrl);
+                  global$1.clearInterval(interval);
+                  reject(false);
+                }
+              }
+            }, 100);
+          });
+        }
+      };
+      var hasLoaded = function () {
+        return categories.isSet() && all.isSet();
+      };
+      return {
+        listCategories: listCategories,
+        hasLoaded: hasLoaded,
+        waitForLoad: waitForLoad,
+        listAll: listAll,
+        listCategory: listCategory
+      };
+    };
+
+    var emojiMatches = function (emoji, lowerCasePattern) {
+      return contains(emoji.title.toLowerCase(), lowerCasePattern) || exists(emoji.keywords, function (k) {
+        return contains(k.toLowerCase(), lowerCasePattern);
+      });
+    };
+    var emojisFrom = function (list, pattern, maxResults) {
+      var matches = [];
+      var lowerCasePattern = pattern.toLowerCase();
+      var reachedLimit = maxResults.fold(function () {
+        return never;
+      }, function (max) {
+        return function (size) {
+          return size >= max;
+        };
+      });
+      for (var i = 0; i < list.length; i++) {
+        if (pattern.length === 0 || emojiMatches(list[i], lowerCasePattern)) {
+          matches.push({
+            value: list[i].char,
+            text: list[i].title,
+            icon: list[i].char
+          });
+          if (reachedLimit(matches.length)) {
+            break;
+          }
+        }
+      }
+      return matches;
+    };
+
+    var patternName = 'pattern';
+    var open = function (editor, database) {
+      var initialState = {
+        pattern: '',
+        results: emojisFrom(database.listAll(), '', Optional.some(300))
+      };
+      var currentTab = Cell(ALL_CATEGORY);
+      var scan = function (dialogApi) {
+        var dialogData = dialogApi.getData();
+        var category = currentTab.get();
+        var candidates = database.listCategory(category);
+        var results = emojisFrom(candidates, dialogData[patternName], category === ALL_CATEGORY ? Optional.some(300) : Optional.none());
+        dialogApi.setData({ results: results });
+      };
+      var updateFilter = last(function (dialogApi) {
+        scan(dialogApi);
+      }, 200);
+      var searchField = {
+        label: 'Search',
+        type: 'input',
+        name: patternName
+      };
+      var resultsField = {
+        type: 'collection',
+        name: 'results'
+      };
+      var getInitialState = function () {
+        var body = {
+          type: 'tabpanel',
+          tabs: map$1(database.listCategories(), function (cat) {
+            return {
+              title: cat,
+              name: cat,
+              items: [
+                searchField,
+                resultsField
+              ]
+            };
+          })
+        };
+        return {
+          title: 'Emoticons',
+          size: 'normal',
+          body: body,
+          initialData: initialState,
+          onTabChange: function (dialogApi, details) {
+            currentTab.set(details.newTabName);
+            updateFilter.throttle(dialogApi);
+          },
+          onChange: updateFilter.throttle,
+          onAction: function (dialogApi, actionData) {
+            if (actionData.name === 'results') {
+              insertEmoticon(editor, actionData.value);
+              dialogApi.close();
+            }
+          },
+          buttons: [{
+              type: 'cancel',
+              text: 'Close',
+              primary: true
+            }]
+        };
+      };
+      var dialogApi = editor.windowManager.open(getInitialState());
+      dialogApi.focus(patternName);
+      if (!database.hasLoaded()) {
+        dialogApi.block('Loading emoticons...');
+        database.waitForLoad().then(function () {
+          dialogApi.redial(getInitialState());
+          updateFilter.throttle(dialogApi);
+          dialogApi.focus(patternName);
+          dialogApi.unblock();
+        }).catch(function (_err) {
+          dialogApi.redial({
+            title: 'Emoticons',
+            body: {
+              type: 'panel',
+              items: [{
+                  type: 'alertbanner',
+                  level: 'error',
+                  icon: 'warning',
+                  text: '<p>Could not load emoticons</p>'
+                }]
+            },
+            buttons: [{
+                type: 'cancel',
+                text: 'Close',
+                primary: true
+              }],
+            initialData: {
+              pattern: '',
+              results: []
+            }
+          });
+          dialogApi.focus(patternName);
+          dialogApi.unblock();
+        });
+      }
+    };
+
+    var register$1 = function (editor, database) {
+      editor.addCommand('mceEmoticons', function () {
+        return open(editor, database);
+      });
+    };
+
+    var setup = function (editor) {
+      editor.on('PreInit', function () {
+        editor.parser.addAttributeFilter('data-emoticon', function (nodes) {
+          each$1(nodes, function (node) {
+            node.attr('data-mce-resize', 'false');
+            node.attr('data-mce-placeholder', '1');
+          });
+        });
+      });
+    };
+
+    var init = function (editor, database) {
+      editor.ui.registry.addAutocompleter('emoticons', {
+        ch: ':',
+        columns: 'auto',
+        minChars: 2,
+        fetch: function (pattern, maxResults) {
+          return database.waitForLoad().then(function () {
+            var candidates = database.listAll();
+            return emojisFrom(candidates, pattern, Optional.some(maxResults));
+          });
+        },
+        onAction: function (autocompleteApi, rng, value) {
+          editor.selection.setRng(rng);
+          editor.insertContent(value);
+          autocompleteApi.hide();
+        }
+      });
+    };
+
+    var register = function (editor) {
+      var onAction = function () {
+        return editor.execCommand('mceEmoticons');
+      };
+      editor.ui.registry.addButton('emoticons', {
+        tooltip: 'Emoticons',
+        icon: 'emoji',
+        onAction: onAction
+      });
+      editor.ui.registry.addMenuItem('emoticons', {
+        text: 'Emoticons...',
+        icon: 'emoji',
+        onAction: onAction
+      });
+    };
+
+    function Plugin () {
+      global$3.add('emoticons', function (editor, pluginUrl) {
+        var databaseUrl = getEmoticonDatabaseUrl(editor, pluginUrl);
+        var databaseId = getEmoticonDatabaseId(editor);
+        var database = initDatabase(editor, databaseUrl, databaseId);
+        register$1(editor, database);
+        register(editor);
+        init(editor, database);
+        setup(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var typeOf = function (x) {
+      var t = typeof x;
+      if (x === null) {
+        return 'null';
+      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
+        return 'array';
+      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
+        return 'string';
+      } else {
+        return t;
+      }
+    };
+    var isType$1 = function (type) {
+      return function (value) {
+        return typeOf(value) === type;
+      };
+    };
+    var isSimpleType = function (type) {
+      return function (value) {
+        return typeof value === type;
+      };
+    };
+    var isString = isType$1('string');
+    var isBoolean = isSimpleType('boolean');
+    var isNullable = function (a) {
+      return a === null || a === undefined;
+    };
+    var isNonNullable = function (a) {
+      return !isNullable(a);
+    };
+    var isFunction = isSimpleType('function');
+    var isNumber = isSimpleType('number');
+
+    var noop = function () {
+    };
+    var compose1 = function (fbc, fab) {
+      return function (a) {
+        return fbc(fab(a));
+      };
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var identity = function (x) {
+      return x;
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = identity;
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || 'error: getOrDie called on none.');
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: function () {
+          return none();
+        },
+        toArray: function () {
+          return [];
+        },
+        toString: constant('none()')
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return 'some(' + a + ')';
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Optional = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var map = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+    var each = function (xs, f) {
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        f(x, i);
+      }
+    };
+    var filter = function (xs, pred) {
+      var r = [];
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (pred(x, i)) {
+          r.push(x);
+        }
+      }
+      return r;
+    };
+
+    var DOCUMENT = 9;
+    var DOCUMENT_FRAGMENT = 11;
+    var ELEMENT = 1;
+    var TEXT = 3;
+
+    var fromHtml = function (html, scope) {
+      var doc = scope || document;
+      var div = doc.createElement('div');
+      div.innerHTML = html;
+      if (!div.hasChildNodes() || div.childNodes.length > 1) {
+        console.error('HTML does not have a single root node', html);
+        throw new Error('HTML must have a single root node');
+      }
+      return fromDom(div.childNodes[0]);
+    };
+    var fromTag = function (tag, scope) {
+      var doc = scope || document;
+      var node = doc.createElement(tag);
+      return fromDom(node);
+    };
+    var fromText = function (text, scope) {
+      var doc = scope || document;
+      var node = doc.createTextNode(text);
+      return fromDom(node);
+    };
+    var fromDom = function (node) {
+      if (node === null || node === undefined) {
+        throw new Error('Node cannot be null or undefined');
+      }
+      return { dom: node };
+    };
+    var fromPoint = function (docElm, x, y) {
+      return Optional.from(docElm.dom.elementFromPoint(x, y)).map(fromDom);
+    };
+    var SugarElement = {
+      fromHtml: fromHtml,
+      fromTag: fromTag,
+      fromText: fromText,
+      fromDom: fromDom,
+      fromPoint: fromPoint
+    };
+
+    var is = function (element, selector) {
+      var dom = element.dom;
+      if (dom.nodeType !== ELEMENT) {
+        return false;
+      } else {
+        var elem = dom;
+        if (elem.matches !== undefined) {
+          return elem.matches(selector);
+        } else if (elem.msMatchesSelector !== undefined) {
+          return elem.msMatchesSelector(selector);
+        } else if (elem.webkitMatchesSelector !== undefined) {
+          return elem.webkitMatchesSelector(selector);
+        } else if (elem.mozMatchesSelector !== undefined) {
+          return elem.mozMatchesSelector(selector);
+        } else {
+          throw new Error('Browser lacks native selectors');
+        }
+      }
+    };
+
+    typeof window !== 'undefined' ? window : Function('return this;')();
+
+    var name = function (element) {
+      var r = element.dom.nodeName;
+      return r.toLowerCase();
+    };
+    var type = function (element) {
+      return element.dom.nodeType;
+    };
+    var isType = function (t) {
+      return function (element) {
+        return type(element) === t;
+      };
+    };
+    var isElement = isType(ELEMENT);
+    var isText = isType(TEXT);
+    var isDocument = isType(DOCUMENT);
+    var isDocumentFragment = isType(DOCUMENT_FRAGMENT);
+    var isTag = function (tag) {
+      return function (e) {
+        return isElement(e) && name(e) === tag;
+      };
+    };
+
+    var owner = function (element) {
+      return SugarElement.fromDom(element.dom.ownerDocument);
+    };
+    var documentOrOwner = function (dos) {
+      return isDocument(dos) ? dos : owner(dos);
+    };
+    var parent = function (element) {
+      return Optional.from(element.dom.parentNode).map(SugarElement.fromDom);
+    };
+    var children$2 = function (element) {
+      return map(element.dom.childNodes, SugarElement.fromDom);
+    };
+
+    var rawSet = function (dom, key, value) {
+      if (isString(value) || isBoolean(value) || isNumber(value)) {
+        dom.setAttribute(key, value + '');
+      } else {
+        console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
+        throw new Error('Attribute value was not simple');
+      }
+    };
+    var set = function (element, key, value) {
+      rawSet(element.dom, key, value);
+    };
+    var remove = function (element, key) {
+      element.dom.removeAttribute(key);
+    };
+
+    var isShadowRoot = function (dos) {
+      return isDocumentFragment(dos) && isNonNullable(dos.dom.host);
+    };
+    var supported = isFunction(Element.prototype.attachShadow) && isFunction(Node.prototype.getRootNode);
+    var getRootNode = supported ? function (e) {
+      return SugarElement.fromDom(e.dom.getRootNode());
+    } : documentOrOwner;
+    var getShadowRoot = function (e) {
+      var r = getRootNode(e);
+      return isShadowRoot(r) ? Optional.some(r) : Optional.none();
+    };
+    var getShadowHost = function (e) {
+      return SugarElement.fromDom(e.dom.host);
+    };
+
+    var inBody = function (element) {
+      var dom = isText(element) ? element.dom.parentNode : element.dom;
+      if (dom === undefined || dom === null || dom.ownerDocument === null) {
+        return false;
+      }
+      var doc = dom.ownerDocument;
+      return getShadowRoot(SugarElement.fromDom(dom)).fold(function () {
+        return doc.body.contains(dom);
+      }, compose1(inBody, getShadowHost));
+    };
+
+    var ancestor$1 = function (scope, predicate, isRoot) {
+      var element = scope.dom;
+      var stop = isFunction(isRoot) ? isRoot : never;
+      while (element.parentNode) {
+        element = element.parentNode;
+        var el = SugarElement.fromDom(element);
+        if (predicate(el)) {
+          return Optional.some(el);
+        } else if (stop(el)) {
+          break;
+        }
+      }
+      return Optional.none();
+    };
+
+    var ancestor = function (scope, selector, isRoot) {
+      return ancestor$1(scope, function (e) {
+        return is(e, selector);
+      }, isRoot);
+    };
+
+    var isSupported = function (dom) {
+      return dom.style !== undefined && isFunction(dom.style.getPropertyValue);
+    };
+
+    var get = function (element, property) {
+      var dom = element.dom;
+      var styles = window.getComputedStyle(dom);
+      var r = styles.getPropertyValue(property);
+      return r === '' && !inBody(element) ? getUnsafeProperty(dom, property) : r;
+    };
+    var getUnsafeProperty = function (dom, property) {
+      return isSupported(dom) ? dom.style.getPropertyValue(property) : '';
+    };
+
+    var getDirection = function (element) {
+      return get(element, 'direction') === 'rtl' ? 'rtl' : 'ltr';
+    };
+
+    var children$1 = function (scope, predicate) {
+      return filter(children$2(scope), predicate);
+    };
+
+    var children = function (scope, selector) {
+      return children$1(scope, function (e) {
+        return is(e, selector);
+      });
+    };
+
+    var getParentElement = function (element) {
+      return parent(element).filter(isElement);
+    };
+    var getNormalizedBlock = function (element, isListItem) {
+      var normalizedElement = isListItem ? ancestor(element, 'ol,ul') : Optional.some(element);
+      return normalizedElement.getOr(element);
+    };
+    var isListItem = isTag('li');
+    var setDir = function (editor, dir) {
+      var selectedBlocks = editor.selection.getSelectedBlocks();
+      if (selectedBlocks.length > 0) {
+        each(selectedBlocks, function (block) {
+          var blockElement = SugarElement.fromDom(block);
+          var isBlockElementListItem = isListItem(blockElement);
+          var normalizedBlock = getNormalizedBlock(blockElement, isBlockElementListItem);
+          var normalizedBlockParent = getParentElement(normalizedBlock);
+          normalizedBlockParent.each(function (parent) {
+            var parentDirection = getDirection(parent);
+            if (parentDirection !== dir) {
+              set(normalizedBlock, 'dir', dir);
+            } else if (getDirection(normalizedBlock) !== dir) {
+              remove(normalizedBlock, 'dir');
+            }
+            if (isBlockElementListItem) {
+              var listItems = children(normalizedBlock, 'li[dir]');
+              each(listItems, function (listItem) {
+                return remove(listItem, 'dir');
+              });
+            }
+          });
+        });
+        editor.nodeChanged();
+      }
+    };
+
+    var register$1 = function (editor) {
+      editor.addCommand('mceDirectionLTR', function () {
+        setDir(editor, 'ltr');
+      });
+      editor.addCommand('mceDirectionRTL', function () {
+        setDir(editor, 'rtl');
+      });
+    };
+
+    var getNodeChangeHandler = function (editor, dir) {
+      return function (api) {
+        var nodeChangeHandler = function (e) {
+          var element = SugarElement.fromDom(e.element);
+          api.setActive(getDirection(element) === dir);
+        };
+        editor.on('NodeChange', nodeChangeHandler);
+        return function () {
+          return editor.off('NodeChange', nodeChangeHandler);
+        };
+      };
+    };
+    var register = function (editor) {
+      editor.ui.registry.addToggleButton('ltr', {
+        tooltip: 'Left to right',
+        icon: 'ltr',
+        onAction: function () {
+          return editor.execCommand('mceDirectionLTR');
+        },
+        onSetup: getNodeChangeHandler(editor, 'ltr')
+      });
+      editor.ui.registry.addToggleButton('rtl', {
+        tooltip: 'Right to left',
+        icon: 'rtl',
+        onAction: function () {
+          return editor.execCommand('mceDirectionRTL');
+        },
+        onSetup: getNodeChangeHandler(editor, 'rtl')
+      });
+    };
+
+    function Plugin () {
+      global.add('directionality', function (editor) {
+        register$1(editor);
+        register(editor);
       });
     }
 
@@ -52832,1141 +53967,6 @@ tinymce.IconManager.add('default', {
             open(editor);
           }
         });
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    function Plugin () {
-      global.add('colorpicker', function () {
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    function Plugin () {
-      global.add('contextmenu', function () {
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var typeOf = function (x) {
-      var t = typeof x;
-      if (x === null) {
-        return 'null';
-      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
-        return 'array';
-      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
-        return 'string';
-      } else {
-        return t;
-      }
-    };
-    var isType$1 = function (type) {
-      return function (value) {
-        return typeOf(value) === type;
-      };
-    };
-    var isSimpleType = function (type) {
-      return function (value) {
-        return typeof value === type;
-      };
-    };
-    var isString = isType$1('string');
-    var isBoolean = isSimpleType('boolean');
-    var isNullable = function (a) {
-      return a === null || a === undefined;
-    };
-    var isNonNullable = function (a) {
-      return !isNullable(a);
-    };
-    var isFunction = isSimpleType('function');
-    var isNumber = isSimpleType('number');
-
-    var noop = function () {
-    };
-    var compose1 = function (fbc, fab) {
-      return function (a) {
-        return fbc(fab(a));
-      };
-    };
-    var constant = function (value) {
-      return function () {
-        return value;
-      };
-    };
-    var identity = function (x) {
-      return x;
-    };
-    var never = constant(false);
-    var always = constant(true);
-
-    var none = function () {
-      return NONE;
-    };
-    var NONE = function () {
-      var call = function (thunk) {
-        return thunk();
-      };
-      var id = identity;
-      var me = {
-        fold: function (n, _s) {
-          return n();
-        },
-        isSome: never,
-        isNone: always,
-        getOr: id,
-        getOrThunk: call,
-        getOrDie: function (msg) {
-          throw new Error(msg || 'error: getOrDie called on none.');
-        },
-        getOrNull: constant(null),
-        getOrUndefined: constant(undefined),
-        or: id,
-        orThunk: call,
-        map: none,
-        each: noop,
-        bind: none,
-        exists: never,
-        forall: always,
-        filter: function () {
-          return none();
-        },
-        toArray: function () {
-          return [];
-        },
-        toString: constant('none()')
-      };
-      return me;
-    }();
-    var some = function (a) {
-      var constant_a = constant(a);
-      var self = function () {
-        return me;
-      };
-      var bind = function (f) {
-        return f(a);
-      };
-      var me = {
-        fold: function (n, s) {
-          return s(a);
-        },
-        isSome: always,
-        isNone: never,
-        getOr: constant_a,
-        getOrThunk: constant_a,
-        getOrDie: constant_a,
-        getOrNull: constant_a,
-        getOrUndefined: constant_a,
-        or: self,
-        orThunk: self,
-        map: function (f) {
-          return some(f(a));
-        },
-        each: function (f) {
-          f(a);
-        },
-        bind: bind,
-        exists: bind,
-        forall: bind,
-        filter: function (f) {
-          return f(a) ? me : NONE;
-        },
-        toArray: function () {
-          return [a];
-        },
-        toString: function () {
-          return 'some(' + a + ')';
-        }
-      };
-      return me;
-    };
-    var from = function (value) {
-      return value === null || value === undefined ? NONE : some(value);
-    };
-    var Optional = {
-      some: some,
-      none: none,
-      from: from
-    };
-
-    var map = function (xs, f) {
-      var len = xs.length;
-      var r = new Array(len);
-      for (var i = 0; i < len; i++) {
-        var x = xs[i];
-        r[i] = f(x, i);
-      }
-      return r;
-    };
-    var each = function (xs, f) {
-      for (var i = 0, len = xs.length; i < len; i++) {
-        var x = xs[i];
-        f(x, i);
-      }
-    };
-    var filter = function (xs, pred) {
-      var r = [];
-      for (var i = 0, len = xs.length; i < len; i++) {
-        var x = xs[i];
-        if (pred(x, i)) {
-          r.push(x);
-        }
-      }
-      return r;
-    };
-
-    var DOCUMENT = 9;
-    var DOCUMENT_FRAGMENT = 11;
-    var ELEMENT = 1;
-    var TEXT = 3;
-
-    var fromHtml = function (html, scope) {
-      var doc = scope || document;
-      var div = doc.createElement('div');
-      div.innerHTML = html;
-      if (!div.hasChildNodes() || div.childNodes.length > 1) {
-        console.error('HTML does not have a single root node', html);
-        throw new Error('HTML must have a single root node');
-      }
-      return fromDom(div.childNodes[0]);
-    };
-    var fromTag = function (tag, scope) {
-      var doc = scope || document;
-      var node = doc.createElement(tag);
-      return fromDom(node);
-    };
-    var fromText = function (text, scope) {
-      var doc = scope || document;
-      var node = doc.createTextNode(text);
-      return fromDom(node);
-    };
-    var fromDom = function (node) {
-      if (node === null || node === undefined) {
-        throw new Error('Node cannot be null or undefined');
-      }
-      return { dom: node };
-    };
-    var fromPoint = function (docElm, x, y) {
-      return Optional.from(docElm.dom.elementFromPoint(x, y)).map(fromDom);
-    };
-    var SugarElement = {
-      fromHtml: fromHtml,
-      fromTag: fromTag,
-      fromText: fromText,
-      fromDom: fromDom,
-      fromPoint: fromPoint
-    };
-
-    var is = function (element, selector) {
-      var dom = element.dom;
-      if (dom.nodeType !== ELEMENT) {
-        return false;
-      } else {
-        var elem = dom;
-        if (elem.matches !== undefined) {
-          return elem.matches(selector);
-        } else if (elem.msMatchesSelector !== undefined) {
-          return elem.msMatchesSelector(selector);
-        } else if (elem.webkitMatchesSelector !== undefined) {
-          return elem.webkitMatchesSelector(selector);
-        } else if (elem.mozMatchesSelector !== undefined) {
-          return elem.mozMatchesSelector(selector);
-        } else {
-          throw new Error('Browser lacks native selectors');
-        }
-      }
-    };
-
-    typeof window !== 'undefined' ? window : Function('return this;')();
-
-    var name = function (element) {
-      var r = element.dom.nodeName;
-      return r.toLowerCase();
-    };
-    var type = function (element) {
-      return element.dom.nodeType;
-    };
-    var isType = function (t) {
-      return function (element) {
-        return type(element) === t;
-      };
-    };
-    var isElement = isType(ELEMENT);
-    var isText = isType(TEXT);
-    var isDocument = isType(DOCUMENT);
-    var isDocumentFragment = isType(DOCUMENT_FRAGMENT);
-    var isTag = function (tag) {
-      return function (e) {
-        return isElement(e) && name(e) === tag;
-      };
-    };
-
-    var owner = function (element) {
-      return SugarElement.fromDom(element.dom.ownerDocument);
-    };
-    var documentOrOwner = function (dos) {
-      return isDocument(dos) ? dos : owner(dos);
-    };
-    var parent = function (element) {
-      return Optional.from(element.dom.parentNode).map(SugarElement.fromDom);
-    };
-    var children$2 = function (element) {
-      return map(element.dom.childNodes, SugarElement.fromDom);
-    };
-
-    var rawSet = function (dom, key, value) {
-      if (isString(value) || isBoolean(value) || isNumber(value)) {
-        dom.setAttribute(key, value + '');
-      } else {
-        console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
-        throw new Error('Attribute value was not simple');
-      }
-    };
-    var set = function (element, key, value) {
-      rawSet(element.dom, key, value);
-    };
-    var remove = function (element, key) {
-      element.dom.removeAttribute(key);
-    };
-
-    var isShadowRoot = function (dos) {
-      return isDocumentFragment(dos) && isNonNullable(dos.dom.host);
-    };
-    var supported = isFunction(Element.prototype.attachShadow) && isFunction(Node.prototype.getRootNode);
-    var getRootNode = supported ? function (e) {
-      return SugarElement.fromDom(e.dom.getRootNode());
-    } : documentOrOwner;
-    var getShadowRoot = function (e) {
-      var r = getRootNode(e);
-      return isShadowRoot(r) ? Optional.some(r) : Optional.none();
-    };
-    var getShadowHost = function (e) {
-      return SugarElement.fromDom(e.dom.host);
-    };
-
-    var inBody = function (element) {
-      var dom = isText(element) ? element.dom.parentNode : element.dom;
-      if (dom === undefined || dom === null || dom.ownerDocument === null) {
-        return false;
-      }
-      var doc = dom.ownerDocument;
-      return getShadowRoot(SugarElement.fromDom(dom)).fold(function () {
-        return doc.body.contains(dom);
-      }, compose1(inBody, getShadowHost));
-    };
-
-    var ancestor$1 = function (scope, predicate, isRoot) {
-      var element = scope.dom;
-      var stop = isFunction(isRoot) ? isRoot : never;
-      while (element.parentNode) {
-        element = element.parentNode;
-        var el = SugarElement.fromDom(element);
-        if (predicate(el)) {
-          return Optional.some(el);
-        } else if (stop(el)) {
-          break;
-        }
-      }
-      return Optional.none();
-    };
-
-    var ancestor = function (scope, selector, isRoot) {
-      return ancestor$1(scope, function (e) {
-        return is(e, selector);
-      }, isRoot);
-    };
-
-    var isSupported = function (dom) {
-      return dom.style !== undefined && isFunction(dom.style.getPropertyValue);
-    };
-
-    var get = function (element, property) {
-      var dom = element.dom;
-      var styles = window.getComputedStyle(dom);
-      var r = styles.getPropertyValue(property);
-      return r === '' && !inBody(element) ? getUnsafeProperty(dom, property) : r;
-    };
-    var getUnsafeProperty = function (dom, property) {
-      return isSupported(dom) ? dom.style.getPropertyValue(property) : '';
-    };
-
-    var getDirection = function (element) {
-      return get(element, 'direction') === 'rtl' ? 'rtl' : 'ltr';
-    };
-
-    var children$1 = function (scope, predicate) {
-      return filter(children$2(scope), predicate);
-    };
-
-    var children = function (scope, selector) {
-      return children$1(scope, function (e) {
-        return is(e, selector);
-      });
-    };
-
-    var getParentElement = function (element) {
-      return parent(element).filter(isElement);
-    };
-    var getNormalizedBlock = function (element, isListItem) {
-      var normalizedElement = isListItem ? ancestor(element, 'ol,ul') : Optional.some(element);
-      return normalizedElement.getOr(element);
-    };
-    var isListItem = isTag('li');
-    var setDir = function (editor, dir) {
-      var selectedBlocks = editor.selection.getSelectedBlocks();
-      if (selectedBlocks.length > 0) {
-        each(selectedBlocks, function (block) {
-          var blockElement = SugarElement.fromDom(block);
-          var isBlockElementListItem = isListItem(blockElement);
-          var normalizedBlock = getNormalizedBlock(blockElement, isBlockElementListItem);
-          var normalizedBlockParent = getParentElement(normalizedBlock);
-          normalizedBlockParent.each(function (parent) {
-            var parentDirection = getDirection(parent);
-            if (parentDirection !== dir) {
-              set(normalizedBlock, 'dir', dir);
-            } else if (getDirection(normalizedBlock) !== dir) {
-              remove(normalizedBlock, 'dir');
-            }
-            if (isBlockElementListItem) {
-              var listItems = children(normalizedBlock, 'li[dir]');
-              each(listItems, function (listItem) {
-                return remove(listItem, 'dir');
-              });
-            }
-          });
-        });
-        editor.nodeChanged();
-      }
-    };
-
-    var register$1 = function (editor) {
-      editor.addCommand('mceDirectionLTR', function () {
-        setDir(editor, 'ltr');
-      });
-      editor.addCommand('mceDirectionRTL', function () {
-        setDir(editor, 'rtl');
-      });
-    };
-
-    var getNodeChangeHandler = function (editor, dir) {
-      return function (api) {
-        var nodeChangeHandler = function (e) {
-          var element = SugarElement.fromDom(e.element);
-          api.setActive(getDirection(element) === dir);
-        };
-        editor.on('NodeChange', nodeChangeHandler);
-        return function () {
-          return editor.off('NodeChange', nodeChangeHandler);
-        };
-      };
-    };
-    var register = function (editor) {
-      editor.ui.registry.addToggleButton('ltr', {
-        tooltip: 'Left to right',
-        icon: 'ltr',
-        onAction: function () {
-          return editor.execCommand('mceDirectionLTR');
-        },
-        onSetup: getNodeChangeHandler(editor, 'ltr')
-      });
-      editor.ui.registry.addToggleButton('rtl', {
-        tooltip: 'Right to left',
-        icon: 'rtl',
-        onAction: function () {
-          return editor.execCommand('mceDirectionRTL');
-        },
-        onSetup: getNodeChangeHandler(editor, 'rtl')
-      });
-    };
-
-    function Plugin () {
-      global.add('directionality', function (editor) {
-        register$1(editor);
-        register(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$3 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var eq = function (t) {
-      return function (a) {
-        return t === a;
-      };
-    };
-    var isNull = eq(null);
-
-    var noop = function () {
-    };
-    var constant = function (value) {
-      return function () {
-        return value;
-      };
-    };
-    var identity = function (x) {
-      return x;
-    };
-    var never = constant(false);
-    var always = constant(true);
-
-    var none = function () {
-      return NONE;
-    };
-    var NONE = function () {
-      var call = function (thunk) {
-        return thunk();
-      };
-      var id = identity;
-      var me = {
-        fold: function (n, _s) {
-          return n();
-        },
-        isSome: never,
-        isNone: always,
-        getOr: id,
-        getOrThunk: call,
-        getOrDie: function (msg) {
-          throw new Error(msg || 'error: getOrDie called on none.');
-        },
-        getOrNull: constant(null),
-        getOrUndefined: constant(undefined),
-        or: id,
-        orThunk: call,
-        map: none,
-        each: noop,
-        bind: none,
-        exists: never,
-        forall: always,
-        filter: function () {
-          return none();
-        },
-        toArray: function () {
-          return [];
-        },
-        toString: constant('none()')
-      };
-      return me;
-    }();
-    var some = function (a) {
-      var constant_a = constant(a);
-      var self = function () {
-        return me;
-      };
-      var bind = function (f) {
-        return f(a);
-      };
-      var me = {
-        fold: function (n, s) {
-          return s(a);
-        },
-        isSome: always,
-        isNone: never,
-        getOr: constant_a,
-        getOrThunk: constant_a,
-        getOrDie: constant_a,
-        getOrNull: constant_a,
-        getOrUndefined: constant_a,
-        or: self,
-        orThunk: self,
-        map: function (f) {
-          return some(f(a));
-        },
-        each: function (f) {
-          f(a);
-        },
-        bind: bind,
-        exists: bind,
-        forall: bind,
-        filter: function (f) {
-          return f(a) ? me : NONE;
-        },
-        toArray: function () {
-          return [a];
-        },
-        toString: function () {
-          return 'some(' + a + ')';
-        }
-      };
-      return me;
-    };
-    var from = function (value) {
-      return value === null || value === undefined ? NONE : some(value);
-    };
-    var Optional = {
-      some: some,
-      none: none,
-      from: from
-    };
-
-    var exists = function (xs, pred) {
-      for (var i = 0, len = xs.length; i < len; i++) {
-        var x = xs[i];
-        if (pred(x, i)) {
-          return true;
-        }
-      }
-      return false;
-    };
-    var map$1 = function (xs, f) {
-      var len = xs.length;
-      var r = new Array(len);
-      for (var i = 0; i < len; i++) {
-        var x = xs[i];
-        r[i] = f(x, i);
-      }
-      return r;
-    };
-    var each$1 = function (xs, f) {
-      for (var i = 0, len = xs.length; i < len; i++) {
-        var x = xs[i];
-        f(x, i);
-      }
-    };
-
-    var Cell = function (initial) {
-      var value = initial;
-      var get = function () {
-        return value;
-      };
-      var set = function (v) {
-        value = v;
-      };
-      return {
-        get: get,
-        set: set
-      };
-    };
-
-    var last = function (fn, rate) {
-      var timer = null;
-      var cancel = function () {
-        if (!isNull(timer)) {
-          clearTimeout(timer);
-          timer = null;
-        }
-      };
-      var throttle = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-          args[_i] = arguments[_i];
-        }
-        cancel();
-        timer = setTimeout(function () {
-          timer = null;
-          fn.apply(null, args);
-        }, rate);
-      };
-      return {
-        cancel: cancel,
-        throttle: throttle
-      };
-    };
-
-    var insertEmoticon = function (editor, ch) {
-      editor.insertContent(ch);
-    };
-
-    var __assign = function () {
-      __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s)
-            if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-        }
-        return t;
-      };
-      return __assign.apply(this, arguments);
-    };
-
-    var keys = Object.keys;
-    var hasOwnProperty = Object.hasOwnProperty;
-    var each = function (obj, f) {
-      var props = keys(obj);
-      for (var k = 0, len = props.length; k < len; k++) {
-        var i = props[k];
-        var x = obj[i];
-        f(x, i);
-      }
-    };
-    var map = function (obj, f) {
-      return tupleMap(obj, function (x, i) {
-        return {
-          k: i,
-          v: f(x, i)
-        };
-      });
-    };
-    var tupleMap = function (obj, f) {
-      var r = {};
-      each(obj, function (x, i) {
-        var tuple = f(x, i);
-        r[tuple.k] = tuple.v;
-      });
-      return r;
-    };
-    var has = function (obj, key) {
-      return hasOwnProperty.call(obj, key);
-    };
-
-    var shallow = function (old, nu) {
-      return nu;
-    };
-    var baseMerge = function (merger) {
-      return function () {
-        var objects = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-          objects[_i] = arguments[_i];
-        }
-        if (objects.length === 0) {
-          throw new Error('Can\'t merge zero objects');
-        }
-        var ret = {};
-        for (var j = 0; j < objects.length; j++) {
-          var curObject = objects[j];
-          for (var key in curObject) {
-            if (has(curObject, key)) {
-              ret[key] = merger(ret[key], curObject[key]);
-            }
-          }
-        }
-        return ret;
-      };
-    };
-    var merge = baseMerge(shallow);
-
-    var singleton = function (doRevoke) {
-      var subject = Cell(Optional.none());
-      var revoke = function () {
-        return subject.get().each(doRevoke);
-      };
-      var clear = function () {
-        revoke();
-        subject.set(Optional.none());
-      };
-      var isSet = function () {
-        return subject.get().isSome();
-      };
-      var get = function () {
-        return subject.get();
-      };
-      var set = function (s) {
-        revoke();
-        subject.set(Optional.some(s));
-      };
-      return {
-        clear: clear,
-        isSet: isSet,
-        get: get,
-        set: set
-      };
-    };
-    var value = function () {
-      var subject = singleton(noop);
-      var on = function (f) {
-        return subject.get().each(f);
-      };
-      return __assign(__assign({}, subject), { on: on });
-    };
-
-    var checkRange = function (str, substr, start) {
-      return substr === '' || str.length >= substr.length && str.substr(start, start + substr.length) === substr;
-    };
-    var contains = function (str, substr) {
-      return str.indexOf(substr) !== -1;
-    };
-    var startsWith = function (str, prefix) {
-      return checkRange(str, prefix, 0);
-    };
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.Resource');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Delay');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Promise');
-
-    var DEFAULT_ID = 'tinymce.plugins.emoticons';
-    var getEmoticonDatabase = function (editor) {
-      return editor.getParam('emoticons_database', 'emojis', 'string');
-    };
-    var getEmoticonDatabaseUrl = function (editor, pluginUrl) {
-      var database = getEmoticonDatabase(editor);
-      return editor.getParam('emoticons_database_url', pluginUrl + '/js/' + database + editor.suffix + '.js', 'string');
-    };
-    var getEmoticonDatabaseId = function (editor) {
-      return editor.getParam('emoticons_database_id', DEFAULT_ID, 'string');
-    };
-    var getAppendedEmoticons = function (editor) {
-      return editor.getParam('emoticons_append', {}, 'object');
-    };
-    var getEmotionsImageUrl = function (editor) {
-      return editor.getParam('emoticons_images_url', 'https://twemoji.maxcdn.com/v/13.0.1/72x72/', 'string');
-    };
-
-    var ALL_CATEGORY = 'All';
-    var categoryNameMap = {
-      symbols: 'Symbols',
-      people: 'People',
-      animals_and_nature: 'Animals and Nature',
-      food_and_drink: 'Food and Drink',
-      activity: 'Activity',
-      travel_and_places: 'Travel and Places',
-      objects: 'Objects',
-      flags: 'Flags',
-      user: 'User Defined'
-    };
-    var translateCategory = function (categories, name) {
-      return has(categories, name) ? categories[name] : name;
-    };
-    var getUserDefinedEmoticons = function (editor) {
-      var userDefinedEmoticons = getAppendedEmoticons(editor);
-      return map(userDefinedEmoticons, function (value) {
-        return __assign({
-          keywords: [],
-          category: 'user'
-        }, value);
-      });
-    };
-    var initDatabase = function (editor, databaseUrl, databaseId) {
-      var categories = value();
-      var all = value();
-      var emojiImagesUrl = getEmotionsImageUrl(editor);
-      var getEmoji = function (lib) {
-        if (startsWith(lib.char, '<img')) {
-          return lib.char.replace(/src="([^"]+)"/, function (match, url) {
-            return 'src="' + emojiImagesUrl + url + '"';
-          });
-        } else {
-          return lib.char;
-        }
-      };
-      var processEmojis = function (emojis) {
-        var cats = {};
-        var everything = [];
-        each(emojis, function (lib, title) {
-          var entry = {
-            title: title,
-            keywords: lib.keywords,
-            char: getEmoji(lib),
-            category: translateCategory(categoryNameMap, lib.category)
-          };
-          var current = cats[entry.category] !== undefined ? cats[entry.category] : [];
-          cats[entry.category] = current.concat([entry]);
-          everything.push(entry);
-        });
-        categories.set(cats);
-        all.set(everything);
-      };
-      editor.on('init', function () {
-        global$2.load(databaseId, databaseUrl).then(function (emojis) {
-          var userEmojis = getUserDefinedEmoticons(editor);
-          processEmojis(merge(emojis, userEmojis));
-        }, function (err) {
-          console.log('Failed to load emoticons: ' + err);
-          categories.set({});
-          all.set([]);
-        });
-      });
-      var listCategory = function (category) {
-        if (category === ALL_CATEGORY) {
-          return listAll();
-        }
-        return categories.get().bind(function (cats) {
-          return Optional.from(cats[category]);
-        }).getOr([]);
-      };
-      var listAll = function () {
-        return all.get().getOr([]);
-      };
-      var listCategories = function () {
-        return [ALL_CATEGORY].concat(keys(categories.get().getOr({})));
-      };
-      var waitForLoad = function () {
-        if (hasLoaded()) {
-          return global.resolve(true);
-        } else {
-          return new global(function (resolve, reject) {
-            var numRetries = 15;
-            var interval = global$1.setInterval(function () {
-              if (hasLoaded()) {
-                global$1.clearInterval(interval);
-                resolve(true);
-              } else {
-                numRetries--;
-                if (numRetries < 0) {
-                  console.log('Could not load emojis from url: ' + databaseUrl);
-                  global$1.clearInterval(interval);
-                  reject(false);
-                }
-              }
-            }, 100);
-          });
-        }
-      };
-      var hasLoaded = function () {
-        return categories.isSet() && all.isSet();
-      };
-      return {
-        listCategories: listCategories,
-        hasLoaded: hasLoaded,
-        waitForLoad: waitForLoad,
-        listAll: listAll,
-        listCategory: listCategory
-      };
-    };
-
-    var emojiMatches = function (emoji, lowerCasePattern) {
-      return contains(emoji.title.toLowerCase(), lowerCasePattern) || exists(emoji.keywords, function (k) {
-        return contains(k.toLowerCase(), lowerCasePattern);
-      });
-    };
-    var emojisFrom = function (list, pattern, maxResults) {
-      var matches = [];
-      var lowerCasePattern = pattern.toLowerCase();
-      var reachedLimit = maxResults.fold(function () {
-        return never;
-      }, function (max) {
-        return function (size) {
-          return size >= max;
-        };
-      });
-      for (var i = 0; i < list.length; i++) {
-        if (pattern.length === 0 || emojiMatches(list[i], lowerCasePattern)) {
-          matches.push({
-            value: list[i].char,
-            text: list[i].title,
-            icon: list[i].char
-          });
-          if (reachedLimit(matches.length)) {
-            break;
-          }
-        }
-      }
-      return matches;
-    };
-
-    var patternName = 'pattern';
-    var open = function (editor, database) {
-      var initialState = {
-        pattern: '',
-        results: emojisFrom(database.listAll(), '', Optional.some(300))
-      };
-      var currentTab = Cell(ALL_CATEGORY);
-      var scan = function (dialogApi) {
-        var dialogData = dialogApi.getData();
-        var category = currentTab.get();
-        var candidates = database.listCategory(category);
-        var results = emojisFrom(candidates, dialogData[patternName], category === ALL_CATEGORY ? Optional.some(300) : Optional.none());
-        dialogApi.setData({ results: results });
-      };
-      var updateFilter = last(function (dialogApi) {
-        scan(dialogApi);
-      }, 200);
-      var searchField = {
-        label: 'Search',
-        type: 'input',
-        name: patternName
-      };
-      var resultsField = {
-        type: 'collection',
-        name: 'results'
-      };
-      var getInitialState = function () {
-        var body = {
-          type: 'tabpanel',
-          tabs: map$1(database.listCategories(), function (cat) {
-            return {
-              title: cat,
-              name: cat,
-              items: [
-                searchField,
-                resultsField
-              ]
-            };
-          })
-        };
-        return {
-          title: 'Emoticons',
-          size: 'normal',
-          body: body,
-          initialData: initialState,
-          onTabChange: function (dialogApi, details) {
-            currentTab.set(details.newTabName);
-            updateFilter.throttle(dialogApi);
-          },
-          onChange: updateFilter.throttle,
-          onAction: function (dialogApi, actionData) {
-            if (actionData.name === 'results') {
-              insertEmoticon(editor, actionData.value);
-              dialogApi.close();
-            }
-          },
-          buttons: [{
-              type: 'cancel',
-              text: 'Close',
-              primary: true
-            }]
-        };
-      };
-      var dialogApi = editor.windowManager.open(getInitialState());
-      dialogApi.focus(patternName);
-      if (!database.hasLoaded()) {
-        dialogApi.block('Loading emoticons...');
-        database.waitForLoad().then(function () {
-          dialogApi.redial(getInitialState());
-          updateFilter.throttle(dialogApi);
-          dialogApi.focus(patternName);
-          dialogApi.unblock();
-        }).catch(function (_err) {
-          dialogApi.redial({
-            title: 'Emoticons',
-            body: {
-              type: 'panel',
-              items: [{
-                  type: 'alertbanner',
-                  level: 'error',
-                  icon: 'warning',
-                  text: '<p>Could not load emoticons</p>'
-                }]
-            },
-            buttons: [{
-                type: 'cancel',
-                text: 'Close',
-                primary: true
-              }],
-            initialData: {
-              pattern: '',
-              results: []
-            }
-          });
-          dialogApi.focus(patternName);
-          dialogApi.unblock();
-        });
-      }
-    };
-
-    var register$1 = function (editor, database) {
-      editor.addCommand('mceEmoticons', function () {
-        return open(editor, database);
-      });
-    };
-
-    var setup = function (editor) {
-      editor.on('PreInit', function () {
-        editor.parser.addAttributeFilter('data-emoticon', function (nodes) {
-          each$1(nodes, function (node) {
-            node.attr('data-mce-resize', 'false');
-            node.attr('data-mce-placeholder', '1');
-          });
-        });
-      });
-    };
-
-    var init = function (editor, database) {
-      editor.ui.registry.addAutocompleter('emoticons', {
-        ch: ':',
-        columns: 'auto',
-        minChars: 2,
-        fetch: function (pattern, maxResults) {
-          return database.waitForLoad().then(function () {
-            var candidates = database.listAll();
-            return emojisFrom(candidates, pattern, Optional.some(maxResults));
-          });
-        },
-        onAction: function (autocompleteApi, rng, value) {
-          editor.selection.setRng(rng);
-          editor.insertContent(value);
-          autocompleteApi.hide();
-        }
-      });
-    };
-
-    var register = function (editor) {
-      var onAction = function () {
-        return editor.execCommand('mceEmoticons');
-      };
-      editor.ui.registry.addButton('emoticons', {
-        tooltip: 'Emoticons',
-        icon: 'emoji',
-        onAction: onAction
-      });
-      editor.ui.registry.addMenuItem('emoticons', {
-        text: 'Emoticons...',
-        icon: 'emoji',
-        onAction: onAction
-      });
-    };
-
-    function Plugin () {
-      global$3.add('emoticons', function (editor, pluginUrl) {
-        var databaseUrl = getEmoticonDatabaseUrl(editor, pluginUrl);
-        var databaseId = getEmoticonDatabaseId(editor);
-        var database = initDatabase(editor, databaseUrl, databaseId);
-        register$1(editor, database);
-        register(editor);
-        init(editor, database);
-        setup(editor);
       });
     }
 
@@ -56759,6 +56759,1843 @@ tinymce.IconManager.add('default', {
       global.add('hr', function (editor) {
         register$1(editor);
         register(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$4 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var typeOf = function (x) {
+      var t = typeof x;
+      if (x === null) {
+        return 'null';
+      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
+        return 'array';
+      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
+        return 'string';
+      } else {
+        return t;
+      }
+    };
+    var isType = function (type) {
+      return function (value) {
+        return typeOf(value) === type;
+      };
+    };
+    var isString = isType('string');
+    var isArray = isType('array');
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.EditorManager');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var shouldMergeClasses = function (editor) {
+      return editor.getParam('importcss_merge_classes');
+    };
+    var shouldImportExclusive = function (editor) {
+      return editor.getParam('importcss_exclusive');
+    };
+    var getSelectorConverter = function (editor) {
+      return editor.getParam('importcss_selector_converter');
+    };
+    var getSelectorFilter = function (editor) {
+      return editor.getParam('importcss_selector_filter');
+    };
+    var getCssGroups = function (editor) {
+      return editor.getParam('importcss_groups');
+    };
+    var shouldAppend = function (editor) {
+      return editor.getParam('importcss_append');
+    };
+    var getFileFilter = function (editor) {
+      return editor.getParam('importcss_file_filter');
+    };
+    var getSkin = function (editor) {
+      var skin = editor.getParam('skin');
+      return skin !== false ? skin || 'oxide' : false;
+    };
+    var getSkinUrl = function (editor) {
+      return editor.getParam('skin_url');
+    };
+
+    var nativePush = Array.prototype.push;
+    var map = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+    var flatten = function (xs) {
+      var r = [];
+      for (var i = 0, len = xs.length; i < len; ++i) {
+        if (!isArray(xs[i])) {
+          throw new Error('Arr.flatten item ' + i + ' was not an array, input: ' + xs);
+        }
+        nativePush.apply(r, xs[i]);
+      }
+      return r;
+    };
+    var bind = function (xs, f) {
+      return flatten(map(xs, f));
+    };
+
+    var generate = function () {
+      var ungroupedOrder = [];
+      var groupOrder = [];
+      var groups = {};
+      var addItemToGroup = function (groupTitle, itemInfo) {
+        if (groups[groupTitle]) {
+          groups[groupTitle].push(itemInfo);
+        } else {
+          groupOrder.push(groupTitle);
+          groups[groupTitle] = [itemInfo];
+        }
+      };
+      var addItem = function (itemInfo) {
+        ungroupedOrder.push(itemInfo);
+      };
+      var toFormats = function () {
+        var groupItems = bind(groupOrder, function (g) {
+          var items = groups[g];
+          return items.length === 0 ? [] : [{
+              title: g,
+              items: items
+            }];
+        });
+        return groupItems.concat(ungroupedOrder);
+      };
+      return {
+        addItemToGroup: addItemToGroup,
+        addItem: addItem,
+        toFormats: toFormats
+      };
+    };
+
+    var internalEditorStyle = /^\.(?:ephox|tiny-pageembed|mce)(?:[.-]+\w+)+$/;
+    var removeCacheSuffix = function (url) {
+      var cacheSuffix = global$1.cacheSuffix;
+      if (isString(url)) {
+        url = url.replace('?' + cacheSuffix, '').replace('&' + cacheSuffix, '');
+      }
+      return url;
+    };
+    var isSkinContentCss = function (editor, href) {
+      var skin = getSkin(editor);
+      if (skin) {
+        var skinUrlBase = getSkinUrl(editor);
+        var skinUrl = skinUrlBase ? editor.documentBaseURI.toAbsolute(skinUrlBase) : global$2.baseURL + '/skins/ui/' + skin;
+        var contentSkinUrlPart = global$2.baseURL + '/skins/content/';
+        return href === skinUrl + '/content' + (editor.inline ? '.inline' : '') + '.min.css' || href.indexOf(contentSkinUrlPart) !== -1;
+      }
+      return false;
+    };
+    var compileFilter = function (filter) {
+      if (isString(filter)) {
+        return function (value) {
+          return value.indexOf(filter) !== -1;
+        };
+      } else if (filter instanceof RegExp) {
+        return function (value) {
+          return filter.test(value);
+        };
+      }
+      return filter;
+    };
+    var isCssImportRule = function (rule) {
+      return rule.styleSheet;
+    };
+    var isCssPageRule = function (rule) {
+      return rule.selectorText;
+    };
+    var getSelectors = function (editor, doc, fileFilter) {
+      var selectors = [];
+      var contentCSSUrls = {};
+      var append = function (styleSheet, imported) {
+        var href = styleSheet.href, rules;
+        href = removeCacheSuffix(href);
+        if (!href || !fileFilter(href, imported) || isSkinContentCss(editor, href)) {
+          return;
+        }
+        global.each(styleSheet.imports, function (styleSheet) {
+          append(styleSheet, true);
+        });
+        try {
+          rules = styleSheet.cssRules || styleSheet.rules;
+        } catch (e) {
+        }
+        global.each(rules, function (cssRule) {
+          if (isCssImportRule(cssRule)) {
+            append(cssRule.styleSheet, true);
+          } else if (isCssPageRule(cssRule)) {
+            global.each(cssRule.selectorText.split(','), function (selector) {
+              selectors.push(global.trim(selector));
+            });
+          }
+        });
+      };
+      global.each(editor.contentCSS, function (url) {
+        contentCSSUrls[url] = true;
+      });
+      if (!fileFilter) {
+        fileFilter = function (href, imported) {
+          return imported || contentCSSUrls[href];
+        };
+      }
+      try {
+        global.each(doc.styleSheets, function (styleSheet) {
+          append(styleSheet);
+        });
+      } catch (e) {
+      }
+      return selectors;
+    };
+    var defaultConvertSelectorToFormat = function (editor, selectorText) {
+      var format;
+      var selector = /^(?:([a-z0-9\-_]+))?(\.[a-z0-9_\-\.]+)$/i.exec(selectorText);
+      if (!selector) {
+        return;
+      }
+      var elementName = selector[1];
+      var classes = selector[2].substr(1).split('.').join(' ');
+      var inlineSelectorElements = global.makeMap('a,img');
+      if (selector[1]) {
+        format = { title: selectorText };
+        if (editor.schema.getTextBlockElements()[elementName]) {
+          format.block = elementName;
+        } else if (editor.schema.getBlockElements()[elementName] || inlineSelectorElements[elementName.toLowerCase()]) {
+          format.selector = elementName;
+        } else {
+          format.inline = elementName;
+        }
+      } else if (selector[2]) {
+        format = {
+          inline: 'span',
+          title: selectorText.substr(1),
+          classes: classes
+        };
+      }
+      if (shouldMergeClasses(editor) !== false) {
+        format.classes = classes;
+      } else {
+        format.attributes = { class: classes };
+      }
+      return format;
+    };
+    var getGroupsBySelector = function (groups, selector) {
+      return global.grep(groups, function (group) {
+        return !group.filter || group.filter(selector);
+      });
+    };
+    var compileUserDefinedGroups = function (groups) {
+      return global.map(groups, function (group) {
+        return global.extend({}, group, {
+          original: group,
+          selectors: {},
+          filter: compileFilter(group.filter)
+        });
+      });
+    };
+    var isExclusiveMode = function (editor, group) {
+      return group === null || shouldImportExclusive(editor) !== false;
+    };
+    var isUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
+      return !(isExclusiveMode(editor, group) ? selector in globallyUniqueSelectors : selector in group.selectors);
+    };
+    var markUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
+      if (isExclusiveMode(editor, group)) {
+        globallyUniqueSelectors[selector] = true;
+      } else {
+        group.selectors[selector] = true;
+      }
+    };
+    var convertSelectorToFormat = function (editor, plugin, selector, group) {
+      var selectorConverter;
+      if (group && group.selector_converter) {
+        selectorConverter = group.selector_converter;
+      } else if (getSelectorConverter(editor)) {
+        selectorConverter = getSelectorConverter(editor);
+      } else {
+        selectorConverter = function () {
+          return defaultConvertSelectorToFormat(editor, selector);
+        };
+      }
+      return selectorConverter.call(plugin, selector, group);
+    };
+    var setup = function (editor) {
+      editor.on('init', function () {
+        var model = generate();
+        var globallyUniqueSelectors = {};
+        var selectorFilter = compileFilter(getSelectorFilter(editor));
+        var groups = compileUserDefinedGroups(getCssGroups(editor));
+        var processSelector = function (selector, group) {
+          if (isUniqueSelector(editor, selector, group, globallyUniqueSelectors)) {
+            markUniqueSelector(editor, selector, group, globallyUniqueSelectors);
+            var format = convertSelectorToFormat(editor, editor.plugins.importcss, selector, group);
+            if (format) {
+              var formatName = format.name || global$3.DOM.uniqueId();
+              editor.formatter.register(formatName, format);
+              return {
+                title: format.title,
+                format: formatName
+              };
+            }
+          }
+          return null;
+        };
+        global.each(getSelectors(editor, editor.getDoc(), compileFilter(getFileFilter(editor))), function (selector) {
+          if (!internalEditorStyle.test(selector)) {
+            if (!selectorFilter || selectorFilter(selector)) {
+              var selectorGroups = getGroupsBySelector(groups, selector);
+              if (selectorGroups.length > 0) {
+                global.each(selectorGroups, function (group) {
+                  var menuItem = processSelector(selector, group);
+                  if (menuItem) {
+                    model.addItemToGroup(group.title, menuItem);
+                  }
+                });
+              } else {
+                var menuItem = processSelector(selector, null);
+                if (menuItem) {
+                  model.addItem(menuItem);
+                }
+              }
+            }
+          }
+        });
+        var items = model.toFormats();
+        editor.fire('addStyleModifications', {
+          items: items,
+          replace: !shouldAppend(editor)
+        });
+      });
+    };
+
+    var get = function (editor) {
+      var convertSelectorToFormat = function (selectorText) {
+        return defaultConvertSelectorToFormat(editor, selectorText);
+      };
+      return { convertSelectorToFormat: convertSelectorToFormat };
+    };
+
+    function Plugin () {
+      global$4.add('importcss', function (editor) {
+        setup(editor);
+        return get(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var getFontSizeFormats = function (editor) {
+      return editor.getParam('fontsize_formats');
+    };
+    var setFontSizeFormats = function (editor, fontsize_formats) {
+      editor.settings.fontsize_formats = fontsize_formats;
+    };
+    var getFontFormats = function (editor) {
+      return editor.getParam('font_formats');
+    };
+    var setFontFormats = function (editor, font_formats) {
+      editor.settings.font_formats = font_formats;
+    };
+    var getFontSizeStyleValues = function (editor) {
+      return editor.getParam('font_size_style_values', 'xx-small,x-small,small,medium,large,x-large,xx-large');
+    };
+    var setInlineStyles = function (editor, inline_styles) {
+      editor.settings.inline_styles = inline_styles;
+    };
+
+    var overrideFormats = function (editor) {
+      var alignElements = 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table', fontSizes = global.explode(getFontSizeStyleValues(editor)), schema = editor.schema;
+      editor.formatter.register({
+        alignleft: {
+          selector: alignElements,
+          attributes: { align: 'left' }
+        },
+        aligncenter: {
+          selector: alignElements,
+          attributes: { align: 'center' }
+        },
+        alignright: {
+          selector: alignElements,
+          attributes: { align: 'right' }
+        },
+        alignjustify: {
+          selector: alignElements,
+          attributes: { align: 'justify' }
+        },
+        bold: [
+          {
+            inline: 'b',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'strong',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'span',
+            styles: { fontWeight: 'bold' }
+          }
+        ],
+        italic: [
+          {
+            inline: 'i',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'em',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'span',
+            styles: { fontStyle: 'italic' }
+          }
+        ],
+        underline: [
+          {
+            inline: 'u',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'span',
+            styles: { textDecoration: 'underline' },
+            exact: true
+          }
+        ],
+        strikethrough: [
+          {
+            inline: 'strike',
+            remove: 'all',
+            preserve_attributes: [
+              'class',
+              'style'
+            ]
+          },
+          {
+            inline: 'span',
+            styles: { textDecoration: 'line-through' },
+            exact: true
+          }
+        ],
+        fontname: {
+          inline: 'font',
+          toggle: false,
+          attributes: { face: '%value' }
+        },
+        fontsize: {
+          inline: 'font',
+          toggle: false,
+          attributes: {
+            size: function (vars) {
+              return String(global.inArray(fontSizes, vars.value) + 1);
+            }
+          }
+        },
+        forecolor: {
+          inline: 'font',
+          attributes: { color: '%value' },
+          links: true,
+          remove_similar: true,
+          clear_child_styles: true
+        },
+        hilitecolor: {
+          inline: 'font',
+          styles: { backgroundColor: '%value' },
+          links: true,
+          remove_similar: true,
+          clear_child_styles: true
+        }
+      });
+      global.each('b,i,u,strike'.split(','), function (name) {
+        schema.addValidElements(name + '[*]');
+      });
+      if (!schema.getElementRule('font')) {
+        schema.addValidElements('font[face|size|color|style]');
+      }
+      global.each(alignElements.split(','), function (name) {
+        var rule = schema.getElementRule(name);
+        if (rule) {
+          if (!rule.attributes.align) {
+            rule.attributes.align = {};
+            rule.attributesOrder.push('align');
+          }
+        }
+      });
+    };
+    var overrideSettings = function (editor) {
+      var defaultFontsizeFormats = '8pt=1 10pt=2 12pt=3 14pt=4 18pt=5 24pt=6 36pt=7';
+      var defaultFontsFormats = 'Andale Mono=andale mono,monospace;' + 'Arial=arial,helvetica,sans-serif;' + 'Arial Black=arial black,sans-serif;' + 'Book Antiqua=book antiqua,palatino,serif;' + 'Comic Sans MS=comic sans ms,sans-serif;' + 'Courier New=courier new,courier,monospace;' + 'Georgia=georgia,palatino,serif;' + 'Helvetica=helvetica,arial,sans-serif;' + 'Impact=impact,sans-serif;' + 'Symbol=symbol;' + 'Tahoma=tahoma,arial,helvetica,sans-serif;' + 'Terminal=terminal,monaco,monospace;' + 'Times New Roman=times new roman,times,serif;' + 'Trebuchet MS=trebuchet ms,geneva,sans-serif;' + 'Verdana=verdana,geneva,sans-serif;' + 'Webdings=webdings;' + 'Wingdings=wingdings,zapf dingbats';
+      setInlineStyles(editor, false);
+      if (!getFontSizeFormats(editor)) {
+        setFontSizeFormats(editor, defaultFontsizeFormats);
+      }
+      if (!getFontFormats(editor)) {
+        setFontFormats(editor, defaultFontsFormats);
+      }
+    };
+    var setup = function (editor) {
+      overrideSettings(editor);
+      editor.on('PreInit', function () {
+        return overrideFormats(editor);
+      });
+    };
+
+    function Plugin () {
+      global$1.add('legacyoutput', function (editor) {
+        setup(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$7 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var global$6 = tinymce.util.Tools.resolve('tinymce.util.VK');
+
+    var typeOf = function (x) {
+      var t = typeof x;
+      if (x === null) {
+        return 'null';
+      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
+        return 'array';
+      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
+        return 'string';
+      } else {
+        return t;
+      }
+    };
+    var isType = function (type) {
+      return function (value) {
+        return typeOf(value) === type;
+      };
+    };
+    var isSimpleType = function (type) {
+      return function (value) {
+        return typeof value === type;
+      };
+    };
+    var eq = function (t) {
+      return function (a) {
+        return t === a;
+      };
+    };
+    var isString = isType('string');
+    var isArray = isType('array');
+    var isNull = eq(null);
+    var isBoolean = isSimpleType('boolean');
+    var isFunction = isSimpleType('function');
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var identity = function (x) {
+      return x;
+    };
+    var tripleEquals = function (a, b) {
+      return a === b;
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = identity;
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || 'error: getOrDie called on none.');
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: function () {
+          return none();
+        },
+        toArray: function () {
+          return [];
+        },
+        toString: constant('none()')
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return 'some(' + a + ')';
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Optional = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var nativeIndexOf = Array.prototype.indexOf;
+    var nativePush = Array.prototype.push;
+    var rawIndexOf = function (ts, t) {
+      return nativeIndexOf.call(ts, t);
+    };
+    var contains = function (xs, x) {
+      return rawIndexOf(xs, x) > -1;
+    };
+    var map = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+    var each$1 = function (xs, f) {
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        f(x, i);
+      }
+    };
+    var foldl = function (xs, f, acc) {
+      each$1(xs, function (x, i) {
+        acc = f(acc, x, i);
+      });
+      return acc;
+    };
+    var flatten = function (xs) {
+      var r = [];
+      for (var i = 0, len = xs.length; i < len; ++i) {
+        if (!isArray(xs[i])) {
+          throw new Error('Arr.flatten item ' + i + ' was not an array, input: ' + xs);
+        }
+        nativePush.apply(r, xs[i]);
+      }
+      return r;
+    };
+    var bind = function (xs, f) {
+      return flatten(map(xs, f));
+    };
+    var findMap = function (arr, f) {
+      for (var i = 0; i < arr.length; i++) {
+        var r = f(arr[i], i);
+        if (r.isSome()) {
+          return r;
+        }
+      }
+      return Optional.none();
+    };
+
+    var is = function (lhs, rhs, comparator) {
+      if (comparator === void 0) {
+        comparator = tripleEquals;
+      }
+      return lhs.exists(function (left) {
+        return comparator(left, rhs);
+      });
+    };
+    var cat = function (arr) {
+      var r = [];
+      var push = function (x) {
+        r.push(x);
+      };
+      for (var i = 0; i < arr.length; i++) {
+        arr[i].each(push);
+      }
+      return r;
+    };
+    var someIf = function (b, a) {
+      return b ? Optional.some(a) : Optional.none();
+    };
+
+    var assumeExternalTargets = function (editor) {
+      var externalTargets = editor.getParam('link_assume_external_targets', false);
+      if (isBoolean(externalTargets) && externalTargets) {
+        return 1;
+      } else if (isString(externalTargets) && (externalTargets === 'http' || externalTargets === 'https')) {
+        return externalTargets;
+      }
+      return 0;
+    };
+    var hasContextToolbar = function (editor) {
+      return editor.getParam('link_context_toolbar', false, 'boolean');
+    };
+    var getLinkList = function (editor) {
+      return editor.getParam('link_list');
+    };
+    var getDefaultLinkTarget = function (editor) {
+      return editor.getParam('default_link_target');
+    };
+    var getTargetList = function (editor) {
+      return editor.getParam('target_list', true);
+    };
+    var getRelList = function (editor) {
+      return editor.getParam('rel_list', [], 'array');
+    };
+    var getLinkClassList = function (editor) {
+      return editor.getParam('link_class_list', [], 'array');
+    };
+    var shouldShowLinkTitle = function (editor) {
+      return editor.getParam('link_title', true, 'boolean');
+    };
+    var allowUnsafeLinkTarget = function (editor) {
+      return editor.getParam('allow_unsafe_link_target', false, 'boolean');
+    };
+    var useQuickLink = function (editor) {
+      return editor.getParam('link_quicklink', false, 'boolean');
+    };
+    var getDefaultLinkProtocol = function (editor) {
+      return editor.getParam('link_default_protocol', 'http', 'string');
+    };
+
+    var global$5 = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var getValue = function (item) {
+      return isString(item.value) ? item.value : '';
+    };
+    var getText = function (item) {
+      if (isString(item.text)) {
+        return item.text;
+      } else if (isString(item.title)) {
+        return item.title;
+      } else {
+        return '';
+      }
+    };
+    var sanitizeList = function (list, extractValue) {
+      var out = [];
+      global$5.each(list, function (item) {
+        var text = getText(item);
+        if (item.menu !== undefined) {
+          var items = sanitizeList(item.menu, extractValue);
+          out.push({
+            text: text,
+            items: items
+          });
+        } else {
+          var value = extractValue(item);
+          out.push({
+            text: text,
+            value: value
+          });
+        }
+      });
+      return out;
+    };
+    var sanitizeWith = function (extracter) {
+      if (extracter === void 0) {
+        extracter = getValue;
+      }
+      return function (list) {
+        return Optional.from(list).map(function (list) {
+          return sanitizeList(list, extracter);
+        });
+      };
+    };
+    var sanitize = function (list) {
+      return sanitizeWith(getValue)(list);
+    };
+    var createUi = function (name, label) {
+      return function (items) {
+        return {
+          name: name,
+          type: 'listbox',
+          label: label,
+          items: items
+        };
+      };
+    };
+    var ListOptions = {
+      sanitize: sanitize,
+      sanitizeWith: sanitizeWith,
+      createUi: createUi,
+      getValue: getValue
+    };
+
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+
+    var keys = Object.keys;
+    var hasOwnProperty = Object.hasOwnProperty;
+    var each = function (obj, f) {
+      var props = keys(obj);
+      for (var k = 0, len = props.length; k < len; k++) {
+        var i = props[k];
+        var x = obj[i];
+        f(x, i);
+      }
+    };
+    var objAcc = function (r) {
+      return function (x, i) {
+        r[i] = x;
+      };
+    };
+    var internalFilter = function (obj, pred, onTrue, onFalse) {
+      var r = {};
+      each(obj, function (x, i) {
+        (pred(x, i) ? onTrue : onFalse)(x, i);
+      });
+      return r;
+    };
+    var filter = function (obj, pred) {
+      var t = {};
+      internalFilter(obj, pred, objAcc(t), noop);
+      return t;
+    };
+    var has = function (obj, key) {
+      return hasOwnProperty.call(obj, key);
+    };
+    var hasNonNullableKey = function (obj, key) {
+      return has(obj, key) && obj[key] !== undefined && obj[key] !== null;
+    };
+
+    var global$4 = tinymce.util.Tools.resolve('tinymce.dom.TreeWalker');
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.util.URI');
+
+    var isAnchor = function (elm) {
+      return elm && elm.nodeName.toLowerCase() === 'a';
+    };
+    var isLink = function (elm) {
+      return isAnchor(elm) && !!getHref(elm);
+    };
+    var collectNodesInRange = function (rng, predicate) {
+      if (rng.collapsed) {
+        return [];
+      } else {
+        var contents = rng.cloneContents();
+        var walker = new global$4(contents.firstChild, contents);
+        var elements = [];
+        var current = contents.firstChild;
+        do {
+          if (predicate(current)) {
+            elements.push(current);
+          }
+        } while (current = walker.next());
+        return elements;
+      }
+    };
+    var hasProtocol = function (url) {
+      return /^\w+:/i.test(url);
+    };
+    var getHref = function (elm) {
+      var href = elm.getAttribute('data-mce-href');
+      return href ? href : elm.getAttribute('href');
+    };
+    var applyRelTargetRules = function (rel, isUnsafe) {
+      var rules = ['noopener'];
+      var rels = rel ? rel.split(/\s+/) : [];
+      var toString = function (rels) {
+        return global$5.trim(rels.sort().join(' '));
+      };
+      var addTargetRules = function (rels) {
+        rels = removeTargetRules(rels);
+        return rels.length > 0 ? rels.concat(rules) : rules;
+      };
+      var removeTargetRules = function (rels) {
+        return rels.filter(function (val) {
+          return global$5.inArray(rules, val) === -1;
+        });
+      };
+      var newRels = isUnsafe ? addTargetRules(rels) : removeTargetRules(rels);
+      return newRels.length > 0 ? toString(newRels) : '';
+    };
+    var trimCaretContainers = function (text) {
+      return text.replace(/\uFEFF/g, '');
+    };
+    var getAnchorElement = function (editor, selectedElm) {
+      selectedElm = selectedElm || editor.selection.getNode();
+      if (isImageFigure(selectedElm)) {
+        return editor.dom.select('a[href]', selectedElm)[0];
+      } else {
+        return editor.dom.getParent(selectedElm, 'a[href]');
+      }
+    };
+    var getAnchorText = function (selection, anchorElm) {
+      var text = anchorElm ? anchorElm.innerText || anchorElm.textContent : selection.getContent({ format: 'text' });
+      return trimCaretContainers(text);
+    };
+    var hasLinks = function (elements) {
+      return global$5.grep(elements, isLink).length > 0;
+    };
+    var hasLinksInSelection = function (rng) {
+      return collectNodesInRange(rng, isLink).length > 0;
+    };
+    var isOnlyTextSelected = function (editor) {
+      var inlineTextElements = editor.schema.getTextInlineElements();
+      var isElement = function (elm) {
+        return elm.nodeType === 1 && !isAnchor(elm) && !has(inlineTextElements, elm.nodeName.toLowerCase());
+      };
+      var elements = collectNodesInRange(editor.selection.getRng(), isElement);
+      return elements.length === 0;
+    };
+    var isImageFigure = function (elm) {
+      return elm && elm.nodeName === 'FIGURE' && /\bimage\b/i.test(elm.className);
+    };
+    var getLinkAttrs = function (data) {
+      var attrs = [
+        'title',
+        'rel',
+        'class',
+        'target'
+      ];
+      return foldl(attrs, function (acc, key) {
+        data[key].each(function (value) {
+          acc[key] = value.length > 0 ? value : null;
+        });
+        return acc;
+      }, { href: data.href });
+    };
+    var handleExternalTargets = function (href, assumeExternalTargets) {
+      if ((assumeExternalTargets === 'http' || assumeExternalTargets === 'https') && !hasProtocol(href)) {
+        return assumeExternalTargets + '://' + href;
+      }
+      return href;
+    };
+    var applyLinkOverrides = function (editor, linkAttrs) {
+      var newLinkAttrs = __assign({}, linkAttrs);
+      if (!(getRelList(editor).length > 0) && allowUnsafeLinkTarget(editor) === false) {
+        var newRel = applyRelTargetRules(newLinkAttrs.rel, newLinkAttrs.target === '_blank');
+        newLinkAttrs.rel = newRel ? newRel : null;
+      }
+      if (Optional.from(newLinkAttrs.target).isNone() && getTargetList(editor) === false) {
+        newLinkAttrs.target = getDefaultLinkTarget(editor);
+      }
+      newLinkAttrs.href = handleExternalTargets(newLinkAttrs.href, assumeExternalTargets(editor));
+      return newLinkAttrs;
+    };
+    var updateLink = function (editor, anchorElm, text, linkAttrs) {
+      text.each(function (text) {
+        if (has(anchorElm, 'innerText')) {
+          anchorElm.innerText = text;
+        } else {
+          anchorElm.textContent = text;
+        }
+      });
+      editor.dom.setAttribs(anchorElm, linkAttrs);
+      editor.selection.select(anchorElm);
+    };
+    var createLink = function (editor, selectedElm, text, linkAttrs) {
+      if (isImageFigure(selectedElm)) {
+        linkImageFigure(editor, selectedElm, linkAttrs);
+      } else {
+        text.fold(function () {
+          editor.execCommand('mceInsertLink', false, linkAttrs);
+        }, function (text) {
+          editor.insertContent(editor.dom.createHTML('a', linkAttrs, editor.dom.encode(text)));
+        });
+      }
+    };
+    var linkDomMutation = function (editor, attachState, data) {
+      var selectedElm = editor.selection.getNode();
+      var anchorElm = getAnchorElement(editor, selectedElm);
+      var linkAttrs = applyLinkOverrides(editor, getLinkAttrs(data));
+      editor.undoManager.transact(function () {
+        if (data.href === attachState.href) {
+          attachState.attach();
+        }
+        if (anchorElm) {
+          editor.focus();
+          updateLink(editor, anchorElm, data.text, linkAttrs);
+        } else {
+          createLink(editor, selectedElm, data.text, linkAttrs);
+        }
+      });
+    };
+    var unlinkSelection = function (editor) {
+      var dom = editor.dom, selection = editor.selection;
+      var bookmark = selection.getBookmark();
+      var rng = selection.getRng().cloneRange();
+      var startAnchorElm = dom.getParent(rng.startContainer, 'a[href]', editor.getBody());
+      var endAnchorElm = dom.getParent(rng.endContainer, 'a[href]', editor.getBody());
+      if (startAnchorElm) {
+        rng.setStartBefore(startAnchorElm);
+      }
+      if (endAnchorElm) {
+        rng.setEndAfter(endAnchorElm);
+      }
+      selection.setRng(rng);
+      editor.execCommand('unlink');
+      selection.moveToBookmark(bookmark);
+    };
+    var unlinkDomMutation = function (editor) {
+      editor.undoManager.transact(function () {
+        var node = editor.selection.getNode();
+        if (isImageFigure(node)) {
+          unlinkImageFigure(editor, node);
+        } else {
+          unlinkSelection(editor);
+        }
+        editor.focus();
+      });
+    };
+    var unwrapOptions = function (data) {
+      var cls = data.class, href = data.href, rel = data.rel, target = data.target, text = data.text, title = data.title;
+      return filter({
+        class: cls.getOrNull(),
+        href: href,
+        rel: rel.getOrNull(),
+        target: target.getOrNull(),
+        text: text.getOrNull(),
+        title: title.getOrNull()
+      }, function (v, _k) {
+        return isNull(v) === false;
+      });
+    };
+    var sanitizeData = function (editor, data) {
+      var href = data.href;
+      return __assign(__assign({}, data), { href: global$3.isDomSafe(href, 'a', editor.settings) ? href : '' });
+    };
+    var link = function (editor, attachState, data) {
+      var sanitizedData = sanitizeData(editor, data);
+      editor.hasPlugin('rtc', true) ? editor.execCommand('createlink', false, unwrapOptions(sanitizedData)) : linkDomMutation(editor, attachState, sanitizedData);
+    };
+    var unlink = function (editor) {
+      editor.hasPlugin('rtc', true) ? editor.execCommand('unlink') : unlinkDomMutation(editor);
+    };
+    var unlinkImageFigure = function (editor, fig) {
+      var img = editor.dom.select('img', fig)[0];
+      if (img) {
+        var a = editor.dom.getParents(img, 'a[href]', fig)[0];
+        if (a) {
+          a.parentNode.insertBefore(img, a);
+          editor.dom.remove(a);
+        }
+      }
+    };
+    var linkImageFigure = function (editor, fig, attrs) {
+      var img = editor.dom.select('img', fig)[0];
+      if (img) {
+        var a = editor.dom.create('a', attrs);
+        img.parentNode.insertBefore(a, img);
+        a.appendChild(img);
+      }
+    };
+
+    var isListGroup = function (item) {
+      return hasNonNullableKey(item, 'items');
+    };
+    var findTextByValue = function (value, catalog) {
+      return findMap(catalog, function (item) {
+        if (isListGroup(item)) {
+          return findTextByValue(value, item.items);
+        } else {
+          return someIf(item.value === value, item);
+        }
+      });
+    };
+    var getDelta = function (persistentText, fieldName, catalog, data) {
+      var value = data[fieldName];
+      var hasPersistentText = persistentText.length > 0;
+      return value !== undefined ? findTextByValue(value, catalog).map(function (i) {
+        return {
+          url: {
+            value: i.value,
+            meta: {
+              text: hasPersistentText ? persistentText : i.text,
+              attach: noop
+            }
+          },
+          text: hasPersistentText ? persistentText : i.text
+        };
+      }) : Optional.none();
+    };
+    var findCatalog = function (catalogs, fieldName) {
+      if (fieldName === 'link') {
+        return catalogs.link;
+      } else if (fieldName === 'anchor') {
+        return catalogs.anchor;
+      } else {
+        return Optional.none();
+      }
+    };
+    var init = function (initialData, linkCatalog) {
+      var persistentData = {
+        text: initialData.text,
+        title: initialData.title
+      };
+      var getTitleFromUrlChange = function (url) {
+        return someIf(persistentData.title.length <= 0, Optional.from(url.meta.title).getOr(''));
+      };
+      var getTextFromUrlChange = function (url) {
+        return someIf(persistentData.text.length <= 0, Optional.from(url.meta.text).getOr(url.value));
+      };
+      var onUrlChange = function (data) {
+        var text = getTextFromUrlChange(data.url);
+        var title = getTitleFromUrlChange(data.url);
+        if (text.isSome() || title.isSome()) {
+          return Optional.some(__assign(__assign({}, text.map(function (text) {
+            return { text: text };
+          }).getOr({})), title.map(function (title) {
+            return { title: title };
+          }).getOr({})));
+        } else {
+          return Optional.none();
+        }
+      };
+      var onCatalogChange = function (data, change) {
+        var catalog = findCatalog(linkCatalog, change.name).getOr([]);
+        return getDelta(persistentData.text, change.name, catalog, data);
+      };
+      var onChange = function (getData, change) {
+        var name = change.name;
+        if (name === 'url') {
+          return onUrlChange(getData());
+        } else if (contains([
+            'anchor',
+            'link'
+          ], name)) {
+          return onCatalogChange(getData(), change);
+        } else if (name === 'text' || name === 'title') {
+          persistentData[name] = getData()[name];
+          return Optional.none();
+        } else {
+          return Optional.none();
+        }
+      };
+      return { onChange: onChange };
+    };
+    var DialogChanges = {
+      init: init,
+      getDelta: getDelta
+    };
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Delay');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Promise');
+
+    var delayedConfirm = function (editor, message, callback) {
+      var rng = editor.selection.getRng();
+      global$2.setEditorTimeout(editor, function () {
+        editor.windowManager.confirm(message, function (state) {
+          editor.selection.setRng(rng);
+          callback(state);
+        });
+      });
+    };
+    var tryEmailTransform = function (data) {
+      var url = data.href;
+      var suggestMailTo = url.indexOf('@') > 0 && url.indexOf('/') === -1 && url.indexOf('mailto:') === -1;
+      return suggestMailTo ? Optional.some({
+        message: 'The URL you entered seems to be an email address. Do you want to add the required mailto: prefix?',
+        preprocess: function (oldData) {
+          return __assign(__assign({}, oldData), { href: 'mailto:' + url });
+        }
+      }) : Optional.none();
+    };
+    var tryProtocolTransform = function (assumeExternalTargets, defaultLinkProtocol) {
+      return function (data) {
+        var url = data.href;
+        var suggestProtocol = assumeExternalTargets === 1 && !hasProtocol(url) || assumeExternalTargets === 0 && /^\s*www(\.|\d\.)/i.test(url);
+        return suggestProtocol ? Optional.some({
+          message: 'The URL you entered seems to be an external link. Do you want to add the required ' + defaultLinkProtocol + ':// prefix?',
+          preprocess: function (oldData) {
+            return __assign(__assign({}, oldData), { href: defaultLinkProtocol + '://' + url });
+          }
+        }) : Optional.none();
+      };
+    };
+    var preprocess = function (editor, data) {
+      return findMap([
+        tryEmailTransform,
+        tryProtocolTransform(assumeExternalTargets(editor), getDefaultLinkProtocol(editor))
+      ], function (f) {
+        return f(data);
+      }).fold(function () {
+        return global$1.resolve(data);
+      }, function (transform) {
+        return new global$1(function (callback) {
+          delayedConfirm(editor, transform.message, function (state) {
+            callback(state ? transform.preprocess(data) : data);
+          });
+        });
+      });
+    };
+    var DialogConfirms = { preprocess: preprocess };
+
+    var getAnchors = function (editor) {
+      var anchorNodes = editor.dom.select('a:not([href])');
+      var anchors = bind(anchorNodes, function (anchor) {
+        var id = anchor.name || anchor.id;
+        return id ? [{
+            text: id,
+            value: '#' + id
+          }] : [];
+      });
+      return anchors.length > 0 ? Optional.some([{
+          text: 'None',
+          value: ''
+        }].concat(anchors)) : Optional.none();
+    };
+    var AnchorListOptions = { getAnchors: getAnchors };
+
+    var getClasses = function (editor) {
+      var list = getLinkClassList(editor);
+      if (list.length > 0) {
+        return ListOptions.sanitize(list);
+      }
+      return Optional.none();
+    };
+    var ClassListOptions = { getClasses: getClasses };
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.XHR');
+
+    var parseJson = function (text) {
+      try {
+        return Optional.some(JSON.parse(text));
+      } catch (err) {
+        return Optional.none();
+      }
+    };
+    var getLinks = function (editor) {
+      var extractor = function (item) {
+        return editor.convertURL(item.value || item.url, 'href');
+      };
+      var linkList = getLinkList(editor);
+      return new global$1(function (callback) {
+        if (isString(linkList)) {
+          global.send({
+            url: linkList,
+            success: function (text) {
+              return callback(parseJson(text));
+            },
+            error: function (_) {
+              return callback(Optional.none());
+            }
+          });
+        } else if (isFunction(linkList)) {
+          linkList(function (output) {
+            return callback(Optional.some(output));
+          });
+        } else {
+          callback(Optional.from(linkList));
+        }
+      }).then(function (optItems) {
+        return optItems.bind(ListOptions.sanitizeWith(extractor)).map(function (items) {
+          if (items.length > 0) {
+            var noneItem = [{
+                text: 'None',
+                value: ''
+              }];
+            return noneItem.concat(items);
+          } else {
+            return items;
+          }
+        });
+      });
+    };
+    var LinkListOptions = { getLinks: getLinks };
+
+    var getRels = function (editor, initialTarget) {
+      var list = getRelList(editor);
+      if (list.length > 0) {
+        var isTargetBlank_1 = is(initialTarget, '_blank');
+        var enforceSafe = allowUnsafeLinkTarget(editor) === false;
+        var safeRelExtractor = function (item) {
+          return applyRelTargetRules(ListOptions.getValue(item), isTargetBlank_1);
+        };
+        var sanitizer = enforceSafe ? ListOptions.sanitizeWith(safeRelExtractor) : ListOptions.sanitize;
+        return sanitizer(list);
+      }
+      return Optional.none();
+    };
+    var RelOptions = { getRels: getRels };
+
+    var fallbacks = [
+      {
+        text: 'Current window',
+        value: ''
+      },
+      {
+        text: 'New window',
+        value: '_blank'
+      }
+    ];
+    var getTargets = function (editor) {
+      var list = getTargetList(editor);
+      if (isArray(list)) {
+        return ListOptions.sanitize(list).orThunk(function () {
+          return Optional.some(fallbacks);
+        });
+      } else if (list === false) {
+        return Optional.none();
+      }
+      return Optional.some(fallbacks);
+    };
+    var TargetOptions = { getTargets: getTargets };
+
+    var nonEmptyAttr = function (dom, elem, name) {
+      var val = dom.getAttrib(elem, name);
+      return val !== null && val.length > 0 ? Optional.some(val) : Optional.none();
+    };
+    var extractFromAnchor = function (editor, anchor) {
+      var dom = editor.dom;
+      var onlyText = isOnlyTextSelected(editor);
+      var text = onlyText ? Optional.some(getAnchorText(editor.selection, anchor)) : Optional.none();
+      var url = anchor ? Optional.some(dom.getAttrib(anchor, 'href')) : Optional.none();
+      var target = anchor ? Optional.from(dom.getAttrib(anchor, 'target')) : Optional.none();
+      var rel = nonEmptyAttr(dom, anchor, 'rel');
+      var linkClass = nonEmptyAttr(dom, anchor, 'class');
+      var title = nonEmptyAttr(dom, anchor, 'title');
+      return {
+        url: url,
+        text: text,
+        title: title,
+        target: target,
+        rel: rel,
+        linkClass: linkClass
+      };
+    };
+    var collect = function (editor, linkNode) {
+      return LinkListOptions.getLinks(editor).then(function (links) {
+        var anchor = extractFromAnchor(editor, linkNode);
+        return {
+          anchor: anchor,
+          catalogs: {
+            targets: TargetOptions.getTargets(editor),
+            rels: RelOptions.getRels(editor, anchor.target),
+            classes: ClassListOptions.getClasses(editor),
+            anchor: AnchorListOptions.getAnchors(editor),
+            link: links
+          },
+          optNode: Optional.from(linkNode),
+          flags: { titleEnabled: shouldShowLinkTitle(editor) }
+        };
+      });
+    };
+    var DialogInfo = { collect: collect };
+
+    var handleSubmit = function (editor, info) {
+      return function (api) {
+        var data = api.getData();
+        if (!data.url.value) {
+          unlink(editor);
+          api.close();
+          return;
+        }
+        var getChangedValue = function (key) {
+          return Optional.from(data[key]).filter(function (value) {
+            return !is(info.anchor[key], value);
+          });
+        };
+        var changedData = {
+          href: data.url.value,
+          text: getChangedValue('text'),
+          target: getChangedValue('target'),
+          rel: getChangedValue('rel'),
+          class: getChangedValue('linkClass'),
+          title: getChangedValue('title')
+        };
+        var attachState = {
+          href: data.url.value,
+          attach: data.url.meta !== undefined && data.url.meta.attach ? data.url.meta.attach : noop
+        };
+        DialogConfirms.preprocess(editor, changedData).then(function (pData) {
+          link(editor, attachState, pData);
+        });
+        api.close();
+      };
+    };
+    var collectData = function (editor) {
+      var anchorNode = getAnchorElement(editor);
+      return DialogInfo.collect(editor, anchorNode);
+    };
+    var getInitialData = function (info, defaultTarget) {
+      var anchor = info.anchor;
+      var url = anchor.url.getOr('');
+      return {
+        url: {
+          value: url,
+          meta: { original: { value: url } }
+        },
+        text: anchor.text.getOr(''),
+        title: anchor.title.getOr(''),
+        anchor: url,
+        link: url,
+        rel: anchor.rel.getOr(''),
+        target: anchor.target.or(defaultTarget).getOr(''),
+        linkClass: anchor.linkClass.getOr('')
+      };
+    };
+    var makeDialog = function (settings, onSubmit, editor) {
+      var urlInput = [{
+          name: 'url',
+          type: 'urlinput',
+          filetype: 'file',
+          label: 'URL'
+        }];
+      var displayText = settings.anchor.text.map(function () {
+        return {
+          name: 'text',
+          type: 'input',
+          label: 'Text to display'
+        };
+      }).toArray();
+      var titleText = settings.flags.titleEnabled ? [{
+          name: 'title',
+          type: 'input',
+          label: 'Title'
+        }] : [];
+      var defaultTarget = Optional.from(getDefaultLinkTarget(editor));
+      var initialData = getInitialData(settings, defaultTarget);
+      var catalogs = settings.catalogs;
+      var dialogDelta = DialogChanges.init(initialData, catalogs);
+      var body = {
+        type: 'panel',
+        items: flatten([
+          urlInput,
+          displayText,
+          titleText,
+          cat([
+            catalogs.anchor.map(ListOptions.createUi('anchor', 'Anchors')),
+            catalogs.rels.map(ListOptions.createUi('rel', 'Rel')),
+            catalogs.targets.map(ListOptions.createUi('target', 'Open link in...')),
+            catalogs.link.map(ListOptions.createUi('link', 'Link list')),
+            catalogs.classes.map(ListOptions.createUi('linkClass', 'Class'))
+          ])
+        ])
+      };
+      return {
+        title: 'Insert/Edit Link',
+        size: 'normal',
+        body: body,
+        buttons: [
+          {
+            type: 'cancel',
+            name: 'cancel',
+            text: 'Cancel'
+          },
+          {
+            type: 'submit',
+            name: 'save',
+            text: 'Save',
+            primary: true
+          }
+        ],
+        initialData: initialData,
+        onChange: function (api, _a) {
+          var name = _a.name;
+          dialogDelta.onChange(api.getData, { name: name }).each(function (newData) {
+            api.setData(newData);
+          });
+        },
+        onSubmit: onSubmit
+      };
+    };
+    var open$1 = function (editor) {
+      var data = collectData(editor);
+      data.then(function (info) {
+        var onSubmit = handleSubmit(editor, info);
+        return makeDialog(info, onSubmit, editor);
+      }).then(function (spec) {
+        editor.windowManager.open(spec);
+      });
+    };
+
+    var appendClickRemove = function (link, evt) {
+      document.body.appendChild(link);
+      link.dispatchEvent(evt);
+      document.body.removeChild(link);
+    };
+    var open = function (url) {
+      var link = document.createElement('a');
+      link.target = '_blank';
+      link.href = url;
+      link.rel = 'noreferrer noopener';
+      var evt = document.createEvent('MouseEvents');
+      evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      appendClickRemove(link, evt);
+    };
+
+    var getLink = function (editor, elm) {
+      return editor.dom.getParent(elm, 'a[href]');
+    };
+    var getSelectedLink = function (editor) {
+      return getLink(editor, editor.selection.getStart());
+    };
+    var hasOnlyAltModifier = function (e) {
+      return e.altKey === true && e.shiftKey === false && e.ctrlKey === false && e.metaKey === false;
+    };
+    var gotoLink = function (editor, a) {
+      if (a) {
+        var href = getHref(a);
+        if (/^#/.test(href)) {
+          var targetEl = editor.$(href);
+          if (targetEl.length) {
+            editor.selection.scrollIntoView(targetEl[0], true);
+          }
+        } else {
+          open(a.href);
+        }
+      }
+    };
+    var openDialog = function (editor) {
+      return function () {
+        open$1(editor);
+      };
+    };
+    var gotoSelectedLink = function (editor) {
+      return function () {
+        gotoLink(editor, getSelectedLink(editor));
+      };
+    };
+    var setupGotoLinks = function (editor) {
+      editor.on('click', function (e) {
+        var link = getLink(editor, e.target);
+        if (link && global$6.metaKeyPressed(e)) {
+          e.preventDefault();
+          gotoLink(editor, link);
+        }
+      });
+      editor.on('keydown', function (e) {
+        var link = getSelectedLink(editor);
+        if (link && e.keyCode === 13 && hasOnlyAltModifier(e)) {
+          e.preventDefault();
+          gotoLink(editor, link);
+        }
+      });
+    };
+    var toggleState = function (editor, toggler) {
+      editor.on('NodeChange', toggler);
+      return function () {
+        return editor.off('NodeChange', toggler);
+      };
+    };
+    var toggleActiveState = function (editor) {
+      return function (api) {
+        var updateState = function () {
+          return api.setActive(!editor.mode.isReadOnly() && getAnchorElement(editor, editor.selection.getNode()) !== null);
+        };
+        updateState();
+        return toggleState(editor, updateState);
+      };
+    };
+    var toggleEnabledState = function (editor) {
+      return function (api) {
+        var updateState = function () {
+          return api.setDisabled(getAnchorElement(editor, editor.selection.getNode()) === null);
+        };
+        updateState();
+        return toggleState(editor, updateState);
+      };
+    };
+    var toggleUnlinkState = function (editor) {
+      return function (api) {
+        var hasLinks$1 = function (parents) {
+          return hasLinks(parents) || hasLinksInSelection(editor.selection.getRng());
+        };
+        var parents = editor.dom.getParents(editor.selection.getStart());
+        api.setDisabled(!hasLinks$1(parents));
+        return toggleState(editor, function (e) {
+          return api.setDisabled(!hasLinks$1(e.parents));
+        });
+      };
+    };
+
+    var register = function (editor) {
+      editor.addCommand('mceLink', function () {
+        if (useQuickLink(editor)) {
+          editor.fire('contexttoolbar-show', { toolbarKey: 'quicklink' });
+        } else {
+          openDialog(editor)();
+        }
+      });
+    };
+
+    var setup = function (editor) {
+      editor.addShortcut('Meta+K', '', function () {
+        editor.execCommand('mceLink');
+      });
+    };
+
+    var setupButtons = function (editor) {
+      editor.ui.registry.addToggleButton('link', {
+        icon: 'link',
+        tooltip: 'Insert/edit link',
+        onAction: openDialog(editor),
+        onSetup: toggleActiveState(editor)
+      });
+      editor.ui.registry.addButton('openlink', {
+        icon: 'new-tab',
+        tooltip: 'Open link',
+        onAction: gotoSelectedLink(editor),
+        onSetup: toggleEnabledState(editor)
+      });
+      editor.ui.registry.addButton('unlink', {
+        icon: 'unlink',
+        tooltip: 'Remove link',
+        onAction: function () {
+          return unlink(editor);
+        },
+        onSetup: toggleUnlinkState(editor)
+      });
+    };
+    var setupMenuItems = function (editor) {
+      editor.ui.registry.addMenuItem('openlink', {
+        text: 'Open link',
+        icon: 'new-tab',
+        onAction: gotoSelectedLink(editor),
+        onSetup: toggleEnabledState(editor)
+      });
+      editor.ui.registry.addMenuItem('link', {
+        icon: 'link',
+        text: 'Link...',
+        shortcut: 'Meta+K',
+        onAction: openDialog(editor)
+      });
+      editor.ui.registry.addMenuItem('unlink', {
+        icon: 'unlink',
+        text: 'Remove link',
+        onAction: function () {
+          return unlink(editor);
+        },
+        onSetup: toggleUnlinkState(editor)
+      });
+    };
+    var setupContextMenu = function (editor) {
+      var inLink = 'link unlink openlink';
+      var noLink = 'link';
+      editor.ui.registry.addContextMenu('link', {
+        update: function (element) {
+          return hasLinks(editor.dom.getParents(element, 'a')) ? inLink : noLink;
+        }
+      });
+    };
+    var setupContextToolbars = function (editor) {
+      var collapseSelectionToEnd = function (editor) {
+        editor.selection.collapse(false);
+      };
+      var onSetupLink = function (buttonApi) {
+        var node = editor.selection.getNode();
+        buttonApi.setDisabled(!getAnchorElement(editor, node));
+        return noop;
+      };
+      var getLinkText = function (value) {
+        var anchor = getAnchorElement(editor);
+        var onlyText = isOnlyTextSelected(editor);
+        if (!anchor && onlyText) {
+          var text = getAnchorText(editor.selection, anchor);
+          return Optional.some(text.length > 0 ? text : value);
+        } else {
+          return Optional.none();
+        }
+      };
+      editor.ui.registry.addContextForm('quicklink', {
+        launch: {
+          type: 'contextformtogglebutton',
+          icon: 'link',
+          tooltip: 'Link',
+          onSetup: toggleActiveState(editor)
+        },
+        label: 'Link',
+        predicate: function (node) {
+          return !!getAnchorElement(editor, node) && hasContextToolbar(editor);
+        },
+        initValue: function () {
+          var elm = getAnchorElement(editor);
+          return !!elm ? getHref(elm) : '';
+        },
+        commands: [
+          {
+            type: 'contextformtogglebutton',
+            icon: 'link',
+            tooltip: 'Link',
+            primary: true,
+            onSetup: function (buttonApi) {
+              var node = editor.selection.getNode();
+              buttonApi.setActive(!!getAnchorElement(editor, node));
+              return toggleActiveState(editor)(buttonApi);
+            },
+            onAction: function (formApi) {
+              var value = formApi.getValue();
+              var text = getLinkText(value);
+              var attachState = {
+                href: value,
+                attach: noop
+              };
+              link(editor, attachState, {
+                href: value,
+                text: text,
+                title: Optional.none(),
+                rel: Optional.none(),
+                target: Optional.none(),
+                class: Optional.none()
+              });
+              collapseSelectionToEnd(editor);
+              formApi.hide();
+            }
+          },
+          {
+            type: 'contextformbutton',
+            icon: 'unlink',
+            tooltip: 'Remove link',
+            onSetup: onSetupLink,
+            onAction: function (formApi) {
+              unlink(editor);
+              formApi.hide();
+            }
+          },
+          {
+            type: 'contextformbutton',
+            icon: 'new-tab',
+            tooltip: 'Open link',
+            onSetup: onSetupLink,
+            onAction: function (formApi) {
+              gotoSelectedLink(editor)();
+              formApi.hide();
+            }
+          }
+        ]
+      });
+    };
+
+    function Plugin () {
+      global$7.add('link', function (editor) {
+        setupButtons(editor);
+        setupMenuItems(editor);
+        setupContextMenu(editor);
+        setupContextToolbars(editor);
+        setupGotoLinks(editor);
+        register(editor);
+        setup(editor);
       });
     }
 
@@ -59976,349 +61813,6 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
-    var global$4 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var typeOf = function (x) {
-      var t = typeof x;
-      if (x === null) {
-        return 'null';
-      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
-        return 'array';
-      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
-        return 'string';
-      } else {
-        return t;
-      }
-    };
-    var isType = function (type) {
-      return function (value) {
-        return typeOf(value) === type;
-      };
-    };
-    var isString = isType('string');
-    var isArray = isType('array');
-
-    var global$3 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.EditorManager');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var shouldMergeClasses = function (editor) {
-      return editor.getParam('importcss_merge_classes');
-    };
-    var shouldImportExclusive = function (editor) {
-      return editor.getParam('importcss_exclusive');
-    };
-    var getSelectorConverter = function (editor) {
-      return editor.getParam('importcss_selector_converter');
-    };
-    var getSelectorFilter = function (editor) {
-      return editor.getParam('importcss_selector_filter');
-    };
-    var getCssGroups = function (editor) {
-      return editor.getParam('importcss_groups');
-    };
-    var shouldAppend = function (editor) {
-      return editor.getParam('importcss_append');
-    };
-    var getFileFilter = function (editor) {
-      return editor.getParam('importcss_file_filter');
-    };
-    var getSkin = function (editor) {
-      var skin = editor.getParam('skin');
-      return skin !== false ? skin || 'oxide' : false;
-    };
-    var getSkinUrl = function (editor) {
-      return editor.getParam('skin_url');
-    };
-
-    var nativePush = Array.prototype.push;
-    var map = function (xs, f) {
-      var len = xs.length;
-      var r = new Array(len);
-      for (var i = 0; i < len; i++) {
-        var x = xs[i];
-        r[i] = f(x, i);
-      }
-      return r;
-    };
-    var flatten = function (xs) {
-      var r = [];
-      for (var i = 0, len = xs.length; i < len; ++i) {
-        if (!isArray(xs[i])) {
-          throw new Error('Arr.flatten item ' + i + ' was not an array, input: ' + xs);
-        }
-        nativePush.apply(r, xs[i]);
-      }
-      return r;
-    };
-    var bind = function (xs, f) {
-      return flatten(map(xs, f));
-    };
-
-    var generate = function () {
-      var ungroupedOrder = [];
-      var groupOrder = [];
-      var groups = {};
-      var addItemToGroup = function (groupTitle, itemInfo) {
-        if (groups[groupTitle]) {
-          groups[groupTitle].push(itemInfo);
-        } else {
-          groupOrder.push(groupTitle);
-          groups[groupTitle] = [itemInfo];
-        }
-      };
-      var addItem = function (itemInfo) {
-        ungroupedOrder.push(itemInfo);
-      };
-      var toFormats = function () {
-        var groupItems = bind(groupOrder, function (g) {
-          var items = groups[g];
-          return items.length === 0 ? [] : [{
-              title: g,
-              items: items
-            }];
-        });
-        return groupItems.concat(ungroupedOrder);
-      };
-      return {
-        addItemToGroup: addItemToGroup,
-        addItem: addItem,
-        toFormats: toFormats
-      };
-    };
-
-    var internalEditorStyle = /^\.(?:ephox|tiny-pageembed|mce)(?:[.-]+\w+)+$/;
-    var removeCacheSuffix = function (url) {
-      var cacheSuffix = global$1.cacheSuffix;
-      if (isString(url)) {
-        url = url.replace('?' + cacheSuffix, '').replace('&' + cacheSuffix, '');
-      }
-      return url;
-    };
-    var isSkinContentCss = function (editor, href) {
-      var skin = getSkin(editor);
-      if (skin) {
-        var skinUrlBase = getSkinUrl(editor);
-        var skinUrl = skinUrlBase ? editor.documentBaseURI.toAbsolute(skinUrlBase) : global$2.baseURL + '/skins/ui/' + skin;
-        var contentSkinUrlPart = global$2.baseURL + '/skins/content/';
-        return href === skinUrl + '/content' + (editor.inline ? '.inline' : '') + '.min.css' || href.indexOf(contentSkinUrlPart) !== -1;
-      }
-      return false;
-    };
-    var compileFilter = function (filter) {
-      if (isString(filter)) {
-        return function (value) {
-          return value.indexOf(filter) !== -1;
-        };
-      } else if (filter instanceof RegExp) {
-        return function (value) {
-          return filter.test(value);
-        };
-      }
-      return filter;
-    };
-    var isCssImportRule = function (rule) {
-      return rule.styleSheet;
-    };
-    var isCssPageRule = function (rule) {
-      return rule.selectorText;
-    };
-    var getSelectors = function (editor, doc, fileFilter) {
-      var selectors = [];
-      var contentCSSUrls = {};
-      var append = function (styleSheet, imported) {
-        var href = styleSheet.href, rules;
-        href = removeCacheSuffix(href);
-        if (!href || !fileFilter(href, imported) || isSkinContentCss(editor, href)) {
-          return;
-        }
-        global.each(styleSheet.imports, function (styleSheet) {
-          append(styleSheet, true);
-        });
-        try {
-          rules = styleSheet.cssRules || styleSheet.rules;
-        } catch (e) {
-        }
-        global.each(rules, function (cssRule) {
-          if (isCssImportRule(cssRule)) {
-            append(cssRule.styleSheet, true);
-          } else if (isCssPageRule(cssRule)) {
-            global.each(cssRule.selectorText.split(','), function (selector) {
-              selectors.push(global.trim(selector));
-            });
-          }
-        });
-      };
-      global.each(editor.contentCSS, function (url) {
-        contentCSSUrls[url] = true;
-      });
-      if (!fileFilter) {
-        fileFilter = function (href, imported) {
-          return imported || contentCSSUrls[href];
-        };
-      }
-      try {
-        global.each(doc.styleSheets, function (styleSheet) {
-          append(styleSheet);
-        });
-      } catch (e) {
-      }
-      return selectors;
-    };
-    var defaultConvertSelectorToFormat = function (editor, selectorText) {
-      var format;
-      var selector = /^(?:([a-z0-9\-_]+))?(\.[a-z0-9_\-\.]+)$/i.exec(selectorText);
-      if (!selector) {
-        return;
-      }
-      var elementName = selector[1];
-      var classes = selector[2].substr(1).split('.').join(' ');
-      var inlineSelectorElements = global.makeMap('a,img');
-      if (selector[1]) {
-        format = { title: selectorText };
-        if (editor.schema.getTextBlockElements()[elementName]) {
-          format.block = elementName;
-        } else if (editor.schema.getBlockElements()[elementName] || inlineSelectorElements[elementName.toLowerCase()]) {
-          format.selector = elementName;
-        } else {
-          format.inline = elementName;
-        }
-      } else if (selector[2]) {
-        format = {
-          inline: 'span',
-          title: selectorText.substr(1),
-          classes: classes
-        };
-      }
-      if (shouldMergeClasses(editor) !== false) {
-        format.classes = classes;
-      } else {
-        format.attributes = { class: classes };
-      }
-      return format;
-    };
-    var getGroupsBySelector = function (groups, selector) {
-      return global.grep(groups, function (group) {
-        return !group.filter || group.filter(selector);
-      });
-    };
-    var compileUserDefinedGroups = function (groups) {
-      return global.map(groups, function (group) {
-        return global.extend({}, group, {
-          original: group,
-          selectors: {},
-          filter: compileFilter(group.filter)
-        });
-      });
-    };
-    var isExclusiveMode = function (editor, group) {
-      return group === null || shouldImportExclusive(editor) !== false;
-    };
-    var isUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
-      return !(isExclusiveMode(editor, group) ? selector in globallyUniqueSelectors : selector in group.selectors);
-    };
-    var markUniqueSelector = function (editor, selector, group, globallyUniqueSelectors) {
-      if (isExclusiveMode(editor, group)) {
-        globallyUniqueSelectors[selector] = true;
-      } else {
-        group.selectors[selector] = true;
-      }
-    };
-    var convertSelectorToFormat = function (editor, plugin, selector, group) {
-      var selectorConverter;
-      if (group && group.selector_converter) {
-        selectorConverter = group.selector_converter;
-      } else if (getSelectorConverter(editor)) {
-        selectorConverter = getSelectorConverter(editor);
-      } else {
-        selectorConverter = function () {
-          return defaultConvertSelectorToFormat(editor, selector);
-        };
-      }
-      return selectorConverter.call(plugin, selector, group);
-    };
-    var setup = function (editor) {
-      editor.on('init', function () {
-        var model = generate();
-        var globallyUniqueSelectors = {};
-        var selectorFilter = compileFilter(getSelectorFilter(editor));
-        var groups = compileUserDefinedGroups(getCssGroups(editor));
-        var processSelector = function (selector, group) {
-          if (isUniqueSelector(editor, selector, group, globallyUniqueSelectors)) {
-            markUniqueSelector(editor, selector, group, globallyUniqueSelectors);
-            var format = convertSelectorToFormat(editor, editor.plugins.importcss, selector, group);
-            if (format) {
-              var formatName = format.name || global$3.DOM.uniqueId();
-              editor.formatter.register(formatName, format);
-              return {
-                title: format.title,
-                format: formatName
-              };
-            }
-          }
-          return null;
-        };
-        global.each(getSelectors(editor, editor.getDoc(), compileFilter(getFileFilter(editor))), function (selector) {
-          if (!internalEditorStyle.test(selector)) {
-            if (!selectorFilter || selectorFilter(selector)) {
-              var selectorGroups = getGroupsBySelector(groups, selector);
-              if (selectorGroups.length > 0) {
-                global.each(selectorGroups, function (group) {
-                  var menuItem = processSelector(selector, group);
-                  if (menuItem) {
-                    model.addItemToGroup(group.title, menuItem);
-                  }
-                });
-              } else {
-                var menuItem = processSelector(selector, null);
-                if (menuItem) {
-                  model.addItem(menuItem);
-                }
-              }
-            }
-          }
-        });
-        var items = model.toFormats();
-        editor.fire('addStyleModifications', {
-          items: items,
-          replace: !shouldAppend(editor)
-        });
-      });
-    };
-
-    var get = function (editor) {
-      var convertSelectorToFormat = function (selectorText) {
-        return defaultConvertSelectorToFormat(editor, selectorText);
-      };
-      return { convertSelectorToFormat: convertSelectorToFormat };
-    };
-
-    function Plugin () {
-      global$4.add('importcss', function (editor) {
-        setup(editor);
-        return get(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
     var getDateFormat = function (editor) {
@@ -60502,209 +61996,20 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
-    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+    var global$9 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var getFontSizeFormats = function (editor) {
-      return editor.getParam('fontsize_formats');
-    };
-    var setFontSizeFormats = function (editor, fontsize_formats) {
-      editor.settings.fontsize_formats = fontsize_formats;
-    };
-    var getFontFormats = function (editor) {
-      return editor.getParam('font_formats');
-    };
-    var setFontFormats = function (editor, font_formats) {
-      editor.settings.font_formats = font_formats;
-    };
-    var getFontSizeStyleValues = function (editor) {
-      return editor.getParam('font_size_style_values', 'xx-small,x-small,small,medium,large,x-large,xx-large');
-    };
-    var setInlineStyles = function (editor, inline_styles) {
-      editor.settings.inline_styles = inline_styles;
-    };
-
-    var overrideFormats = function (editor) {
-      var alignElements = 'p,h1,h2,h3,h4,h5,h6,td,th,div,ul,ol,li,table', fontSizes = global.explode(getFontSizeStyleValues(editor)), schema = editor.schema;
-      editor.formatter.register({
-        alignleft: {
-          selector: alignElements,
-          attributes: { align: 'left' }
-        },
-        aligncenter: {
-          selector: alignElements,
-          attributes: { align: 'center' }
-        },
-        alignright: {
-          selector: alignElements,
-          attributes: { align: 'right' }
-        },
-        alignjustify: {
-          selector: alignElements,
-          attributes: { align: 'justify' }
-        },
-        bold: [
-          {
-            inline: 'b',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'strong',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'span',
-            styles: { fontWeight: 'bold' }
-          }
-        ],
-        italic: [
-          {
-            inline: 'i',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'em',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'span',
-            styles: { fontStyle: 'italic' }
-          }
-        ],
-        underline: [
-          {
-            inline: 'u',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'span',
-            styles: { textDecoration: 'underline' },
-            exact: true
-          }
-        ],
-        strikethrough: [
-          {
-            inline: 'strike',
-            remove: 'all',
-            preserve_attributes: [
-              'class',
-              'style'
-            ]
-          },
-          {
-            inline: 'span',
-            styles: { textDecoration: 'line-through' },
-            exact: true
-          }
-        ],
-        fontname: {
-          inline: 'font',
-          toggle: false,
-          attributes: { face: '%value' }
-        },
-        fontsize: {
-          inline: 'font',
-          toggle: false,
-          attributes: {
-            size: function (vars) {
-              return String(global.inArray(fontSizes, vars.value) + 1);
-            }
-          }
-        },
-        forecolor: {
-          inline: 'font',
-          attributes: { color: '%value' },
-          links: true,
-          remove_similar: true,
-          clear_child_styles: true
-        },
-        hilitecolor: {
-          inline: 'font',
-          styles: { backgroundColor: '%value' },
-          links: true,
-          remove_similar: true,
-          clear_child_styles: true
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
         }
-      });
-      global.each('b,i,u,strike'.split(','), function (name) {
-        schema.addValidElements(name + '[*]');
-      });
-      if (!schema.getElementRule('font')) {
-        schema.addValidElements('font[face|size|color|style]');
-      }
-      global.each(alignElements.split(','), function (name) {
-        var rule = schema.getElementRule(name);
-        if (rule) {
-          if (!rule.attributes.align) {
-            rule.attributes.align = {};
-            rule.attributesOrder.push('align');
-          }
-        }
-      });
+        return t;
+      };
+      return __assign.apply(this, arguments);
     };
-    var overrideSettings = function (editor) {
-      var defaultFontsizeFormats = '8pt=1 10pt=2 12pt=3 14pt=4 18pt=5 24pt=6 36pt=7';
-      var defaultFontsFormats = 'Andale Mono=andale mono,monospace;' + 'Arial=arial,helvetica,sans-serif;' + 'Arial Black=arial black,sans-serif;' + 'Book Antiqua=book antiqua,palatino,serif;' + 'Comic Sans MS=comic sans ms,sans-serif;' + 'Courier New=courier new,courier,monospace;' + 'Georgia=georgia,palatino,serif;' + 'Helvetica=helvetica,arial,sans-serif;' + 'Impact=impact,sans-serif;' + 'Symbol=symbol;' + 'Tahoma=tahoma,arial,helvetica,sans-serif;' + 'Terminal=terminal,monaco,monospace;' + 'Times New Roman=times new roman,times,serif;' + 'Trebuchet MS=trebuchet ms,geneva,sans-serif;' + 'Verdana=verdana,geneva,sans-serif;' + 'Webdings=webdings;' + 'Wingdings=wingdings,zapf dingbats';
-      setInlineStyles(editor, false);
-      if (!getFontSizeFormats(editor)) {
-        setFontSizeFormats(editor, defaultFontsizeFormats);
-      }
-      if (!getFontFormats(editor)) {
-        setFontFormats(editor, defaultFontsFormats);
-      }
-    };
-    var setup = function (editor) {
-      overrideSettings(editor);
-      editor.on('PreInit', function () {
-        return overrideFormats(editor);
-      });
-    };
-
-    function Plugin () {
-      global$1.add('legacyoutput', function (editor) {
-        setup(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$7 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var global$6 = tinymce.util.Tools.resolve('tinymce.util.VK');
 
     var typeOf = function (x) {
       var t = typeof x;
@@ -60723,21 +62028,15 @@ tinymce.IconManager.add('default', {
         return typeOf(value) === type;
       };
     };
-    var isSimpleType = function (type) {
-      return function (value) {
-        return typeof value === type;
-      };
-    };
-    var eq = function (t) {
-      return function (a) {
-        return t === a;
-      };
-    };
     var isString = isType('string');
+    var isObject = isType('object');
     var isArray = isType('array');
-    var isNull = eq(null);
-    var isBoolean = isSimpleType('boolean');
-    var isFunction = isSimpleType('function');
+    var isNullable = function (a) {
+      return a === null || a === undefined;
+    };
+    var isNonNullable = function (a) {
+      return !isNullable(a);
+    };
 
     var noop = function () {
     };
@@ -60748,9 +62047,6 @@ tinymce.IconManager.add('default', {
     };
     var identity = function (x) {
       return x;
-    };
-    var tripleEquals = function (a, b) {
-      return a === b;
     };
     var never = constant(false);
     var always = constant(true);
@@ -60844,34 +62140,12 @@ tinymce.IconManager.add('default', {
       from: from
     };
 
-    var nativeIndexOf = Array.prototype.indexOf;
     var nativePush = Array.prototype.push;
-    var rawIndexOf = function (ts, t) {
-      return nativeIndexOf.call(ts, t);
-    };
-    var contains = function (xs, x) {
-      return rawIndexOf(xs, x) > -1;
-    };
-    var map = function (xs, f) {
-      var len = xs.length;
-      var r = new Array(len);
-      for (var i = 0; i < len; i++) {
-        var x = xs[i];
-        r[i] = f(x, i);
-      }
-      return r;
-    };
     var each$1 = function (xs, f) {
       for (var i = 0, len = xs.length; i < len; i++) {
         var x = xs[i];
         f(x, i);
       }
-    };
-    var foldl = function (xs, f, acc) {
-      each$1(xs, function (x, i) {
-        acc = f(acc, x, i);
-      });
-      return acc;
     };
     var flatten = function (xs) {
       var r = [];
@@ -60883,156 +62157,19 @@ tinymce.IconManager.add('default', {
       }
       return r;
     };
-    var bind = function (xs, f) {
-      return flatten(map(xs, f));
-    };
-    var findMap = function (arr, f) {
-      for (var i = 0; i < arr.length; i++) {
-        var r = f(arr[i], i);
-        if (r.isSome()) {
-          return r;
-        }
-      }
-      return Optional.none();
-    };
 
-    var is = function (lhs, rhs, comparator) {
-      if (comparator === void 0) {
-        comparator = tripleEquals;
-      }
-      return lhs.exists(function (left) {
-        return comparator(left, rhs);
-      });
-    };
-    var cat = function (arr) {
-      var r = [];
-      var push = function (x) {
-        r.push(x);
+    var Cell = function (initial) {
+      var value = initial;
+      var get = function () {
+        return value;
       };
-      for (var i = 0; i < arr.length; i++) {
-        arr[i].each(push);
-      }
-      return r;
-    };
-    var someIf = function (b, a) {
-      return b ? Optional.some(a) : Optional.none();
-    };
-
-    var assumeExternalTargets = function (editor) {
-      var externalTargets = editor.getParam('link_assume_external_targets', false);
-      if (isBoolean(externalTargets) && externalTargets) {
-        return 1;
-      } else if (isString(externalTargets) && (externalTargets === 'http' || externalTargets === 'https')) {
-        return externalTargets;
-      }
-      return 0;
-    };
-    var hasContextToolbar = function (editor) {
-      return editor.getParam('link_context_toolbar', false, 'boolean');
-    };
-    var getLinkList = function (editor) {
-      return editor.getParam('link_list');
-    };
-    var getDefaultLinkTarget = function (editor) {
-      return editor.getParam('default_link_target');
-    };
-    var getTargetList = function (editor) {
-      return editor.getParam('target_list', true);
-    };
-    var getRelList = function (editor) {
-      return editor.getParam('rel_list', [], 'array');
-    };
-    var getLinkClassList = function (editor) {
-      return editor.getParam('link_class_list', [], 'array');
-    };
-    var shouldShowLinkTitle = function (editor) {
-      return editor.getParam('link_title', true, 'boolean');
-    };
-    var allowUnsafeLinkTarget = function (editor) {
-      return editor.getParam('allow_unsafe_link_target', false, 'boolean');
-    };
-    var useQuickLink = function (editor) {
-      return editor.getParam('link_quicklink', false, 'boolean');
-    };
-    var getDefaultLinkProtocol = function (editor) {
-      return editor.getParam('link_default_protocol', 'http', 'string');
-    };
-
-    var global$5 = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var getValue = function (item) {
-      return isString(item.value) ? item.value : '';
-    };
-    var getText = function (item) {
-      if (isString(item.text)) {
-        return item.text;
-      } else if (isString(item.title)) {
-        return item.title;
-      } else {
-        return '';
-      }
-    };
-    var sanitizeList = function (list, extractValue) {
-      var out = [];
-      global$5.each(list, function (item) {
-        var text = getText(item);
-        if (item.menu !== undefined) {
-          var items = sanitizeList(item.menu, extractValue);
-          out.push({
-            text: text,
-            items: items
-          });
-        } else {
-          var value = extractValue(item);
-          out.push({
-            text: text,
-            value: value
-          });
-        }
-      });
-      return out;
-    };
-    var sanitizeWith = function (extracter) {
-      if (extracter === void 0) {
-        extracter = getValue;
-      }
-      return function (list) {
-        return Optional.from(list).map(function (list) {
-          return sanitizeList(list, extracter);
-        });
+      var set = function (v) {
+        value = v;
       };
-    };
-    var sanitize = function (list) {
-      return sanitizeWith(getValue)(list);
-    };
-    var createUi = function (name, label) {
-      return function (items) {
-        return {
-          name: name,
-          type: 'listbox',
-          label: label,
-          items: items
-        };
+      return {
+        get: get,
+        set: set
       };
-    };
-    var ListOptions = {
-      sanitize: sanitize,
-      sanitizeWith: sanitizeWith,
-      createUi: createUi,
-      getValue: getValue
-    };
-
-    var __assign = function () {
-      __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s)
-            if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-        }
-        return t;
-      };
-      return __assign.apply(this, arguments);
     };
 
     var keys = Object.keys;
@@ -61045,638 +62182,769 @@ tinymce.IconManager.add('default', {
         f(x, i);
       }
     };
-    var objAcc = function (r) {
-      return function (x, i) {
-        r[i] = x;
-      };
-    };
-    var internalFilter = function (obj, pred, onTrue, onFalse) {
-      var r = {};
-      each(obj, function (x, i) {
-        (pred(x, i) ? onTrue : onFalse)(x, i);
-      });
-      return r;
-    };
-    var filter = function (obj, pred) {
-      var t = {};
-      internalFilter(obj, pred, objAcc(t), noop);
-      return t;
+    var get$1 = function (obj, key) {
+      return has(obj, key) ? Optional.from(obj[key]) : Optional.none();
     };
     var has = function (obj, key) {
       return hasOwnProperty.call(obj, key);
     };
-    var hasNonNullableKey = function (obj, key) {
-      return has(obj, key) && obj[key] !== undefined && obj[key] !== null;
+
+    var getScripts = function (editor) {
+      return editor.getParam('media_scripts');
+    };
+    var getAudioTemplateCallback = function (editor) {
+      return editor.getParam('audio_template_callback');
+    };
+    var getVideoTemplateCallback = function (editor) {
+      return editor.getParam('video_template_callback');
+    };
+    var hasLiveEmbeds = function (editor) {
+      return editor.getParam('media_live_embeds', true);
+    };
+    var shouldFilterHtml = function (editor) {
+      return editor.getParam('media_filter_html', true);
+    };
+    var getUrlResolver = function (editor) {
+      return editor.getParam('media_url_resolver');
+    };
+    var hasAltSource = function (editor) {
+      return editor.getParam('media_alt_source', true);
+    };
+    var hasPoster = function (editor) {
+      return editor.getParam('media_poster', true);
+    };
+    var hasDimensions = function (editor) {
+      return editor.getParam('media_dimensions', true);
     };
 
-    var global$4 = tinymce.util.Tools.resolve('tinymce.dom.TreeWalker');
+    var global$8 = tinymce.util.Tools.resolve('tinymce.util.Tools');
 
-    var global$3 = tinymce.util.Tools.resolve('tinymce.util.URI');
+    var global$7 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
 
-    var isAnchor = function (elm) {
-      return elm && elm.nodeName.toLowerCase() === 'a';
-    };
-    var isLink = function (elm) {
-      return isAnchor(elm) && !!getHref(elm);
-    };
-    var collectNodesInRange = function (rng, predicate) {
-      if (rng.collapsed) {
-        return [];
-      } else {
-        var contents = rng.cloneContents();
-        var walker = new global$4(contents.firstChild, contents);
-        var elements = [];
-        var current = contents.firstChild;
-        do {
-          if (predicate(current)) {
-            elements.push(current);
+    var global$6 = tinymce.util.Tools.resolve('tinymce.html.SaxParser');
+
+    var getVideoScriptMatch = function (prefixes, src) {
+      if (prefixes) {
+        for (var i = 0; i < prefixes.length; i++) {
+          if (src.indexOf(prefixes[i].filter) !== -1) {
+            return prefixes[i];
           }
-        } while (current = walker.next());
-        return elements;
-      }
-    };
-    var hasProtocol = function (url) {
-      return /^\w+:/i.test(url);
-    };
-    var getHref = function (elm) {
-      var href = elm.getAttribute('data-mce-href');
-      return href ? href : elm.getAttribute('href');
-    };
-    var applyRelTargetRules = function (rel, isUnsafe) {
-      var rules = ['noopener'];
-      var rels = rel ? rel.split(/\s+/) : [];
-      var toString = function (rels) {
-        return global$5.trim(rels.sort().join(' '));
-      };
-      var addTargetRules = function (rels) {
-        rels = removeTargetRules(rels);
-        return rels.length > 0 ? rels.concat(rules) : rules;
-      };
-      var removeTargetRules = function (rels) {
-        return rels.filter(function (val) {
-          return global$5.inArray(rules, val) === -1;
-        });
-      };
-      var newRels = isUnsafe ? addTargetRules(rels) : removeTargetRules(rels);
-      return newRels.length > 0 ? toString(newRels) : '';
-    };
-    var trimCaretContainers = function (text) {
-      return text.replace(/\uFEFF/g, '');
-    };
-    var getAnchorElement = function (editor, selectedElm) {
-      selectedElm = selectedElm || editor.selection.getNode();
-      if (isImageFigure(selectedElm)) {
-        return editor.dom.select('a[href]', selectedElm)[0];
-      } else {
-        return editor.dom.getParent(selectedElm, 'a[href]');
-      }
-    };
-    var getAnchorText = function (selection, anchorElm) {
-      var text = anchorElm ? anchorElm.innerText || anchorElm.textContent : selection.getContent({ format: 'text' });
-      return trimCaretContainers(text);
-    };
-    var hasLinks = function (elements) {
-      return global$5.grep(elements, isLink).length > 0;
-    };
-    var hasLinksInSelection = function (rng) {
-      return collectNodesInRange(rng, isLink).length > 0;
-    };
-    var isOnlyTextSelected = function (editor) {
-      var inlineTextElements = editor.schema.getTextInlineElements();
-      var isElement = function (elm) {
-        return elm.nodeType === 1 && !isAnchor(elm) && !has(inlineTextElements, elm.nodeName.toLowerCase());
-      };
-      var elements = collectNodesInRange(editor.selection.getRng(), isElement);
-      return elements.length === 0;
-    };
-    var isImageFigure = function (elm) {
-      return elm && elm.nodeName === 'FIGURE' && /\bimage\b/i.test(elm.className);
-    };
-    var getLinkAttrs = function (data) {
-      var attrs = [
-        'title',
-        'rel',
-        'class',
-        'target'
-      ];
-      return foldl(attrs, function (acc, key) {
-        data[key].each(function (value) {
-          acc[key] = value.length > 0 ? value : null;
-        });
-        return acc;
-      }, { href: data.href });
-    };
-    var handleExternalTargets = function (href, assumeExternalTargets) {
-      if ((assumeExternalTargets === 'http' || assumeExternalTargets === 'https') && !hasProtocol(href)) {
-        return assumeExternalTargets + '://' + href;
-      }
-      return href;
-    };
-    var applyLinkOverrides = function (editor, linkAttrs) {
-      var newLinkAttrs = __assign({}, linkAttrs);
-      if (!(getRelList(editor).length > 0) && allowUnsafeLinkTarget(editor) === false) {
-        var newRel = applyRelTargetRules(newLinkAttrs.rel, newLinkAttrs.target === '_blank');
-        newLinkAttrs.rel = newRel ? newRel : null;
-      }
-      if (Optional.from(newLinkAttrs.target).isNone() && getTargetList(editor) === false) {
-        newLinkAttrs.target = getDefaultLinkTarget(editor);
-      }
-      newLinkAttrs.href = handleExternalTargets(newLinkAttrs.href, assumeExternalTargets(editor));
-      return newLinkAttrs;
-    };
-    var updateLink = function (editor, anchorElm, text, linkAttrs) {
-      text.each(function (text) {
-        if (has(anchorElm, 'innerText')) {
-          anchorElm.innerText = text;
-        } else {
-          anchorElm.textContent = text;
         }
-      });
-      editor.dom.setAttribs(anchorElm, linkAttrs);
-      editor.selection.select(anchorElm);
-    };
-    var createLink = function (editor, selectedElm, text, linkAttrs) {
-      if (isImageFigure(selectedElm)) {
-        linkImageFigure(editor, selectedElm, linkAttrs);
-      } else {
-        text.fold(function () {
-          editor.execCommand('mceInsertLink', false, linkAttrs);
-        }, function (text) {
-          editor.insertContent(editor.dom.createHTML('a', linkAttrs, editor.dom.encode(text)));
-        });
-      }
-    };
-    var linkDomMutation = function (editor, attachState, data) {
-      var selectedElm = editor.selection.getNode();
-      var anchorElm = getAnchorElement(editor, selectedElm);
-      var linkAttrs = applyLinkOverrides(editor, getLinkAttrs(data));
-      editor.undoManager.transact(function () {
-        if (data.href === attachState.href) {
-          attachState.attach();
-        }
-        if (anchorElm) {
-          editor.focus();
-          updateLink(editor, anchorElm, data.text, linkAttrs);
-        } else {
-          createLink(editor, selectedElm, data.text, linkAttrs);
-        }
-      });
-    };
-    var unlinkSelection = function (editor) {
-      var dom = editor.dom, selection = editor.selection;
-      var bookmark = selection.getBookmark();
-      var rng = selection.getRng().cloneRange();
-      var startAnchorElm = dom.getParent(rng.startContainer, 'a[href]', editor.getBody());
-      var endAnchorElm = dom.getParent(rng.endContainer, 'a[href]', editor.getBody());
-      if (startAnchorElm) {
-        rng.setStartBefore(startAnchorElm);
-      }
-      if (endAnchorElm) {
-        rng.setEndAfter(endAnchorElm);
-      }
-      selection.setRng(rng);
-      editor.execCommand('unlink');
-      selection.moveToBookmark(bookmark);
-    };
-    var unlinkDomMutation = function (editor) {
-      editor.undoManager.transact(function () {
-        var node = editor.selection.getNode();
-        if (isImageFigure(node)) {
-          unlinkImageFigure(editor, node);
-        } else {
-          unlinkSelection(editor);
-        }
-        editor.focus();
-      });
-    };
-    var unwrapOptions = function (data) {
-      var cls = data.class, href = data.href, rel = data.rel, target = data.target, text = data.text, title = data.title;
-      return filter({
-        class: cls.getOrNull(),
-        href: href,
-        rel: rel.getOrNull(),
-        target: target.getOrNull(),
-        text: text.getOrNull(),
-        title: title.getOrNull()
-      }, function (v, _k) {
-        return isNull(v) === false;
-      });
-    };
-    var sanitizeData = function (editor, data) {
-      var href = data.href;
-      return __assign(__assign({}, data), { href: global$3.isDomSafe(href, 'a', editor.settings) ? href : '' });
-    };
-    var link = function (editor, attachState, data) {
-      var sanitizedData = sanitizeData(editor, data);
-      editor.hasPlugin('rtc', true) ? editor.execCommand('createlink', false, unwrapOptions(sanitizedData)) : linkDomMutation(editor, attachState, sanitizedData);
-    };
-    var unlink = function (editor) {
-      editor.hasPlugin('rtc', true) ? editor.execCommand('unlink') : unlinkDomMutation(editor);
-    };
-    var unlinkImageFigure = function (editor, fig) {
-      var img = editor.dom.select('img', fig)[0];
-      if (img) {
-        var a = editor.dom.getParents(img, 'a[href]', fig)[0];
-        if (a) {
-          a.parentNode.insertBefore(img, a);
-          editor.dom.remove(a);
-        }
-      }
-    };
-    var linkImageFigure = function (editor, fig, attrs) {
-      var img = editor.dom.select('img', fig)[0];
-      if (img) {
-        var a = editor.dom.create('a', attrs);
-        img.parentNode.insertBefore(a, img);
-        a.appendChild(img);
       }
     };
 
-    var isListGroup = function (item) {
-      return hasNonNullableKey(item, 'items');
+    var DOM$1 = global$7.DOM;
+    var trimPx = function (value) {
+      return value.replace(/px$/, '');
     };
-    var findTextByValue = function (value, catalog) {
-      return findMap(catalog, function (item) {
-        if (isListGroup(item)) {
-          return findTextByValue(value, item.items);
-        } else {
-          return someIf(item.value === value, item);
-        }
-      });
-    };
-    var getDelta = function (persistentText, fieldName, catalog, data) {
-      var value = data[fieldName];
-      var hasPersistentText = persistentText.length > 0;
-      return value !== undefined ? findTextByValue(value, catalog).map(function (i) {
-        return {
-          url: {
-            value: i.value,
-            meta: {
-              text: hasPersistentText ? persistentText : i.text,
-              attach: noop
-            }
-          },
-          text: hasPersistentText ? persistentText : i.text
-        };
-      }) : Optional.none();
-    };
-    var findCatalog = function (catalogs, fieldName) {
-      if (fieldName === 'link') {
-        return catalogs.link;
-      } else if (fieldName === 'anchor') {
-        return catalogs.anchor;
-      } else {
-        return Optional.none();
-      }
-    };
-    var init = function (initialData, linkCatalog) {
-      var persistentData = {
-        text: initialData.text,
-        title: initialData.title
-      };
-      var getTitleFromUrlChange = function (url) {
-        return someIf(persistentData.title.length <= 0, Optional.from(url.meta.title).getOr(''));
-      };
-      var getTextFromUrlChange = function (url) {
-        return someIf(persistentData.text.length <= 0, Optional.from(url.meta.text).getOr(url.value));
-      };
-      var onUrlChange = function (data) {
-        var text = getTextFromUrlChange(data.url);
-        var title = getTitleFromUrlChange(data.url);
-        if (text.isSome() || title.isSome()) {
-          return Optional.some(__assign(__assign({}, text.map(function (text) {
-            return { text: text };
-          }).getOr({})), title.map(function (title) {
-            return { title: title };
-          }).getOr({})));
-        } else {
-          return Optional.none();
-        }
-      };
-      var onCatalogChange = function (data, change) {
-        var catalog = findCatalog(linkCatalog, change.name).getOr([]);
-        return getDelta(persistentData.text, change.name, catalog, data);
-      };
-      var onChange = function (getData, change) {
-        var name = change.name;
-        if (name === 'url') {
-          return onUrlChange(getData());
-        } else if (contains([
-            'anchor',
-            'link'
-          ], name)) {
-          return onCatalogChange(getData(), change);
-        } else if (name === 'text' || name === 'title') {
-          persistentData[name] = getData()[name];
-          return Optional.none();
-        } else {
-          return Optional.none();
-        }
-      };
-      return { onChange: onChange };
-    };
-    var DialogChanges = {
-      init: init,
-      getDelta: getDelta
-    };
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Delay');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Promise');
-
-    var delayedConfirm = function (editor, message, callback) {
-      var rng = editor.selection.getRng();
-      global$2.setEditorTimeout(editor, function () {
-        editor.windowManager.confirm(message, function (state) {
-          editor.selection.setRng(rng);
-          callback(state);
-        });
-      });
-    };
-    var tryEmailTransform = function (data) {
-      var url = data.href;
-      var suggestMailTo = url.indexOf('@') > 0 && url.indexOf('/') === -1 && url.indexOf('mailto:') === -1;
-      return suggestMailTo ? Optional.some({
-        message: 'The URL you entered seems to be an email address. Do you want to add the required mailto: prefix?',
-        preprocess: function (oldData) {
-          return __assign(__assign({}, oldData), { href: 'mailto:' + url });
-        }
-      }) : Optional.none();
-    };
-    var tryProtocolTransform = function (assumeExternalTargets, defaultLinkProtocol) {
-      return function (data) {
-        var url = data.href;
-        var suggestProtocol = assumeExternalTargets === 1 && !hasProtocol(url) || assumeExternalTargets === 0 && /^\s*www(\.|\d\.)/i.test(url);
-        return suggestProtocol ? Optional.some({
-          message: 'The URL you entered seems to be an external link. Do you want to add the required ' + defaultLinkProtocol + ':// prefix?',
-          preprocess: function (oldData) {
-            return __assign(__assign({}, oldData), { href: defaultLinkProtocol + '://' + url });
-          }
-        }) : Optional.none();
+    var getEphoxEmbedData = function (attrs) {
+      var style = attrs.map.style;
+      var styles = style ? DOM$1.parseStyle(style) : {};
+      return {
+        type: 'ephox-embed-iri',
+        source: attrs.map['data-ephox-embed-iri'],
+        altsource: '',
+        poster: '',
+        width: get$1(styles, 'max-width').map(trimPx).getOr(''),
+        height: get$1(styles, 'max-height').map(trimPx).getOr('')
       };
     };
-    var preprocess = function (editor, data) {
-      return findMap([
-        tryEmailTransform,
-        tryProtocolTransform(assumeExternalTargets(editor), getDefaultLinkProtocol(editor))
-      ], function (f) {
-        return f(data);
-      }).fold(function () {
-        return global$1.resolve(data);
-      }, function (transform) {
-        return new global$1(function (callback) {
-          delayedConfirm(editor, transform.message, function (state) {
-            callback(state ? transform.preprocess(data) : data);
-          });
-        });
-      });
-    };
-    var DialogConfirms = { preprocess: preprocess };
-
-    var getAnchors = function (editor) {
-      var anchorNodes = editor.dom.select('a:not([href])');
-      var anchors = bind(anchorNodes, function (anchor) {
-        var id = anchor.name || anchor.id;
-        return id ? [{
-            text: id,
-            value: '#' + id
-          }] : [];
-      });
-      return anchors.length > 0 ? Optional.some([{
-          text: 'None',
-          value: ''
-        }].concat(anchors)) : Optional.none();
-    };
-    var AnchorListOptions = { getAnchors: getAnchors };
-
-    var getClasses = function (editor) {
-      var list = getLinkClassList(editor);
-      if (list.length > 0) {
-        return ListOptions.sanitize(list);
-      }
-      return Optional.none();
-    };
-    var ClassListOptions = { getClasses: getClasses };
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.XHR');
-
-    var parseJson = function (text) {
-      try {
-        return Optional.some(JSON.parse(text));
-      } catch (err) {
-        return Optional.none();
-      }
-    };
-    var getLinks = function (editor) {
-      var extractor = function (item) {
-        return editor.convertURL(item.value || item.url, 'href');
-      };
-      var linkList = getLinkList(editor);
-      return new global$1(function (callback) {
-        if (isString(linkList)) {
-          global.send({
-            url: linkList,
-            success: function (text) {
-              return callback(parseJson(text));
-            },
-            error: function (_) {
-              return callback(Optional.none());
-            }
-          });
-        } else if (isFunction(linkList)) {
-          linkList(function (output) {
-            return callback(Optional.some(output));
-          });
-        } else {
-          callback(Optional.from(linkList));
-        }
-      }).then(function (optItems) {
-        return optItems.bind(ListOptions.sanitizeWith(extractor)).map(function (items) {
-          if (items.length > 0) {
-            var noneItem = [{
-                text: 'None',
-                value: ''
-              }];
-            return noneItem.concat(items);
+    var htmlToData = function (prefixes, html) {
+      var isEphoxEmbed = Cell(false);
+      var data = {};
+      global$6({
+        validate: false,
+        allow_conditional_comments: true,
+        start: function (name, attrs) {
+          if (isEphoxEmbed.get()) ; else if (has(attrs.map, 'data-ephox-embed-iri')) {
+            isEphoxEmbed.set(true);
+            data = getEphoxEmbedData(attrs);
           } else {
-            return items;
+            if (!data.source && name === 'param') {
+              data.source = attrs.map.movie;
+            }
+            if (name === 'iframe' || name === 'object' || name === 'embed' || name === 'video' || name === 'audio') {
+              if (!data.type) {
+                data.type = name;
+              }
+              data = global$8.extend(attrs.map, data);
+            }
+            if (name === 'script') {
+              var videoScript = getVideoScriptMatch(prefixes, attrs.map.src);
+              if (!videoScript) {
+                return;
+              }
+              data = {
+                type: 'script',
+                source: attrs.map.src,
+                width: String(videoScript.width),
+                height: String(videoScript.height)
+              };
+            }
+            if (name === 'source') {
+              if (!data.source) {
+                data.source = attrs.map.src;
+              } else if (!data.altsource) {
+                data.altsource = attrs.map.src;
+              }
+            }
+            if (name === 'img' && !data.poster) {
+              data.poster = attrs.map.src;
+            }
           }
-        });
+        }
+      }).parse(html);
+      data.source = data.source || data.src || data.data;
+      data.altsource = data.altsource || '';
+      data.poster = data.poster || '';
+      return data;
+    };
+
+    var guess = function (url) {
+      var mimes = {
+        mp3: 'audio/mpeg',
+        m4a: 'audio/x-m4a',
+        wav: 'audio/wav',
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        ogg: 'video/ogg',
+        swf: 'application/x-shockwave-flash'
+      };
+      var fileEnd = url.toLowerCase().split('.').pop();
+      var mime = mimes[fileEnd];
+      return mime ? mime : '';
+    };
+
+    var global$5 = tinymce.util.Tools.resolve('tinymce.html.Schema');
+
+    var global$4 = tinymce.util.Tools.resolve('tinymce.html.Writer');
+
+    var DOM = global$7.DOM;
+    var addPx = function (value) {
+      return /^[0-9.]+$/.test(value) ? value + 'px' : value;
+    };
+    var setAttributes = function (attrs, updatedAttrs) {
+      each(updatedAttrs, function (val, name) {
+        var value = '' + val;
+        if (attrs.map[name]) {
+          var i = attrs.length;
+          while (i--) {
+            var attr = attrs[i];
+            if (attr.name === name) {
+              if (value) {
+                attrs.map[name] = value;
+                attr.value = value;
+              } else {
+                delete attrs.map[name];
+                attrs.splice(i, 1);
+              }
+            }
+          }
+        } else if (value) {
+          attrs.push({
+            name: name,
+            value: value
+          });
+          attrs.map[name] = value;
+        }
       });
     };
-    var LinkListOptions = { getLinks: getLinks };
-
-    var getRels = function (editor, initialTarget) {
-      var list = getRelList(editor);
-      if (list.length > 0) {
-        var isTargetBlank_1 = is(initialTarget, '_blank');
-        var enforceSafe = allowUnsafeLinkTarget(editor) === false;
-        var safeRelExtractor = function (item) {
-          return applyRelTargetRules(ListOptions.getValue(item), isTargetBlank_1);
-        };
-        var sanitizer = enforceSafe ? ListOptions.sanitizeWith(safeRelExtractor) : ListOptions.sanitize;
-        return sanitizer(list);
-      }
-      return Optional.none();
+    var updateEphoxEmbed = function (data, attrs) {
+      var style = attrs.map.style;
+      var styleMap = style ? DOM.parseStyle(style) : {};
+      styleMap['max-width'] = addPx(data.width);
+      styleMap['max-height'] = addPx(data.height);
+      setAttributes(attrs, { style: DOM.serializeStyle(styleMap) });
     };
-    var RelOptions = { getRels: getRels };
+    var sources = [
+      'source',
+      'altsource'
+    ];
+    var updateHtml = function (html, data, updateAll) {
+      var writer = global$4();
+      var isEphoxEmbed = Cell(false);
+      var sourceCount = 0;
+      var hasImage;
+      global$6({
+        validate: false,
+        allow_conditional_comments: true,
+        comment: function (text) {
+          writer.comment(text);
+        },
+        cdata: function (text) {
+          writer.cdata(text);
+        },
+        text: function (text, raw) {
+          writer.text(text, raw);
+        },
+        start: function (name, attrs, empty) {
+          if (isEphoxEmbed.get()) ; else if (has(attrs.map, 'data-ephox-embed-iri')) {
+            isEphoxEmbed.set(true);
+            updateEphoxEmbed(data, attrs);
+          } else {
+            switch (name) {
+            case 'video':
+            case 'object':
+            case 'embed':
+            case 'img':
+            case 'iframe':
+              if (data.height !== undefined && data.width !== undefined) {
+                setAttributes(attrs, {
+                  width: data.width,
+                  height: data.height
+                });
+              }
+              break;
+            }
+            if (updateAll) {
+              switch (name) {
+              case 'video':
+                setAttributes(attrs, {
+                  poster: data.poster,
+                  src: ''
+                });
+                if (data.altsource) {
+                  setAttributes(attrs, { src: '' });
+                }
+                break;
+              case 'iframe':
+                setAttributes(attrs, { src: data.source });
+                break;
+              case 'source':
+                if (sourceCount < 2) {
+                  setAttributes(attrs, {
+                    src: data[sources[sourceCount]],
+                    type: data[sources[sourceCount] + 'mime']
+                  });
+                  if (!data[sources[sourceCount]]) {
+                    return;
+                  }
+                }
+                sourceCount++;
+                break;
+              case 'img':
+                if (!data.poster) {
+                  return;
+                }
+                hasImage = true;
+                break;
+              }
+            }
+          }
+          writer.start(name, attrs, empty);
+        },
+        end: function (name) {
+          if (!isEphoxEmbed.get()) {
+            if (name === 'video' && updateAll) {
+              for (var index = 0; index < 2; index++) {
+                if (data[sources[index]]) {
+                  var attrs = [];
+                  attrs.map = {};
+                  if (sourceCount <= index) {
+                    setAttributes(attrs, {
+                      src: data[sources[index]],
+                      type: data[sources[index] + 'mime']
+                    });
+                    writer.start('source', attrs, true);
+                  }
+                }
+              }
+            }
+            if (data.poster && name === 'object' && updateAll && !hasImage) {
+              var imgAttrs = [];
+              imgAttrs.map = {};
+              setAttributes(imgAttrs, {
+                src: data.poster,
+                width: data.width,
+                height: data.height
+              });
+              writer.start('img', imgAttrs, true);
+            }
+          }
+          writer.end(name);
+        }
+      }, global$5({})).parse(html);
+      return writer.getContent();
+    };
 
-    var fallbacks = [
+    var urlPatterns = [
       {
-        text: 'Current window',
-        value: ''
+        regex: /youtu\.be\/([\w\-_\?&=.]+)/i,
+        type: 'iframe',
+        w: 560,
+        h: 314,
+        url: 'www.youtube.com/embed/$1',
+        allowFullscreen: true
       },
       {
-        text: 'New window',
-        value: '_blank'
+        regex: /youtube\.com(.+)v=([^&]+)(&([a-z0-9&=\-_]+))?/i,
+        type: 'iframe',
+        w: 560,
+        h: 314,
+        url: 'www.youtube.com/embed/$2?$4',
+        allowFullscreen: true
+      },
+      {
+        regex: /youtube.com\/embed\/([a-z0-9\?&=\-_]+)/i,
+        type: 'iframe',
+        w: 560,
+        h: 314,
+        url: 'www.youtube.com/embed/$1',
+        allowFullscreen: true
+      },
+      {
+        regex: /vimeo\.com\/([0-9]+)/,
+        type: 'iframe',
+        w: 425,
+        h: 350,
+        url: 'player.vimeo.com/video/$1?title=0&byline=0&portrait=0&color=8dc7dc',
+        allowFullscreen: true
+      },
+      {
+        regex: /vimeo\.com\/(.*)\/([0-9]+)/,
+        type: 'iframe',
+        w: 425,
+        h: 350,
+        url: 'player.vimeo.com/video/$2?title=0&amp;byline=0',
+        allowFullscreen: true
+      },
+      {
+        regex: /maps\.google\.([a-z]{2,3})\/maps\/(.+)msid=(.+)/,
+        type: 'iframe',
+        w: 425,
+        h: 350,
+        url: 'maps.google.com/maps/ms?msid=$2&output=embed"',
+        allowFullscreen: false
+      },
+      {
+        regex: /dailymotion\.com\/video\/([^_]+)/,
+        type: 'iframe',
+        w: 480,
+        h: 270,
+        url: 'www.dailymotion.com/embed/video/$1',
+        allowFullscreen: true
+      },
+      {
+        regex: /dai\.ly\/([^_]+)/,
+        type: 'iframe',
+        w: 480,
+        h: 270,
+        url: 'www.dailymotion.com/embed/video/$1',
+        allowFullscreen: true
       }
     ];
-    var getTargets = function (editor) {
-      var list = getTargetList(editor);
-      if (isArray(list)) {
-        return ListOptions.sanitize(list).orThunk(function () {
-          return Optional.some(fallbacks);
-        });
-      } else if (list === false) {
-        return Optional.none();
+    var getProtocol = function (url) {
+      var protocolMatches = url.match(/^(https?:\/\/|www\.)(.+)$/i);
+      if (protocolMatches && protocolMatches.length > 1) {
+        return protocolMatches[1] === 'www.' ? 'https://' : protocolMatches[1];
+      } else {
+        return 'https://';
       }
-      return Optional.some(fallbacks);
     };
-    var TargetOptions = { getTargets: getTargets };
-
-    var nonEmptyAttr = function (dom, elem, name) {
-      var val = dom.getAttrib(elem, name);
-      return val !== null && val.length > 0 ? Optional.some(val) : Optional.none();
-    };
-    var extractFromAnchor = function (editor, anchor) {
-      var dom = editor.dom;
-      var onlyText = isOnlyTextSelected(editor);
-      var text = onlyText ? Optional.some(getAnchorText(editor.selection, anchor)) : Optional.none();
-      var url = anchor ? Optional.some(dom.getAttrib(anchor, 'href')) : Optional.none();
-      var target = anchor ? Optional.from(dom.getAttrib(anchor, 'target')) : Optional.none();
-      var rel = nonEmptyAttr(dom, anchor, 'rel');
-      var linkClass = nonEmptyAttr(dom, anchor, 'class');
-      var title = nonEmptyAttr(dom, anchor, 'title');
-      return {
-        url: url,
-        text: text,
-        title: title,
-        target: target,
-        rel: rel,
-        linkClass: linkClass
+    var getUrl = function (pattern, url) {
+      var protocol = getProtocol(url);
+      var match = pattern.regex.exec(url);
+      var newUrl = protocol + pattern.url;
+      var _loop_1 = function (i) {
+        newUrl = newUrl.replace('$' + i, function () {
+          return match[i] ? match[i] : '';
+        });
       };
+      for (var i = 0; i < match.length; i++) {
+        _loop_1(i);
+      }
+      return newUrl.replace(/\?$/, '');
     };
-    var collect = function (editor, linkNode) {
-      return LinkListOptions.getLinks(editor).then(function (links) {
-        var anchor = extractFromAnchor(editor, linkNode);
-        return {
-          anchor: anchor,
-          catalogs: {
-            targets: TargetOptions.getTargets(editor),
-            rels: RelOptions.getRels(editor, anchor.target),
-            classes: ClassListOptions.getClasses(editor),
-            anchor: AnchorListOptions.getAnchors(editor),
-            link: links
-          },
-          optNode: Optional.from(linkNode),
-          flags: { titleEnabled: shouldShowLinkTitle(editor) }
-        };
+    var matchPattern = function (url) {
+      var patterns = urlPatterns.filter(function (pattern) {
+        return pattern.regex.test(url);
+      });
+      if (patterns.length > 0) {
+        return global$8.extend({}, patterns[0], { url: getUrl(patterns[0], url) });
+      } else {
+        return null;
+      }
+    };
+
+    var getIframeHtml = function (data) {
+      var allowFullscreen = data.allowfullscreen ? ' allowFullscreen="1"' : '';
+      return '<iframe src="' + data.source + '" width="' + data.width + '" height="' + data.height + '"' + allowFullscreen + '></iframe>';
+    };
+    var getFlashHtml = function (data) {
+      var html = '<object data="' + data.source + '" width="' + data.width + '" height="' + data.height + '" type="application/x-shockwave-flash">';
+      if (data.poster) {
+        html += '<img src="' + data.poster + '" width="' + data.width + '" height="' + data.height + '" />';
+      }
+      html += '</object>';
+      return html;
+    };
+    var getAudioHtml = function (data, audioTemplateCallback) {
+      if (audioTemplateCallback) {
+        return audioTemplateCallback(data);
+      } else {
+        return '<audio controls="controls" src="' + data.source + '">' + (data.altsource ? '\n<source src="' + data.altsource + '"' + (data.altsourcemime ? ' type="' + data.altsourcemime + '"' : '') + ' />\n' : '') + '</audio>';
+      }
+    };
+    var getVideoHtml = function (data, videoTemplateCallback) {
+      if (videoTemplateCallback) {
+        return videoTemplateCallback(data);
+      } else {
+        return '<video width="' + data.width + '" height="' + data.height + '"' + (data.poster ? ' poster="' + data.poster + '"' : '') + ' controls="controls">\n' + '<source src="' + data.source + '"' + (data.sourcemime ? ' type="' + data.sourcemime + '"' : '') + ' />\n' + (data.altsource ? '<source src="' + data.altsource + '"' + (data.altsourcemime ? ' type="' + data.altsourcemime + '"' : '') + ' />\n' : '') + '</video>';
+      }
+    };
+    var getScriptHtml = function (data) {
+      return '<script src="' + data.source + '"></script>';
+    };
+    var dataToHtml = function (editor, dataIn) {
+      var data = global$8.extend({}, dataIn);
+      if (!data.source) {
+        global$8.extend(data, htmlToData(getScripts(editor), data.embed));
+        if (!data.source) {
+          return '';
+        }
+      }
+      if (!data.altsource) {
+        data.altsource = '';
+      }
+      if (!data.poster) {
+        data.poster = '';
+      }
+      data.source = editor.convertURL(data.source, 'source');
+      data.altsource = editor.convertURL(data.altsource, 'source');
+      data.sourcemime = guess(data.source);
+      data.altsourcemime = guess(data.altsource);
+      data.poster = editor.convertURL(data.poster, 'poster');
+      var pattern = matchPattern(data.source);
+      if (pattern) {
+        data.source = pattern.url;
+        data.type = pattern.type;
+        data.allowfullscreen = pattern.allowFullscreen;
+        data.width = data.width || String(pattern.w);
+        data.height = data.height || String(pattern.h);
+      }
+      if (data.embed) {
+        return updateHtml(data.embed, data, true);
+      } else {
+        var videoScript = getVideoScriptMatch(getScripts(editor), data.source);
+        if (videoScript) {
+          data.type = 'script';
+          data.width = String(videoScript.width);
+          data.height = String(videoScript.height);
+        }
+        var audioTemplateCallback = getAudioTemplateCallback(editor);
+        var videoTemplateCallback = getVideoTemplateCallback(editor);
+        data.width = data.width || '300';
+        data.height = data.height || '150';
+        global$8.each(data, function (value, key) {
+          data[key] = editor.dom.encode('' + value);
+        });
+        if (data.type === 'iframe') {
+          return getIframeHtml(data);
+        } else if (data.sourcemime === 'application/x-shockwave-flash') {
+          return getFlashHtml(data);
+        } else if (data.sourcemime.indexOf('audio') !== -1) {
+          return getAudioHtml(data, audioTemplateCallback);
+        } else if (data.type === 'script') {
+          return getScriptHtml(data);
+        } else {
+          return getVideoHtml(data, videoTemplateCallback);
+        }
+      }
+    };
+
+    var isMediaElement = function (element) {
+      return element.hasAttribute('data-mce-object') || element.hasAttribute('data-ephox-embed-iri');
+    };
+    var setup$2 = function (editor) {
+      editor.on('click keyup touchend', function () {
+        var selectedNode = editor.selection.getNode();
+        if (selectedNode && editor.dom.hasClass(selectedNode, 'mce-preview-object')) {
+          if (editor.dom.getAttrib(selectedNode, 'data-mce-selected')) {
+            selectedNode.setAttribute('data-mce-selected', '2');
+          }
+        }
+      });
+      editor.on('ObjectSelected', function (e) {
+        var objectType = e.target.getAttribute('data-mce-object');
+        if (objectType === 'script') {
+          e.preventDefault();
+        }
+      });
+      editor.on('ObjectResized', function (e) {
+        var target = e.target;
+        if (target.getAttribute('data-mce-object')) {
+          var html = target.getAttribute('data-mce-html');
+          if (html) {
+            html = unescape(html);
+            target.setAttribute('data-mce-html', escape(updateHtml(html, {
+              width: String(e.width),
+              height: String(e.height)
+            })));
+          }
+        }
       });
     };
-    var DialogInfo = { collect: collect };
 
-    var handleSubmit = function (editor, info) {
-      return function (api) {
-        var data = api.getData();
-        if (!data.url.value) {
-          unlink(editor);
-          api.close();
-          return;
-        }
-        var getChangedValue = function (key) {
-          return Optional.from(data[key]).filter(function (value) {
-            return !is(info.anchor[key], value);
+    var global$3 = tinymce.util.Tools.resolve('tinymce.util.Promise');
+
+    var cache = {};
+    var embedPromise = function (data, dataToHtml, handler) {
+      return new global$3(function (res, rej) {
+        var wrappedResolve = function (response) {
+          if (response.html) {
+            cache[data.source] = response;
+          }
+          return res({
+            url: data.source,
+            html: response.html ? response.html : dataToHtml(data)
           });
         };
-        var changedData = {
-          href: data.url.value,
-          text: getChangedValue('text'),
-          target: getChangedValue('target'),
-          rel: getChangedValue('rel'),
-          class: getChangedValue('linkClass'),
-          title: getChangedValue('title')
+        if (cache[data.source]) {
+          wrappedResolve(cache[data.source]);
+        } else {
+          handler({ url: data.source }, wrappedResolve, rej);
+        }
+      });
+    };
+    var defaultPromise = function (data, dataToHtml) {
+      return global$3.resolve({
+        html: dataToHtml(data),
+        url: data.source
+      });
+    };
+    var loadedData = function (editor) {
+      return function (data) {
+        return dataToHtml(editor, data);
+      };
+    };
+    var getEmbedHtml = function (editor, data) {
+      var embedHandler = getUrlResolver(editor);
+      return embedHandler ? embedPromise(data, loadedData(editor), embedHandler) : defaultPromise(data, loadedData(editor));
+    };
+    var isCached = function (url) {
+      return has(cache, url);
+    };
+
+    var extractMeta = function (sourceInput, data) {
+      return get$1(data, sourceInput).bind(function (mainData) {
+        return get$1(mainData, 'meta');
+      });
+    };
+    var getValue = function (data, metaData, sourceInput) {
+      return function (prop) {
+        var _a;
+        var getFromData = function () {
+          return get$1(data, prop);
         };
-        var attachState = {
-          href: data.url.value,
-          attach: data.url.meta !== undefined && data.url.meta.attach ? data.url.meta.attach : noop
+        var getFromMetaData = function () {
+          return get$1(metaData, prop);
         };
-        DialogConfirms.preprocess(editor, changedData).then(function (pData) {
-          link(editor, attachState, pData);
+        var getNonEmptyValue = function (c) {
+          return get$1(c, 'value').bind(function (v) {
+            return v.length > 0 ? Optional.some(v) : Optional.none();
+          });
+        };
+        var getFromValueFirst = function () {
+          return getFromData().bind(function (child) {
+            return isObject(child) ? getNonEmptyValue(child).orThunk(getFromMetaData) : getFromMetaData().orThunk(function () {
+              return Optional.from(child);
+            });
+          });
+        };
+        var getFromMetaFirst = function () {
+          return getFromMetaData().orThunk(function () {
+            return getFromData().bind(function (child) {
+              return isObject(child) ? getNonEmptyValue(child) : Optional.from(child);
+            });
+          });
+        };
+        return _a = {}, _a[prop] = (prop === sourceInput ? getFromValueFirst() : getFromMetaFirst()).getOr(''), _a;
+      };
+    };
+    var getDimensions = function (data, metaData) {
+      var dimensions = {};
+      get$1(data, 'dimensions').each(function (dims) {
+        each$1([
+          'width',
+          'height'
+        ], function (prop) {
+          get$1(metaData, prop).orThunk(function () {
+            return get$1(dims, prop);
+          }).each(function (value) {
+            return dimensions[prop] = value;
+          });
         });
-        api.close();
+      });
+      return dimensions;
+    };
+    var unwrap = function (data, sourceInput) {
+      var metaData = sourceInput ? extractMeta(sourceInput, data).getOr({}) : {};
+      var get = getValue(data, metaData, sourceInput);
+      return __assign(__assign(__assign(__assign(__assign({}, get('source')), get('altsource')), get('poster')), get('embed')), getDimensions(data, metaData));
+    };
+    var wrap = function (data) {
+      var wrapped = __assign(__assign({}, data), {
+        source: { value: get$1(data, 'source').getOr('') },
+        altsource: { value: get$1(data, 'altsource').getOr('') },
+        poster: { value: get$1(data, 'poster').getOr('') }
+      });
+      each$1([
+        'width',
+        'height'
+      ], function (prop) {
+        get$1(data, prop).each(function (value) {
+          var dimensions = wrapped.dimensions || {};
+          dimensions[prop] = value;
+          wrapped.dimensions = dimensions;
+        });
+      });
+      return wrapped;
+    };
+    var handleError = function (editor) {
+      return function (error) {
+        var errorMessage = error && error.msg ? 'Media embed handler error: ' + error.msg : 'Media embed handler threw unknown error.';
+        editor.notificationManager.open({
+          type: 'error',
+          text: errorMessage
+        });
       };
     };
-    var collectData = function (editor) {
-      var anchorNode = getAnchorElement(editor);
-      return DialogInfo.collect(editor, anchorNode);
+    var snippetToData = function (editor, embedSnippet) {
+      return htmlToData(getScripts(editor), embedSnippet);
     };
-    var getInitialData = function (info, defaultTarget) {
-      var anchor = info.anchor;
-      var url = anchor.url.getOr('');
-      return {
-        url: {
-          value: url,
-          meta: { original: { value: url } }
-        },
-        text: anchor.text.getOr(''),
-        title: anchor.title.getOr(''),
-        anchor: url,
-        link: url,
-        rel: anchor.rel.getOr(''),
-        target: anchor.target.or(defaultTarget).getOr(''),
-        linkClass: anchor.linkClass.getOr('')
+    var getEditorData = function (editor) {
+      var element = editor.selection.getNode();
+      var snippet = isMediaElement(element) ? editor.serializer.serialize(element, { selection: true }) : '';
+      return __assign({ embed: snippet }, htmlToData(getScripts(editor), snippet));
+    };
+    var addEmbedHtml = function (api, editor) {
+      return function (response) {
+        if (isString(response.url) && response.url.trim().length > 0) {
+          var html = response.html;
+          var snippetData = snippetToData(editor, html);
+          var nuData = __assign(__assign({}, snippetData), {
+            source: response.url,
+            embed: html
+          });
+          api.setData(wrap(nuData));
+        }
       };
     };
-    var makeDialog = function (settings, onSubmit, editor) {
-      var urlInput = [{
-          name: 'url',
+    var selectPlaceholder = function (editor, beforeObjects) {
+      var afterObjects = editor.dom.select('*[data-mce-object]');
+      for (var i = 0; i < beforeObjects.length; i++) {
+        for (var y = afterObjects.length - 1; y >= 0; y--) {
+          if (beforeObjects[i] === afterObjects[y]) {
+            afterObjects.splice(y, 1);
+          }
+        }
+      }
+      editor.selection.select(afterObjects[0]);
+    };
+    var handleInsert = function (editor, html) {
+      var beforeObjects = editor.dom.select('*[data-mce-object]');
+      editor.insertContent(html);
+      selectPlaceholder(editor, beforeObjects);
+      editor.nodeChanged();
+    };
+    var submitForm = function (prevData, newData, editor) {
+      newData.embed = updateHtml(newData.embed, newData);
+      if (newData.embed && (prevData.source === newData.source || isCached(newData.source))) {
+        handleInsert(editor, newData.embed);
+      } else {
+        getEmbedHtml(editor, newData).then(function (response) {
+          handleInsert(editor, response.html);
+        }).catch(handleError(editor));
+      }
+    };
+    var showDialog = function (editor) {
+      var editorData = getEditorData(editor);
+      var currentData = Cell(editorData);
+      var initialData = wrap(editorData);
+      var handleSource = function (prevData, api) {
+        var serviceData = unwrap(api.getData(), 'source');
+        if (prevData.source !== serviceData.source) {
+          addEmbedHtml(win, editor)({
+            url: serviceData.source,
+            html: ''
+          });
+          getEmbedHtml(editor, serviceData).then(addEmbedHtml(win, editor)).catch(handleError(editor));
+        }
+      };
+      var handleEmbed = function (api) {
+        var data = unwrap(api.getData());
+        var dataFromEmbed = snippetToData(editor, data.embed);
+        api.setData(wrap(dataFromEmbed));
+      };
+      var handleUpdate = function (api, sourceInput) {
+        var data = unwrap(api.getData(), sourceInput);
+        var embed = dataToHtml(editor, data);
+        api.setData(wrap(__assign(__assign({}, data), { embed: embed })));
+      };
+      var mediaInput = [{
+          name: 'source',
           type: 'urlinput',
-          filetype: 'file',
-          label: 'URL'
+          filetype: 'media',
+          label: 'Source'
         }];
-      var displayText = settings.anchor.text.map(function () {
-        return {
-          name: 'text',
-          type: 'input',
-          label: 'Text to display'
-        };
-      }).toArray();
-      var titleText = settings.flags.titleEnabled ? [{
-          name: 'title',
-          type: 'input',
-          label: 'Title'
-        }] : [];
-      var defaultTarget = Optional.from(getDefaultLinkTarget(editor));
-      var initialData = getInitialData(settings, defaultTarget);
-      var catalogs = settings.catalogs;
-      var dialogDelta = DialogChanges.init(initialData, catalogs);
-      var body = {
-        type: 'panel',
+      var sizeInput = !hasDimensions(editor) ? [] : [{
+          type: 'sizeinput',
+          name: 'dimensions',
+          label: 'Constrain proportions',
+          constrain: true
+        }];
+      var generalTab = {
+        title: 'General',
+        name: 'general',
         items: flatten([
-          urlInput,
-          displayText,
-          titleText,
-          cat([
-            catalogs.anchor.map(ListOptions.createUi('anchor', 'Anchors')),
-            catalogs.rels.map(ListOptions.createUi('rel', 'Rel')),
-            catalogs.targets.map(ListOptions.createUi('target', 'Open link in...')),
-            catalogs.link.map(ListOptions.createUi('link', 'Link list')),
-            catalogs.classes.map(ListOptions.createUi('linkClass', 'Class'))
-          ])
+          mediaInput,
+          sizeInput
         ])
       };
-      return {
-        title: 'Insert/Edit Link',
+      var embedTextarea = {
+        type: 'textarea',
+        name: 'embed',
+        label: 'Paste your embed code below:'
+      };
+      var embedTab = {
+        title: 'Embed',
+        items: [embedTextarea]
+      };
+      var advancedFormItems = [];
+      if (hasAltSource(editor)) {
+        advancedFormItems.push({
+          name: 'altsource',
+          type: 'urlinput',
+          filetype: 'media',
+          label: 'Alternative source URL'
+        });
+      }
+      if (hasPoster(editor)) {
+        advancedFormItems.push({
+          name: 'poster',
+          type: 'urlinput',
+          filetype: 'image',
+          label: 'Media poster (Image URL)'
+        });
+      }
+      var advancedTab = {
+        title: 'Advanced',
+        name: 'advanced',
+        items: advancedFormItems
+      };
+      var tabs = [
+        generalTab,
+        embedTab
+      ];
+      if (advancedFormItems.length > 0) {
+        tabs.push(advancedTab);
+      }
+      var body = {
+        type: 'tabpanel',
+        tabs: tabs
+      };
+      var win = editor.windowManager.open({
+        title: 'Insert/Edit Media',
         size: 'normal',
         body: body,
         buttons: [
@@ -61692,292 +62960,384 @@ tinymce.IconManager.add('default', {
             primary: true
           }
         ],
-        initialData: initialData,
-        onChange: function (api, _a) {
-          var name = _a.name;
-          dialogDelta.onChange(api.getData, { name: name }).each(function (newData) {
-            api.setData(newData);
-          });
+        onSubmit: function (api) {
+          var serviceData = unwrap(api.getData());
+          submitForm(currentData.get(), serviceData, editor);
+          api.close();
         },
-        onSubmit: onSubmit
-      };
-    };
-    var open$1 = function (editor) {
-      var data = collectData(editor);
-      data.then(function (info) {
-        var onSubmit = handleSubmit(editor, info);
-        return makeDialog(info, onSubmit, editor);
-      }).then(function (spec) {
-        editor.windowManager.open(spec);
+        onChange: function (api, detail) {
+          switch (detail.name) {
+          case 'source':
+            handleSource(currentData.get(), api);
+            break;
+          case 'embed':
+            handleEmbed(api);
+            break;
+          case 'dimensions':
+          case 'altsource':
+          case 'poster':
+            handleUpdate(api, detail.name);
+            break;
+          }
+          currentData.set(unwrap(api.getData()));
+        },
+        initialData: initialData
       });
     };
 
-    var appendClickRemove = function (link, evt) {
-      document.body.appendChild(link);
-      link.dispatchEvent(evt);
-      document.body.removeChild(link);
-    };
-    var open = function (url) {
-      var link = document.createElement('a');
-      link.target = '_blank';
-      link.href = url;
-      link.rel = 'noreferrer noopener';
-      var evt = document.createEvent('MouseEvents');
-      evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      appendClickRemove(link, evt);
+    var get = function (editor) {
+      var showDialog$1 = function () {
+        showDialog(editor);
+      };
+      return { showDialog: showDialog$1 };
     };
 
-    var getLink = function (editor, elm) {
-      return editor.dom.getParent(elm, 'a[href]');
+    var register$1 = function (editor) {
+      var showDialog$1 = function () {
+        showDialog(editor);
+      };
+      editor.addCommand('mceMedia', showDialog$1);
     };
-    var getSelectedLink = function (editor) {
-      return getLink(editor, editor.selection.getStart());
-    };
-    var hasOnlyAltModifier = function (e) {
-      return e.altKey === true && e.shiftKey === false && e.ctrlKey === false && e.metaKey === false;
-    };
-    var gotoLink = function (editor, a) {
-      if (a) {
-        var href = getHref(a);
-        if (/^#/.test(href)) {
-          var targetEl = editor.$(href);
-          if (targetEl.length) {
-            editor.selection.scrollIntoView(targetEl[0], true);
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.html.Node');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
+
+    var global = tinymce.util.Tools.resolve('tinymce.html.DomParser');
+
+    var sanitize = function (editor, html) {
+      if (shouldFilterHtml(editor) === false) {
+        return html;
+      }
+      var writer = global$4();
+      var blocked;
+      global$6({
+        validate: false,
+        allow_conditional_comments: false,
+        comment: function (text) {
+          if (!blocked) {
+            writer.comment(text);
           }
-        } else {
-          open(a.href);
+        },
+        cdata: function (text) {
+          if (!blocked) {
+            writer.cdata(text);
+          }
+        },
+        text: function (text, raw) {
+          if (!blocked) {
+            writer.text(text, raw);
+          }
+        },
+        start: function (name, attrs, empty) {
+          blocked = true;
+          if (name === 'script' || name === 'noscript' || name === 'svg') {
+            return;
+          }
+          for (var i = attrs.length - 1; i >= 0; i--) {
+            var attrName = attrs[i].name;
+            if (attrName.indexOf('on') === 0) {
+              delete attrs.map[attrName];
+              attrs.splice(i, 1);
+            }
+            if (attrName === 'style') {
+              attrs[i].value = editor.dom.serializeStyle(editor.dom.parseStyle(attrs[i].value), name);
+            }
+          }
+          writer.start(name, attrs, empty);
+          blocked = false;
+        },
+        end: function (name) {
+          if (blocked) {
+            return;
+          }
+          writer.end(name);
         }
+      }, global$5({})).parse(html);
+      return writer.getContent();
+    };
+
+    var isLiveEmbedNode = function (node) {
+      var name = node.name;
+      return name === 'iframe' || name === 'video' || name === 'audio';
+    };
+    var getDimension = function (node, styles, dimension, defaultValue) {
+      if (defaultValue === void 0) {
+        defaultValue = null;
+      }
+      var value = node.attr(dimension);
+      if (isNonNullable(value)) {
+        return value;
+      } else if (!has(styles, dimension)) {
+        return defaultValue;
+      } else {
+        return null;
       }
     };
-    var openDialog = function (editor) {
-      return function () {
-        open$1(editor);
-      };
-    };
-    var gotoSelectedLink = function (editor) {
-      return function () {
-        gotoLink(editor, getSelectedLink(editor));
-      };
-    };
-    var setupGotoLinks = function (editor) {
-      editor.on('click', function (e) {
-        var link = getLink(editor, e.target);
-        if (link && global$6.metaKeyPressed(e)) {
-          e.preventDefault();
-          gotoLink(editor, link);
-        }
-      });
-      editor.on('keydown', function (e) {
-        var link = getSelectedLink(editor);
-        if (link && e.keyCode === 13 && hasOnlyAltModifier(e)) {
-          e.preventDefault();
-          gotoLink(editor, link);
-        }
+    var setDimensions = function (node, previewNode, styles) {
+      var useDefaults = previewNode.name === 'img' || node.name === 'video';
+      var defaultWidth = useDefaults ? '300' : null;
+      var fallbackHeight = node.name === 'audio' ? '30' : '150';
+      var defaultHeight = useDefaults ? fallbackHeight : null;
+      previewNode.attr({
+        width: getDimension(node, styles, 'width', defaultWidth),
+        height: getDimension(node, styles, 'height', defaultHeight)
       });
     };
-    var toggleState = function (editor, toggler) {
-      editor.on('NodeChange', toggler);
-      return function () {
-        return editor.off('NodeChange', toggler);
-      };
+    var appendNodeContent = function (editor, nodeName, previewNode, html) {
+      var newNode = global({
+        forced_root_block: false,
+        validate: false
+      }, editor.schema).parse(html, { context: nodeName });
+      while (newNode.firstChild) {
+        previewNode.append(newNode.firstChild);
+      }
     };
-    var toggleActiveState = function (editor) {
-      return function (api) {
-        var updateState = function () {
-          return api.setActive(!editor.mode.isReadOnly() && getAnchorElement(editor, editor.selection.getNode()) !== null);
-        };
-        updateState();
-        return toggleState(editor, updateState);
-      };
+    var createPlaceholderNode = function (editor, node) {
+      var name = node.name;
+      var placeHolder = new global$2('img', 1);
+      placeHolder.shortEnded = true;
+      retainAttributesAndInnerHtml(editor, node, placeHolder);
+      setDimensions(node, placeHolder, {});
+      placeHolder.attr({
+        'style': node.attr('style'),
+        'src': global$1.transparentSrc,
+        'data-mce-object': name,
+        'class': 'mce-object mce-object-' + name
+      });
+      return placeHolder;
     };
-    var toggleEnabledState = function (editor) {
-      return function (api) {
-        var updateState = function () {
-          return api.setDisabled(getAnchorElement(editor, editor.selection.getNode()) === null);
-        };
-        updateState();
-        return toggleState(editor, updateState);
-      };
-    };
-    var toggleUnlinkState = function (editor) {
-      return function (api) {
-        var hasLinks$1 = function (parents) {
-          return hasLinks(parents) || hasLinksInSelection(editor.selection.getRng());
-        };
-        var parents = editor.dom.getParents(editor.selection.getStart());
-        api.setDisabled(!hasLinks$1(parents));
-        return toggleState(editor, function (e) {
-          return api.setDisabled(!hasLinks$1(e.parents));
+    var createPreviewNode = function (editor, node) {
+      var name = node.name;
+      var previewWrapper = new global$2('span', 1);
+      previewWrapper.attr({
+        'contentEditable': 'false',
+        'style': node.attr('style'),
+        'data-mce-object': name,
+        'class': 'mce-preview-object mce-object-' + name
+      });
+      retainAttributesAndInnerHtml(editor, node, previewWrapper);
+      var styles = editor.dom.parseStyle(node.attr('style'));
+      var previewNode = new global$2(name, 1);
+      setDimensions(node, previewNode, styles);
+      previewNode.attr({
+        src: node.attr('src'),
+        style: node.attr('style'),
+        class: node.attr('class')
+      });
+      if (name === 'iframe') {
+        previewNode.attr({
+          allowfullscreen: node.attr('allowfullscreen'),
+          frameborder: '0'
         });
+      } else {
+        var attrs = [
+          'controls',
+          'crossorigin',
+          'currentTime',
+          'loop',
+          'muted',
+          'poster',
+          'preload'
+        ];
+        each$1(attrs, function (attrName) {
+          previewNode.attr(attrName, node.attr(attrName));
+        });
+        var sanitizedHtml = previewWrapper.attr('data-mce-html');
+        if (isNonNullable(sanitizedHtml)) {
+          appendNodeContent(editor, name, previewNode, unescape(sanitizedHtml));
+        }
+      }
+      var shimNode = new global$2('span', 1);
+      shimNode.attr('class', 'mce-shim');
+      previewWrapper.append(previewNode);
+      previewWrapper.append(shimNode);
+      return previewWrapper;
+    };
+    var retainAttributesAndInnerHtml = function (editor, sourceNode, targetNode) {
+      var attribs = sourceNode.attributes;
+      var ai = attribs.length;
+      while (ai--) {
+        var attrName = attribs[ai].name;
+        var attrValue = attribs[ai].value;
+        if (attrName !== 'width' && attrName !== 'height' && attrName !== 'style') {
+          if (attrName === 'data' || attrName === 'src') {
+            attrValue = editor.convertURL(attrValue, attrName);
+          }
+          targetNode.attr('data-mce-p-' + attrName, attrValue);
+        }
+      }
+      var innerHtml = sourceNode.firstChild && sourceNode.firstChild.value;
+      if (innerHtml) {
+        targetNode.attr('data-mce-html', escape(sanitize(editor, innerHtml)));
+        targetNode.firstChild = null;
+      }
+    };
+    var isPageEmbedWrapper = function (node) {
+      var nodeClass = node.attr('class');
+      return nodeClass && /\btiny-pageembed\b/.test(nodeClass);
+    };
+    var isWithinEmbedWrapper = function (node) {
+      while (node = node.parent) {
+        if (node.attr('data-ephox-embed-iri') || isPageEmbedWrapper(node)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    var placeHolderConverter = function (editor) {
+      return function (nodes) {
+        var i = nodes.length;
+        var node;
+        var videoScript;
+        while (i--) {
+          node = nodes[i];
+          if (!node.parent) {
+            continue;
+          }
+          if (node.parent.attr('data-mce-object')) {
+            continue;
+          }
+          if (node.name === 'script') {
+            videoScript = getVideoScriptMatch(getScripts(editor), node.attr('src'));
+            if (!videoScript) {
+              continue;
+            }
+          }
+          if (videoScript) {
+            if (videoScript.width) {
+              node.attr('width', videoScript.width.toString());
+            }
+            if (videoScript.height) {
+              node.attr('height', videoScript.height.toString());
+            }
+          }
+          if (isLiveEmbedNode(node) && hasLiveEmbeds(editor) && global$1.ceFalse) {
+            if (!isWithinEmbedWrapper(node)) {
+              node.replace(createPreviewNode(editor, node));
+            }
+          } else {
+            if (!isWithinEmbedWrapper(node)) {
+              node.replace(createPlaceholderNode(editor, node));
+            }
+          }
+        }
       };
     };
 
-    var register = function (editor) {
-      editor.addCommand('mceLink', function () {
-        if (useQuickLink(editor)) {
-          editor.fire('contexttoolbar-show', { toolbarKey: 'quicklink' });
-        } else {
-          openDialog(editor)();
-        }
+    var setup$1 = function (editor) {
+      editor.on('preInit', function () {
+        var specialElements = editor.schema.getSpecialElements();
+        global$8.each('video audio iframe object'.split(' '), function (name) {
+          specialElements[name] = new RegExp('</' + name + '[^>]*>', 'gi');
+        });
+        var boolAttrs = editor.schema.getBoolAttrs();
+        global$8.each('webkitallowfullscreen mozallowfullscreen allowfullscreen'.split(' '), function (name) {
+          boolAttrs[name] = {};
+        });
+        editor.parser.addNodeFilter('iframe,video,audio,object,embed,script', placeHolderConverter(editor));
+        editor.serializer.addAttributeFilter('data-mce-object', function (nodes, name) {
+          var i = nodes.length;
+          var node;
+          var realElm;
+          var ai;
+          var attribs;
+          var innerHtml;
+          var innerNode;
+          var realElmName;
+          var className;
+          while (i--) {
+            node = nodes[i];
+            if (!node.parent) {
+              continue;
+            }
+            realElmName = node.attr(name);
+            realElm = new global$2(realElmName, 1);
+            if (realElmName !== 'audio' && realElmName !== 'script') {
+              className = node.attr('class');
+              if (className && className.indexOf('mce-preview-object') !== -1) {
+                realElm.attr({
+                  width: node.firstChild.attr('width'),
+                  height: node.firstChild.attr('height')
+                });
+              } else {
+                realElm.attr({
+                  width: node.attr('width'),
+                  height: node.attr('height')
+                });
+              }
+            }
+            realElm.attr({ style: node.attr('style') });
+            attribs = node.attributes;
+            ai = attribs.length;
+            while (ai--) {
+              var attrName = attribs[ai].name;
+              if (attrName.indexOf('data-mce-p-') === 0) {
+                realElm.attr(attrName.substr(11), attribs[ai].value);
+              }
+            }
+            if (realElmName === 'script') {
+              realElm.attr('type', 'text/javascript');
+            }
+            innerHtml = node.attr('data-mce-html');
+            if (innerHtml) {
+              innerNode = new global$2('#text', 3);
+              innerNode.raw = true;
+              innerNode.value = sanitize(editor, unescape(innerHtml));
+              realElm.append(innerNode);
+            }
+            node.replace(realElm);
+          }
+        });
+      });
+      editor.on('SetContent', function () {
+        editor.$('span.mce-preview-object').each(function (index, elm) {
+          var $elm = editor.$(elm);
+          if ($elm.find('span.mce-shim').length === 0) {
+            $elm.append('<span class="mce-shim"></span>');
+          }
+        });
       });
     };
 
     var setup = function (editor) {
-      editor.addShortcut('Meta+K', '', function () {
-        editor.execCommand('mceLink');
+      editor.on('ResolveName', function (e) {
+        var name;
+        if (e.target.nodeType === 1 && (name = e.target.getAttribute('data-mce-object'))) {
+          e.name = name;
+        }
       });
     };
 
-    var setupButtons = function (editor) {
-      editor.ui.registry.addToggleButton('link', {
-        icon: 'link',
-        tooltip: 'Insert/edit link',
-        onAction: openDialog(editor),
-        onSetup: toggleActiveState(editor)
-      });
-      editor.ui.registry.addButton('openlink', {
-        icon: 'new-tab',
-        tooltip: 'Open link',
-        onAction: gotoSelectedLink(editor),
-        onSetup: toggleEnabledState(editor)
-      });
-      editor.ui.registry.addButton('unlink', {
-        icon: 'unlink',
-        tooltip: 'Remove link',
-        onAction: function () {
-          return unlink(editor);
-        },
-        onSetup: toggleUnlinkState(editor)
-      });
-    };
-    var setupMenuItems = function (editor) {
-      editor.ui.registry.addMenuItem('openlink', {
-        text: 'Open link',
-        icon: 'new-tab',
-        onAction: gotoSelectedLink(editor),
-        onSetup: toggleEnabledState(editor)
-      });
-      editor.ui.registry.addMenuItem('link', {
-        icon: 'link',
-        text: 'Link...',
-        shortcut: 'Meta+K',
-        onAction: openDialog(editor)
-      });
-      editor.ui.registry.addMenuItem('unlink', {
-        icon: 'unlink',
-        text: 'Remove link',
-        onAction: function () {
-          return unlink(editor);
-        },
-        onSetup: toggleUnlinkState(editor)
-      });
-    };
-    var setupContextMenu = function (editor) {
-      var inLink = 'link unlink openlink';
-      var noLink = 'link';
-      editor.ui.registry.addContextMenu('link', {
-        update: function (element) {
-          return hasLinks(editor.dom.getParents(element, 'a')) ? inLink : noLink;
+    var register = function (editor) {
+      var onAction = function () {
+        return editor.execCommand('mceMedia');
+      };
+      editor.ui.registry.addToggleButton('media', {
+        tooltip: 'Insert/edit media',
+        icon: 'embed',
+        onAction: onAction,
+        onSetup: function (buttonApi) {
+          var selection = editor.selection;
+          buttonApi.setActive(isMediaElement(selection.getNode()));
+          return selection.selectorChangedWithUnbind('img[data-mce-object],span[data-mce-object],div[data-ephox-embed-iri]', buttonApi.setActive).unbind;
         }
       });
-    };
-    var setupContextToolbars = function (editor) {
-      var collapseSelectionToEnd = function (editor) {
-        editor.selection.collapse(false);
-      };
-      var onSetupLink = function (buttonApi) {
-        var node = editor.selection.getNode();
-        buttonApi.setDisabled(!getAnchorElement(editor, node));
-        return noop;
-      };
-      var getLinkText = function (value) {
-        var anchor = getAnchorElement(editor);
-        var onlyText = isOnlyTextSelected(editor);
-        if (!anchor && onlyText) {
-          var text = getAnchorText(editor.selection, anchor);
-          return Optional.some(text.length > 0 ? text : value);
-        } else {
-          return Optional.none();
-        }
-      };
-      editor.ui.registry.addContextForm('quicklink', {
-        launch: {
-          type: 'contextformtogglebutton',
-          icon: 'link',
-          tooltip: 'Link',
-          onSetup: toggleActiveState(editor)
-        },
-        label: 'Link',
-        predicate: function (node) {
-          return !!getAnchorElement(editor, node) && hasContextToolbar(editor);
-        },
-        initValue: function () {
-          var elm = getAnchorElement(editor);
-          return !!elm ? getHref(elm) : '';
-        },
-        commands: [
-          {
-            type: 'contextformtogglebutton',
-            icon: 'link',
-            tooltip: 'Link',
-            primary: true,
-            onSetup: function (buttonApi) {
-              var node = editor.selection.getNode();
-              buttonApi.setActive(!!getAnchorElement(editor, node));
-              return toggleActiveState(editor)(buttonApi);
-            },
-            onAction: function (formApi) {
-              var value = formApi.getValue();
-              var text = getLinkText(value);
-              var attachState = {
-                href: value,
-                attach: noop
-              };
-              link(editor, attachState, {
-                href: value,
-                text: text,
-                title: Optional.none(),
-                rel: Optional.none(),
-                target: Optional.none(),
-                class: Optional.none()
-              });
-              collapseSelectionToEnd(editor);
-              formApi.hide();
-            }
-          },
-          {
-            type: 'contextformbutton',
-            icon: 'unlink',
-            tooltip: 'Remove link',
-            onSetup: onSetupLink,
-            onAction: function (formApi) {
-              unlink(editor);
-              formApi.hide();
-            }
-          },
-          {
-            type: 'contextformbutton',
-            icon: 'new-tab',
-            tooltip: 'Open link',
-            onSetup: onSetupLink,
-            onAction: function (formApi) {
-              gotoSelectedLink(editor)();
-              formApi.hide();
-            }
-          }
-        ]
+      editor.ui.registry.addMenuItem('media', {
+        icon: 'embed',
+        text: 'Media...',
+        onAction: onAction
       });
     };
 
     function Plugin () {
-      global$7.add('link', function (editor) {
-        setupButtons(editor);
-        setupMenuItems(editor);
-        setupContextMenu(editor);
-        setupContextToolbars(editor);
-        setupGotoLinks(editor);
+      global$9.add('media', function (editor) {
+        register$1(editor);
         register(editor);
         setup(editor);
+        setup$1(editor);
+        setup$2(editor);
+        return get(editor);
       });
     }
 
@@ -64310,1348 +65670,106 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
-    var global$9 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    var __assign = function () {
-      __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s)
-            if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-        }
-        return t;
-      };
-      return __assign.apply(this, arguments);
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var getNonEditableClass = function (editor) {
+      return editor.getParam('noneditable_noneditable_class', 'mceNonEditable');
     };
-
-    var typeOf = function (x) {
-      var t = typeof x;
-      if (x === null) {
-        return 'null';
-      } else if (t === 'object' && (Array.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'Array')) {
-        return 'array';
-      } else if (t === 'object' && (String.prototype.isPrototypeOf(x) || x.constructor && x.constructor.name === 'String')) {
-        return 'string';
+    var getEditableClass = function (editor) {
+      return editor.getParam('noneditable_editable_class', 'mceEditable');
+    };
+    var getNonEditableRegExps = function (editor) {
+      var nonEditableRegExps = editor.getParam('noneditable_regexp', []);
+      if (nonEditableRegExps && nonEditableRegExps.constructor === RegExp) {
+        return [nonEditableRegExps];
       } else {
-        return t;
+        return nonEditableRegExps;
       }
     };
-    var isType = function (type) {
-      return function (value) {
-        return typeOf(value) === type;
-      };
-    };
-    var isString = isType('string');
-    var isObject = isType('object');
-    var isArray = isType('array');
-    var isNullable = function (a) {
-      return a === null || a === undefined;
-    };
-    var isNonNullable = function (a) {
-      return !isNullable(a);
-    };
 
-    var noop = function () {
-    };
-    var constant = function (value) {
-      return function () {
-        return value;
+    var hasClass = function (checkClassName) {
+      return function (node) {
+        return (' ' + node.attr('class') + ' ').indexOf(checkClassName) !== -1;
       };
     };
-    var identity = function (x) {
-      return x;
-    };
-    var never = constant(false);
-    var always = constant(true);
-
-    var none = function () {
-      return NONE;
-    };
-    var NONE = function () {
-      var call = function (thunk) {
-        return thunk();
-      };
-      var id = identity;
-      var me = {
-        fold: function (n, _s) {
-          return n();
-        },
-        isSome: never,
-        isNone: always,
-        getOr: id,
-        getOrThunk: call,
-        getOrDie: function (msg) {
-          throw new Error(msg || 'error: getOrDie called on none.');
-        },
-        getOrNull: constant(null),
-        getOrUndefined: constant(undefined),
-        or: id,
-        orThunk: call,
-        map: none,
-        each: noop,
-        bind: none,
-        exists: never,
-        forall: always,
-        filter: function () {
-          return none();
-        },
-        toArray: function () {
-          return [];
-        },
-        toString: constant('none()')
-      };
-      return me;
-    }();
-    var some = function (a) {
-      var constant_a = constant(a);
-      var self = function () {
-        return me;
-      };
-      var bind = function (f) {
-        return f(a);
-      };
-      var me = {
-        fold: function (n, s) {
-          return s(a);
-        },
-        isSome: always,
-        isNone: never,
-        getOr: constant_a,
-        getOrThunk: constant_a,
-        getOrDie: constant_a,
-        getOrNull: constant_a,
-        getOrUndefined: constant_a,
-        or: self,
-        orThunk: self,
-        map: function (f) {
-          return some(f(a));
-        },
-        each: function (f) {
-          f(a);
-        },
-        bind: bind,
-        exists: bind,
-        forall: bind,
-        filter: function (f) {
-          return f(a) ? me : NONE;
-        },
-        toArray: function () {
-          return [a];
-        },
-        toString: function () {
-          return 'some(' + a + ')';
+    var replaceMatchWithSpan = function (editor, content, cls) {
+      return function (match) {
+        var args = arguments, index = args[args.length - 2];
+        var prevChar = index > 0 ? content.charAt(index - 1) : '';
+        if (prevChar === '"') {
+          return match;
         }
-      };
-      return me;
-    };
-    var from = function (value) {
-      return value === null || value === undefined ? NONE : some(value);
-    };
-    var Optional = {
-      some: some,
-      none: none,
-      from: from
-    };
-
-    var nativePush = Array.prototype.push;
-    var each$1 = function (xs, f) {
-      for (var i = 0, len = xs.length; i < len; i++) {
-        var x = xs[i];
-        f(x, i);
-      }
-    };
-    var flatten = function (xs) {
-      var r = [];
-      for (var i = 0, len = xs.length; i < len; ++i) {
-        if (!isArray(xs[i])) {
-          throw new Error('Arr.flatten item ' + i + ' was not an array, input: ' + xs);
-        }
-        nativePush.apply(r, xs[i]);
-      }
-      return r;
-    };
-
-    var Cell = function (initial) {
-      var value = initial;
-      var get = function () {
-        return value;
-      };
-      var set = function (v) {
-        value = v;
-      };
-      return {
-        get: get,
-        set: set
-      };
-    };
-
-    var keys = Object.keys;
-    var hasOwnProperty = Object.hasOwnProperty;
-    var each = function (obj, f) {
-      var props = keys(obj);
-      for (var k = 0, len = props.length; k < len; k++) {
-        var i = props[k];
-        var x = obj[i];
-        f(x, i);
-      }
-    };
-    var get$1 = function (obj, key) {
-      return has(obj, key) ? Optional.from(obj[key]) : Optional.none();
-    };
-    var has = function (obj, key) {
-      return hasOwnProperty.call(obj, key);
-    };
-
-    var getScripts = function (editor) {
-      return editor.getParam('media_scripts');
-    };
-    var getAudioTemplateCallback = function (editor) {
-      return editor.getParam('audio_template_callback');
-    };
-    var getVideoTemplateCallback = function (editor) {
-      return editor.getParam('video_template_callback');
-    };
-    var hasLiveEmbeds = function (editor) {
-      return editor.getParam('media_live_embeds', true);
-    };
-    var shouldFilterHtml = function (editor) {
-      return editor.getParam('media_filter_html', true);
-    };
-    var getUrlResolver = function (editor) {
-      return editor.getParam('media_url_resolver');
-    };
-    var hasAltSource = function (editor) {
-      return editor.getParam('media_alt_source', true);
-    };
-    var hasPoster = function (editor) {
-      return editor.getParam('media_poster', true);
-    };
-    var hasDimensions = function (editor) {
-      return editor.getParam('media_dimensions', true);
-    };
-
-    var global$8 = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var global$7 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
-
-    var global$6 = tinymce.util.Tools.resolve('tinymce.html.SaxParser');
-
-    var getVideoScriptMatch = function (prefixes, src) {
-      if (prefixes) {
-        for (var i = 0; i < prefixes.length; i++) {
-          if (src.indexOf(prefixes[i].filter) !== -1) {
-            return prefixes[i];
-          }
-        }
-      }
-    };
-
-    var DOM$1 = global$7.DOM;
-    var trimPx = function (value) {
-      return value.replace(/px$/, '');
-    };
-    var getEphoxEmbedData = function (attrs) {
-      var style = attrs.map.style;
-      var styles = style ? DOM$1.parseStyle(style) : {};
-      return {
-        type: 'ephox-embed-iri',
-        source: attrs.map['data-ephox-embed-iri'],
-        altsource: '',
-        poster: '',
-        width: get$1(styles, 'max-width').map(trimPx).getOr(''),
-        height: get$1(styles, 'max-height').map(trimPx).getOr('')
-      };
-    };
-    var htmlToData = function (prefixes, html) {
-      var isEphoxEmbed = Cell(false);
-      var data = {};
-      global$6({
-        validate: false,
-        allow_conditional_comments: true,
-        start: function (name, attrs) {
-          if (isEphoxEmbed.get()) ; else if (has(attrs.map, 'data-ephox-embed-iri')) {
-            isEphoxEmbed.set(true);
-            data = getEphoxEmbedData(attrs);
-          } else {
-            if (!data.source && name === 'param') {
-              data.source = attrs.map.movie;
-            }
-            if (name === 'iframe' || name === 'object' || name === 'embed' || name === 'video' || name === 'audio') {
-              if (!data.type) {
-                data.type = name;
-              }
-              data = global$8.extend(attrs.map, data);
-            }
-            if (name === 'script') {
-              var videoScript = getVideoScriptMatch(prefixes, attrs.map.src);
-              if (!videoScript) {
-                return;
-              }
-              data = {
-                type: 'script',
-                source: attrs.map.src,
-                width: String(videoScript.width),
-                height: String(videoScript.height)
-              };
-            }
-            if (name === 'source') {
-              if (!data.source) {
-                data.source = attrs.map.src;
-              } else if (!data.altsource) {
-                data.altsource = attrs.map.src;
-              }
-            }
-            if (name === 'img' && !data.poster) {
-              data.poster = attrs.map.src;
+        if (prevChar === '>') {
+          var findStartTagIndex = content.lastIndexOf('<', index);
+          if (findStartTagIndex !== -1) {
+            var tagHtml = content.substring(findStartTagIndex, index);
+            if (tagHtml.indexOf('contenteditable="false"') !== -1) {
+              return match;
             }
           }
         }
-      }).parse(html);
-      data.source = data.source || data.src || data.data;
-      data.altsource = data.altsource || '';
-      data.poster = data.poster || '';
-      return data;
-    };
-
-    var guess = function (url) {
-      var mimes = {
-        mp3: 'audio/mpeg',
-        m4a: 'audio/x-m4a',
-        wav: 'audio/wav',
-        mp4: 'video/mp4',
-        webm: 'video/webm',
-        ogg: 'video/ogg',
-        swf: 'application/x-shockwave-flash'
+        return '<span class="' + cls + '" data-mce-content="' + editor.dom.encode(args[0]) + '">' + editor.dom.encode(typeof args[1] === 'string' ? args[1] : args[0]) + '</span>';
       };
-      var fileEnd = url.toLowerCase().split('.').pop();
-      var mime = mimes[fileEnd];
-      return mime ? mime : '';
     };
-
-    var global$5 = tinymce.util.Tools.resolve('tinymce.html.Schema');
-
-    var global$4 = tinymce.util.Tools.resolve('tinymce.html.Writer');
-
-    var DOM = global$7.DOM;
-    var addPx = function (value) {
-      return /^[0-9.]+$/.test(value) ? value + 'px' : value;
+    var convertRegExpsToNonEditable = function (editor, nonEditableRegExps, e) {
+      var i = nonEditableRegExps.length, content = e.content;
+      if (e.format === 'raw') {
+        return;
+      }
+      while (i--) {
+        content = content.replace(nonEditableRegExps[i], replaceMatchWithSpan(editor, content, getNonEditableClass(editor)));
+      }
+      e.content = content;
     };
-    var setAttributes = function (attrs, updatedAttrs) {
-      each(updatedAttrs, function (val, name) {
-        var value = '' + val;
-        if (attrs.map[name]) {
-          var i = attrs.length;
-          while (i--) {
-            var attr = attrs[i];
-            if (attr.name === name) {
-              if (value) {
-                attrs.map[name] = value;
-                attr.value = value;
-              } else {
-                delete attrs.map[name];
-                attrs.splice(i, 1);
-              }
-            }
-          }
-        } else if (value) {
-          attrs.push({
-            name: name,
-            value: value
+    var setup = function (editor) {
+      var contentEditableAttrName = 'contenteditable';
+      var editClass = ' ' + global.trim(getEditableClass(editor)) + ' ';
+      var nonEditClass = ' ' + global.trim(getNonEditableClass(editor)) + ' ';
+      var hasEditClass = hasClass(editClass);
+      var hasNonEditClass = hasClass(nonEditClass);
+      var nonEditableRegExps = getNonEditableRegExps(editor);
+      editor.on('PreInit', function () {
+        if (nonEditableRegExps.length > 0) {
+          editor.on('BeforeSetContent', function (e) {
+            convertRegExpsToNonEditable(editor, nonEditableRegExps, e);
           });
-          attrs.map[name] = value;
         }
-      });
-    };
-    var updateEphoxEmbed = function (data, attrs) {
-      var style = attrs.map.style;
-      var styleMap = style ? DOM.parseStyle(style) : {};
-      styleMap['max-width'] = addPx(data.width);
-      styleMap['max-height'] = addPx(data.height);
-      setAttributes(attrs, { style: DOM.serializeStyle(styleMap) });
-    };
-    var sources = [
-      'source',
-      'altsource'
-    ];
-    var updateHtml = function (html, data, updateAll) {
-      var writer = global$4();
-      var isEphoxEmbed = Cell(false);
-      var sourceCount = 0;
-      var hasImage;
-      global$6({
-        validate: false,
-        allow_conditional_comments: true,
-        comment: function (text) {
-          writer.comment(text);
-        },
-        cdata: function (text) {
-          writer.cdata(text);
-        },
-        text: function (text, raw) {
-          writer.text(text, raw);
-        },
-        start: function (name, attrs, empty) {
-          if (isEphoxEmbed.get()) ; else if (has(attrs.map, 'data-ephox-embed-iri')) {
-            isEphoxEmbed.set(true);
-            updateEphoxEmbed(data, attrs);
-          } else {
-            switch (name) {
-            case 'video':
-            case 'object':
-            case 'embed':
-            case 'img':
-            case 'iframe':
-              if (data.height !== undefined && data.width !== undefined) {
-                setAttributes(attrs, {
-                  width: data.width,
-                  height: data.height
-                });
-              }
-              break;
-            }
-            if (updateAll) {
-              switch (name) {
-              case 'video':
-                setAttributes(attrs, {
-                  poster: data.poster,
-                  src: ''
-                });
-                if (data.altsource) {
-                  setAttributes(attrs, { src: '' });
-                }
-                break;
-              case 'iframe':
-                setAttributes(attrs, { src: data.source });
-                break;
-              case 'source':
-                if (sourceCount < 2) {
-                  setAttributes(attrs, {
-                    src: data[sources[sourceCount]],
-                    type: data[sources[sourceCount] + 'mime']
-                  });
-                  if (!data[sources[sourceCount]]) {
-                    return;
-                  }
-                }
-                sourceCount++;
-                break;
-              case 'img':
-                if (!data.poster) {
-                  return;
-                }
-                hasImage = true;
-                break;
-              }
-            }
-          }
-          writer.start(name, attrs, empty);
-        },
-        end: function (name) {
-          if (!isEphoxEmbed.get()) {
-            if (name === 'video' && updateAll) {
-              for (var index = 0; index < 2; index++) {
-                if (data[sources[index]]) {
-                  var attrs = [];
-                  attrs.map = {};
-                  if (sourceCount <= index) {
-                    setAttributes(attrs, {
-                      src: data[sources[index]],
-                      type: data[sources[index] + 'mime']
-                    });
-                    writer.start('source', attrs, true);
-                  }
-                }
-              }
-            }
-            if (data.poster && name === 'object' && updateAll && !hasImage) {
-              var imgAttrs = [];
-              imgAttrs.map = {};
-              setAttributes(imgAttrs, {
-                src: data.poster,
-                width: data.width,
-                height: data.height
-              });
-              writer.start('img', imgAttrs, true);
-            }
-          }
-          writer.end(name);
-        }
-      }, global$5({})).parse(html);
-      return writer.getContent();
-    };
-
-    var urlPatterns = [
-      {
-        regex: /youtu\.be\/([\w\-_\?&=.]+)/i,
-        type: 'iframe',
-        w: 560,
-        h: 314,
-        url: 'www.youtube.com/embed/$1',
-        allowFullscreen: true
-      },
-      {
-        regex: /youtube\.com(.+)v=([^&]+)(&([a-z0-9&=\-_]+))?/i,
-        type: 'iframe',
-        w: 560,
-        h: 314,
-        url: 'www.youtube.com/embed/$2?$4',
-        allowFullscreen: true
-      },
-      {
-        regex: /youtube.com\/embed\/([a-z0-9\?&=\-_]+)/i,
-        type: 'iframe',
-        w: 560,
-        h: 314,
-        url: 'www.youtube.com/embed/$1',
-        allowFullscreen: true
-      },
-      {
-        regex: /vimeo\.com\/([0-9]+)/,
-        type: 'iframe',
-        w: 425,
-        h: 350,
-        url: 'player.vimeo.com/video/$1?title=0&byline=0&portrait=0&color=8dc7dc',
-        allowFullscreen: true
-      },
-      {
-        regex: /vimeo\.com\/(.*)\/([0-9]+)/,
-        type: 'iframe',
-        w: 425,
-        h: 350,
-        url: 'player.vimeo.com/video/$2?title=0&amp;byline=0',
-        allowFullscreen: true
-      },
-      {
-        regex: /maps\.google\.([a-z]{2,3})\/maps\/(.+)msid=(.+)/,
-        type: 'iframe',
-        w: 425,
-        h: 350,
-        url: 'maps.google.com/maps/ms?msid=$2&output=embed"',
-        allowFullscreen: false
-      },
-      {
-        regex: /dailymotion\.com\/video\/([^_]+)/,
-        type: 'iframe',
-        w: 480,
-        h: 270,
-        url: 'www.dailymotion.com/embed/video/$1',
-        allowFullscreen: true
-      },
-      {
-        regex: /dai\.ly\/([^_]+)/,
-        type: 'iframe',
-        w: 480,
-        h: 270,
-        url: 'www.dailymotion.com/embed/video/$1',
-        allowFullscreen: true
-      }
-    ];
-    var getProtocol = function (url) {
-      var protocolMatches = url.match(/^(https?:\/\/|www\.)(.+)$/i);
-      if (protocolMatches && protocolMatches.length > 1) {
-        return protocolMatches[1] === 'www.' ? 'https://' : protocolMatches[1];
-      } else {
-        return 'https://';
-      }
-    };
-    var getUrl = function (pattern, url) {
-      var protocol = getProtocol(url);
-      var match = pattern.regex.exec(url);
-      var newUrl = protocol + pattern.url;
-      var _loop_1 = function (i) {
-        newUrl = newUrl.replace('$' + i, function () {
-          return match[i] ? match[i] : '';
-        });
-      };
-      for (var i = 0; i < match.length; i++) {
-        _loop_1(i);
-      }
-      return newUrl.replace(/\?$/, '');
-    };
-    var matchPattern = function (url) {
-      var patterns = urlPatterns.filter(function (pattern) {
-        return pattern.regex.test(url);
-      });
-      if (patterns.length > 0) {
-        return global$8.extend({}, patterns[0], { url: getUrl(patterns[0], url) });
-      } else {
-        return null;
-      }
-    };
-
-    var getIframeHtml = function (data) {
-      var allowFullscreen = data.allowfullscreen ? ' allowFullscreen="1"' : '';
-      return '<iframe src="' + data.source + '" width="' + data.width + '" height="' + data.height + '"' + allowFullscreen + '></iframe>';
-    };
-    var getFlashHtml = function (data) {
-      var html = '<object data="' + data.source + '" width="' + data.width + '" height="' + data.height + '" type="application/x-shockwave-flash">';
-      if (data.poster) {
-        html += '<img src="' + data.poster + '" width="' + data.width + '" height="' + data.height + '" />';
-      }
-      html += '</object>';
-      return html;
-    };
-    var getAudioHtml = function (data, audioTemplateCallback) {
-      if (audioTemplateCallback) {
-        return audioTemplateCallback(data);
-      } else {
-        return '<audio controls="controls" src="' + data.source + '">' + (data.altsource ? '\n<source src="' + data.altsource + '"' + (data.altsourcemime ? ' type="' + data.altsourcemime + '"' : '') + ' />\n' : '') + '</audio>';
-      }
-    };
-    var getVideoHtml = function (data, videoTemplateCallback) {
-      if (videoTemplateCallback) {
-        return videoTemplateCallback(data);
-      } else {
-        return '<video width="' + data.width + '" height="' + data.height + '"' + (data.poster ? ' poster="' + data.poster + '"' : '') + ' controls="controls">\n' + '<source src="' + data.source + '"' + (data.sourcemime ? ' type="' + data.sourcemime + '"' : '') + ' />\n' + (data.altsource ? '<source src="' + data.altsource + '"' + (data.altsourcemime ? ' type="' + data.altsourcemime + '"' : '') + ' />\n' : '') + '</video>';
-      }
-    };
-    var getScriptHtml = function (data) {
-      return '<script src="' + data.source + '"></script>';
-    };
-    var dataToHtml = function (editor, dataIn) {
-      var data = global$8.extend({}, dataIn);
-      if (!data.source) {
-        global$8.extend(data, htmlToData(getScripts(editor), data.embed));
-        if (!data.source) {
-          return '';
-        }
-      }
-      if (!data.altsource) {
-        data.altsource = '';
-      }
-      if (!data.poster) {
-        data.poster = '';
-      }
-      data.source = editor.convertURL(data.source, 'source');
-      data.altsource = editor.convertURL(data.altsource, 'source');
-      data.sourcemime = guess(data.source);
-      data.altsourcemime = guess(data.altsource);
-      data.poster = editor.convertURL(data.poster, 'poster');
-      var pattern = matchPattern(data.source);
-      if (pattern) {
-        data.source = pattern.url;
-        data.type = pattern.type;
-        data.allowfullscreen = pattern.allowFullscreen;
-        data.width = data.width || String(pattern.w);
-        data.height = data.height || String(pattern.h);
-      }
-      if (data.embed) {
-        return updateHtml(data.embed, data, true);
-      } else {
-        var videoScript = getVideoScriptMatch(getScripts(editor), data.source);
-        if (videoScript) {
-          data.type = 'script';
-          data.width = String(videoScript.width);
-          data.height = String(videoScript.height);
-        }
-        var audioTemplateCallback = getAudioTemplateCallback(editor);
-        var videoTemplateCallback = getVideoTemplateCallback(editor);
-        data.width = data.width || '300';
-        data.height = data.height || '150';
-        global$8.each(data, function (value, key) {
-          data[key] = editor.dom.encode('' + value);
-        });
-        if (data.type === 'iframe') {
-          return getIframeHtml(data);
-        } else if (data.sourcemime === 'application/x-shockwave-flash') {
-          return getFlashHtml(data);
-        } else if (data.sourcemime.indexOf('audio') !== -1) {
-          return getAudioHtml(data, audioTemplateCallback);
-        } else if (data.type === 'script') {
-          return getScriptHtml(data);
-        } else {
-          return getVideoHtml(data, videoTemplateCallback);
-        }
-      }
-    };
-
-    var isMediaElement = function (element) {
-      return element.hasAttribute('data-mce-object') || element.hasAttribute('data-ephox-embed-iri');
-    };
-    var setup$2 = function (editor) {
-      editor.on('click keyup touchend', function () {
-        var selectedNode = editor.selection.getNode();
-        if (selectedNode && editor.dom.hasClass(selectedNode, 'mce-preview-object')) {
-          if (editor.dom.getAttrib(selectedNode, 'data-mce-selected')) {
-            selectedNode.setAttribute('data-mce-selected', '2');
-          }
-        }
-      });
-      editor.on('ObjectSelected', function (e) {
-        var objectType = e.target.getAttribute('data-mce-object');
-        if (objectType === 'script') {
-          e.preventDefault();
-        }
-      });
-      editor.on('ObjectResized', function (e) {
-        var target = e.target;
-        if (target.getAttribute('data-mce-object')) {
-          var html = target.getAttribute('data-mce-html');
-          if (html) {
-            html = unescape(html);
-            target.setAttribute('data-mce-html', escape(updateHtml(html, {
-              width: String(e.width),
-              height: String(e.height)
-            })));
-          }
-        }
-      });
-    };
-
-    var global$3 = tinymce.util.Tools.resolve('tinymce.util.Promise');
-
-    var cache = {};
-    var embedPromise = function (data, dataToHtml, handler) {
-      return new global$3(function (res, rej) {
-        var wrappedResolve = function (response) {
-          if (response.html) {
-            cache[data.source] = response;
-          }
-          return res({
-            url: data.source,
-            html: response.html ? response.html : dataToHtml(data)
-          });
-        };
-        if (cache[data.source]) {
-          wrappedResolve(cache[data.source]);
-        } else {
-          handler({ url: data.source }, wrappedResolve, rej);
-        }
-      });
-    };
-    var defaultPromise = function (data, dataToHtml) {
-      return global$3.resolve({
-        html: dataToHtml(data),
-        url: data.source
-      });
-    };
-    var loadedData = function (editor) {
-      return function (data) {
-        return dataToHtml(editor, data);
-      };
-    };
-    var getEmbedHtml = function (editor, data) {
-      var embedHandler = getUrlResolver(editor);
-      return embedHandler ? embedPromise(data, loadedData(editor), embedHandler) : defaultPromise(data, loadedData(editor));
-    };
-    var isCached = function (url) {
-      return has(cache, url);
-    };
-
-    var extractMeta = function (sourceInput, data) {
-      return get$1(data, sourceInput).bind(function (mainData) {
-        return get$1(mainData, 'meta');
-      });
-    };
-    var getValue = function (data, metaData, sourceInput) {
-      return function (prop) {
-        var _a;
-        var getFromData = function () {
-          return get$1(data, prop);
-        };
-        var getFromMetaData = function () {
-          return get$1(metaData, prop);
-        };
-        var getNonEmptyValue = function (c) {
-          return get$1(c, 'value').bind(function (v) {
-            return v.length > 0 ? Optional.some(v) : Optional.none();
-          });
-        };
-        var getFromValueFirst = function () {
-          return getFromData().bind(function (child) {
-            return isObject(child) ? getNonEmptyValue(child).orThunk(getFromMetaData) : getFromMetaData().orThunk(function () {
-              return Optional.from(child);
-            });
-          });
-        };
-        var getFromMetaFirst = function () {
-          return getFromMetaData().orThunk(function () {
-            return getFromData().bind(function (child) {
-              return isObject(child) ? getNonEmptyValue(child) : Optional.from(child);
-            });
-          });
-        };
-        return _a = {}, _a[prop] = (prop === sourceInput ? getFromValueFirst() : getFromMetaFirst()).getOr(''), _a;
-      };
-    };
-    var getDimensions = function (data, metaData) {
-      var dimensions = {};
-      get$1(data, 'dimensions').each(function (dims) {
-        each$1([
-          'width',
-          'height'
-        ], function (prop) {
-          get$1(metaData, prop).orThunk(function () {
-            return get$1(dims, prop);
-          }).each(function (value) {
-            return dimensions[prop] = value;
-          });
-        });
-      });
-      return dimensions;
-    };
-    var unwrap = function (data, sourceInput) {
-      var metaData = sourceInput ? extractMeta(sourceInput, data).getOr({}) : {};
-      var get = getValue(data, metaData, sourceInput);
-      return __assign(__assign(__assign(__assign(__assign({}, get('source')), get('altsource')), get('poster')), get('embed')), getDimensions(data, metaData));
-    };
-    var wrap = function (data) {
-      var wrapped = __assign(__assign({}, data), {
-        source: { value: get$1(data, 'source').getOr('') },
-        altsource: { value: get$1(data, 'altsource').getOr('') },
-        poster: { value: get$1(data, 'poster').getOr('') }
-      });
-      each$1([
-        'width',
-        'height'
-      ], function (prop) {
-        get$1(data, prop).each(function (value) {
-          var dimensions = wrapped.dimensions || {};
-          dimensions[prop] = value;
-          wrapped.dimensions = dimensions;
-        });
-      });
-      return wrapped;
-    };
-    var handleError = function (editor) {
-      return function (error) {
-        var errorMessage = error && error.msg ? 'Media embed handler error: ' + error.msg : 'Media embed handler threw unknown error.';
-        editor.notificationManager.open({
-          type: 'error',
-          text: errorMessage
-        });
-      };
-    };
-    var snippetToData = function (editor, embedSnippet) {
-      return htmlToData(getScripts(editor), embedSnippet);
-    };
-    var getEditorData = function (editor) {
-      var element = editor.selection.getNode();
-      var snippet = isMediaElement(element) ? editor.serializer.serialize(element, { selection: true }) : '';
-      return __assign({ embed: snippet }, htmlToData(getScripts(editor), snippet));
-    };
-    var addEmbedHtml = function (api, editor) {
-      return function (response) {
-        if (isString(response.url) && response.url.trim().length > 0) {
-          var html = response.html;
-          var snippetData = snippetToData(editor, html);
-          var nuData = __assign(__assign({}, snippetData), {
-            source: response.url,
-            embed: html
-          });
-          api.setData(wrap(nuData));
-        }
-      };
-    };
-    var selectPlaceholder = function (editor, beforeObjects) {
-      var afterObjects = editor.dom.select('*[data-mce-object]');
-      for (var i = 0; i < beforeObjects.length; i++) {
-        for (var y = afterObjects.length - 1; y >= 0; y--) {
-          if (beforeObjects[i] === afterObjects[y]) {
-            afterObjects.splice(y, 1);
-          }
-        }
-      }
-      editor.selection.select(afterObjects[0]);
-    };
-    var handleInsert = function (editor, html) {
-      var beforeObjects = editor.dom.select('*[data-mce-object]');
-      editor.insertContent(html);
-      selectPlaceholder(editor, beforeObjects);
-      editor.nodeChanged();
-    };
-    var submitForm = function (prevData, newData, editor) {
-      newData.embed = updateHtml(newData.embed, newData);
-      if (newData.embed && (prevData.source === newData.source || isCached(newData.source))) {
-        handleInsert(editor, newData.embed);
-      } else {
-        getEmbedHtml(editor, newData).then(function (response) {
-          handleInsert(editor, response.html);
-        }).catch(handleError(editor));
-      }
-    };
-    var showDialog = function (editor) {
-      var editorData = getEditorData(editor);
-      var currentData = Cell(editorData);
-      var initialData = wrap(editorData);
-      var handleSource = function (prevData, api) {
-        var serviceData = unwrap(api.getData(), 'source');
-        if (prevData.source !== serviceData.source) {
-          addEmbedHtml(win, editor)({
-            url: serviceData.source,
-            html: ''
-          });
-          getEmbedHtml(editor, serviceData).then(addEmbedHtml(win, editor)).catch(handleError(editor));
-        }
-      };
-      var handleEmbed = function (api) {
-        var data = unwrap(api.getData());
-        var dataFromEmbed = snippetToData(editor, data.embed);
-        api.setData(wrap(dataFromEmbed));
-      };
-      var handleUpdate = function (api, sourceInput) {
-        var data = unwrap(api.getData(), sourceInput);
-        var embed = dataToHtml(editor, data);
-        api.setData(wrap(__assign(__assign({}, data), { embed: embed })));
-      };
-      var mediaInput = [{
-          name: 'source',
-          type: 'urlinput',
-          filetype: 'media',
-          label: 'Source'
-        }];
-      var sizeInput = !hasDimensions(editor) ? [] : [{
-          type: 'sizeinput',
-          name: 'dimensions',
-          label: 'Constrain proportions',
-          constrain: true
-        }];
-      var generalTab = {
-        title: 'General',
-        name: 'general',
-        items: flatten([
-          mediaInput,
-          sizeInput
-        ])
-      };
-      var embedTextarea = {
-        type: 'textarea',
-        name: 'embed',
-        label: 'Paste your embed code below:'
-      };
-      var embedTab = {
-        title: 'Embed',
-        items: [embedTextarea]
-      };
-      var advancedFormItems = [];
-      if (hasAltSource(editor)) {
-        advancedFormItems.push({
-          name: 'altsource',
-          type: 'urlinput',
-          filetype: 'media',
-          label: 'Alternative source URL'
-        });
-      }
-      if (hasPoster(editor)) {
-        advancedFormItems.push({
-          name: 'poster',
-          type: 'urlinput',
-          filetype: 'image',
-          label: 'Media poster (Image URL)'
-        });
-      }
-      var advancedTab = {
-        title: 'Advanced',
-        name: 'advanced',
-        items: advancedFormItems
-      };
-      var tabs = [
-        generalTab,
-        embedTab
-      ];
-      if (advancedFormItems.length > 0) {
-        tabs.push(advancedTab);
-      }
-      var body = {
-        type: 'tabpanel',
-        tabs: tabs
-      };
-      var win = editor.windowManager.open({
-        title: 'Insert/Edit Media',
-        size: 'normal',
-        body: body,
-        buttons: [
-          {
-            type: 'cancel',
-            name: 'cancel',
-            text: 'Cancel'
-          },
-          {
-            type: 'submit',
-            name: 'save',
-            text: 'Save',
-            primary: true
-          }
-        ],
-        onSubmit: function (api) {
-          var serviceData = unwrap(api.getData());
-          submitForm(currentData.get(), serviceData, editor);
-          api.close();
-        },
-        onChange: function (api, detail) {
-          switch (detail.name) {
-          case 'source':
-            handleSource(currentData.get(), api);
-            break;
-          case 'embed':
-            handleEmbed(api);
-            break;
-          case 'dimensions':
-          case 'altsource':
-          case 'poster':
-            handleUpdate(api, detail.name);
-            break;
-          }
-          currentData.set(unwrap(api.getData()));
-        },
-        initialData: initialData
-      });
-    };
-
-    var get = function (editor) {
-      var showDialog$1 = function () {
-        showDialog(editor);
-      };
-      return { showDialog: showDialog$1 };
-    };
-
-    var register$1 = function (editor) {
-      var showDialog$1 = function () {
-        showDialog(editor);
-      };
-      editor.addCommand('mceMedia', showDialog$1);
-    };
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.html.Node');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
-
-    var global = tinymce.util.Tools.resolve('tinymce.html.DomParser');
-
-    var sanitize = function (editor, html) {
-      if (shouldFilterHtml(editor) === false) {
-        return html;
-      }
-      var writer = global$4();
-      var blocked;
-      global$6({
-        validate: false,
-        allow_conditional_comments: false,
-        comment: function (text) {
-          if (!blocked) {
-            writer.comment(text);
-          }
-        },
-        cdata: function (text) {
-          if (!blocked) {
-            writer.cdata(text);
-          }
-        },
-        text: function (text, raw) {
-          if (!blocked) {
-            writer.text(text, raw);
-          }
-        },
-        start: function (name, attrs, empty) {
-          blocked = true;
-          if (name === 'script' || name === 'noscript' || name === 'svg') {
-            return;
-          }
-          for (var i = attrs.length - 1; i >= 0; i--) {
-            var attrName = attrs[i].name;
-            if (attrName.indexOf('on') === 0) {
-              delete attrs.map[attrName];
-              attrs.splice(i, 1);
-            }
-            if (attrName === 'style') {
-              attrs[i].value = editor.dom.serializeStyle(editor.dom.parseStyle(attrs[i].value), name);
-            }
-          }
-          writer.start(name, attrs, empty);
-          blocked = false;
-        },
-        end: function (name) {
-          if (blocked) {
-            return;
-          }
-          writer.end(name);
-        }
-      }, global$5({})).parse(html);
-      return writer.getContent();
-    };
-
-    var isLiveEmbedNode = function (node) {
-      var name = node.name;
-      return name === 'iframe' || name === 'video' || name === 'audio';
-    };
-    var getDimension = function (node, styles, dimension, defaultValue) {
-      if (defaultValue === void 0) {
-        defaultValue = null;
-      }
-      var value = node.attr(dimension);
-      if (isNonNullable(value)) {
-        return value;
-      } else if (!has(styles, dimension)) {
-        return defaultValue;
-      } else {
-        return null;
-      }
-    };
-    var setDimensions = function (node, previewNode, styles) {
-      var useDefaults = previewNode.name === 'img' || node.name === 'video';
-      var defaultWidth = useDefaults ? '300' : null;
-      var fallbackHeight = node.name === 'audio' ? '30' : '150';
-      var defaultHeight = useDefaults ? fallbackHeight : null;
-      previewNode.attr({
-        width: getDimension(node, styles, 'width', defaultWidth),
-        height: getDimension(node, styles, 'height', defaultHeight)
-      });
-    };
-    var appendNodeContent = function (editor, nodeName, previewNode, html) {
-      var newNode = global({
-        forced_root_block: false,
-        validate: false
-      }, editor.schema).parse(html, { context: nodeName });
-      while (newNode.firstChild) {
-        previewNode.append(newNode.firstChild);
-      }
-    };
-    var createPlaceholderNode = function (editor, node) {
-      var name = node.name;
-      var placeHolder = new global$2('img', 1);
-      placeHolder.shortEnded = true;
-      retainAttributesAndInnerHtml(editor, node, placeHolder);
-      setDimensions(node, placeHolder, {});
-      placeHolder.attr({
-        'style': node.attr('style'),
-        'src': global$1.transparentSrc,
-        'data-mce-object': name,
-        'class': 'mce-object mce-object-' + name
-      });
-      return placeHolder;
-    };
-    var createPreviewNode = function (editor, node) {
-      var name = node.name;
-      var previewWrapper = new global$2('span', 1);
-      previewWrapper.attr({
-        'contentEditable': 'false',
-        'style': node.attr('style'),
-        'data-mce-object': name,
-        'class': 'mce-preview-object mce-object-' + name
-      });
-      retainAttributesAndInnerHtml(editor, node, previewWrapper);
-      var styles = editor.dom.parseStyle(node.attr('style'));
-      var previewNode = new global$2(name, 1);
-      setDimensions(node, previewNode, styles);
-      previewNode.attr({
-        src: node.attr('src'),
-        style: node.attr('style'),
-        class: node.attr('class')
-      });
-      if (name === 'iframe') {
-        previewNode.attr({
-          allowfullscreen: node.attr('allowfullscreen'),
-          frameborder: '0'
-        });
-      } else {
-        var attrs = [
-          'controls',
-          'crossorigin',
-          'currentTime',
-          'loop',
-          'muted',
-          'poster',
-          'preload'
-        ];
-        each$1(attrs, function (attrName) {
-          previewNode.attr(attrName, node.attr(attrName));
-        });
-        var sanitizedHtml = previewWrapper.attr('data-mce-html');
-        if (isNonNullable(sanitizedHtml)) {
-          appendNodeContent(editor, name, previewNode, unescape(sanitizedHtml));
-        }
-      }
-      var shimNode = new global$2('span', 1);
-      shimNode.attr('class', 'mce-shim');
-      previewWrapper.append(previewNode);
-      previewWrapper.append(shimNode);
-      return previewWrapper;
-    };
-    var retainAttributesAndInnerHtml = function (editor, sourceNode, targetNode) {
-      var attribs = sourceNode.attributes;
-      var ai = attribs.length;
-      while (ai--) {
-        var attrName = attribs[ai].name;
-        var attrValue = attribs[ai].value;
-        if (attrName !== 'width' && attrName !== 'height' && attrName !== 'style') {
-          if (attrName === 'data' || attrName === 'src') {
-            attrValue = editor.convertURL(attrValue, attrName);
-          }
-          targetNode.attr('data-mce-p-' + attrName, attrValue);
-        }
-      }
-      var innerHtml = sourceNode.firstChild && sourceNode.firstChild.value;
-      if (innerHtml) {
-        targetNode.attr('data-mce-html', escape(sanitize(editor, innerHtml)));
-        targetNode.firstChild = null;
-      }
-    };
-    var isPageEmbedWrapper = function (node) {
-      var nodeClass = node.attr('class');
-      return nodeClass && /\btiny-pageembed\b/.test(nodeClass);
-    };
-    var isWithinEmbedWrapper = function (node) {
-      while (node = node.parent) {
-        if (node.attr('data-ephox-embed-iri') || isPageEmbedWrapper(node)) {
-          return true;
-        }
-      }
-      return false;
-    };
-    var placeHolderConverter = function (editor) {
-      return function (nodes) {
-        var i = nodes.length;
-        var node;
-        var videoScript;
-        while (i--) {
-          node = nodes[i];
-          if (!node.parent) {
-            continue;
-          }
-          if (node.parent.attr('data-mce-object')) {
-            continue;
-          }
-          if (node.name === 'script') {
-            videoScript = getVideoScriptMatch(getScripts(editor), node.attr('src'));
-            if (!videoScript) {
-              continue;
-            }
-          }
-          if (videoScript) {
-            if (videoScript.width) {
-              node.attr('width', videoScript.width.toString());
-            }
-            if (videoScript.height) {
-              node.attr('height', videoScript.height.toString());
-            }
-          }
-          if (isLiveEmbedNode(node) && hasLiveEmbeds(editor) && global$1.ceFalse) {
-            if (!isWithinEmbedWrapper(node)) {
-              node.replace(createPreviewNode(editor, node));
-            }
-          } else {
-            if (!isWithinEmbedWrapper(node)) {
-              node.replace(createPlaceholderNode(editor, node));
-            }
-          }
-        }
-      };
-    };
-
-    var setup$1 = function (editor) {
-      editor.on('preInit', function () {
-        var specialElements = editor.schema.getSpecialElements();
-        global$8.each('video audio iframe object'.split(' '), function (name) {
-          specialElements[name] = new RegExp('</' + name + '[^>]*>', 'gi');
-        });
-        var boolAttrs = editor.schema.getBoolAttrs();
-        global$8.each('webkitallowfullscreen mozallowfullscreen allowfullscreen'.split(' '), function (name) {
-          boolAttrs[name] = {};
-        });
-        editor.parser.addNodeFilter('iframe,video,audio,object,embed,script', placeHolderConverter(editor));
-        editor.serializer.addAttributeFilter('data-mce-object', function (nodes, name) {
-          var i = nodes.length;
-          var node;
-          var realElm;
-          var ai;
-          var attribs;
-          var innerHtml;
-          var innerNode;
-          var realElmName;
-          var className;
+        editor.parser.addAttributeFilter('class', function (nodes) {
+          var i = nodes.length, node;
           while (i--) {
             node = nodes[i];
-            if (!node.parent) {
+            if (hasEditClass(node)) {
+              node.attr(contentEditableAttrName, 'true');
+            } else if (hasNonEditClass(node)) {
+              node.attr(contentEditableAttrName, 'false');
+            }
+          }
+        });
+        editor.serializer.addAttributeFilter(contentEditableAttrName, function (nodes) {
+          var i = nodes.length, node;
+          while (i--) {
+            node = nodes[i];
+            if (!hasEditClass(node) && !hasNonEditClass(node)) {
               continue;
             }
-            realElmName = node.attr(name);
-            realElm = new global$2(realElmName, 1);
-            if (realElmName !== 'audio' && realElmName !== 'script') {
-              className = node.attr('class');
-              if (className && className.indexOf('mce-preview-object') !== -1) {
-                realElm.attr({
-                  width: node.firstChild.attr('width'),
-                  height: node.firstChild.attr('height')
-                });
-              } else {
-                realElm.attr({
-                  width: node.attr('width'),
-                  height: node.attr('height')
-                });
-              }
+            if (nonEditableRegExps.length > 0 && node.attr('data-mce-content')) {
+              node.name = '#text';
+              node.type = 3;
+              node.raw = true;
+              node.value = node.attr('data-mce-content');
+            } else {
+              node.attr(contentEditableAttrName, null);
             }
-            realElm.attr({ style: node.attr('style') });
-            attribs = node.attributes;
-            ai = attribs.length;
-            while (ai--) {
-              var attrName = attribs[ai].name;
-              if (attrName.indexOf('data-mce-p-') === 0) {
-                realElm.attr(attrName.substr(11), attribs[ai].value);
-              }
-            }
-            if (realElmName === 'script') {
-              realElm.attr('type', 'text/javascript');
-            }
-            innerHtml = node.attr('data-mce-html');
-            if (innerHtml) {
-              innerNode = new global$2('#text', 3);
-              innerNode.raw = true;
-              innerNode.value = sanitize(editor, unescape(innerHtml));
-              realElm.append(innerNode);
-            }
-            node.replace(realElm);
           }
         });
-      });
-      editor.on('SetContent', function () {
-        editor.$('span.mce-preview-object').each(function (index, elm) {
-          var $elm = editor.$(elm);
-          if ($elm.find('span.mce-shim').length === 0) {
-            $elm.append('<span class="mce-shim"></span>');
-          }
-        });
-      });
-    };
-
-    var setup = function (editor) {
-      editor.on('ResolveName', function (e) {
-        var name;
-        if (e.target.nodeType === 1 && (name = e.target.getAttribute('data-mce-object'))) {
-          e.name = name;
-        }
-      });
-    };
-
-    var register = function (editor) {
-      var onAction = function () {
-        return editor.execCommand('mceMedia');
-      };
-      editor.ui.registry.addToggleButton('media', {
-        tooltip: 'Insert/edit media',
-        icon: 'embed',
-        onAction: onAction,
-        onSetup: function (buttonApi) {
-          var selection = editor.selection;
-          buttonApi.setActive(isMediaElement(selection.getNode()));
-          return selection.selectorChangedWithUnbind('img[data-mce-object],span[data-mce-object],div[data-ephox-embed-iri]', buttonApi.setActive).unbind;
-        }
-      });
-      editor.ui.registry.addMenuItem('media', {
-        icon: 'embed',
-        text: 'Media...',
-        onAction: onAction
       });
     };
 
     function Plugin () {
-      global$9.add('media', function (editor) {
-        register$1(editor);
-        register(editor);
+      global$1.add('noneditable', function (editor) {
         setup(editor);
-        setup$1(editor);
-        setup$2(editor);
-        return get(editor);
       });
     }
 
@@ -65773,124 +65891,6 @@ tinymce.IconManager.add('default', {
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var getNonEditableClass = function (editor) {
-      return editor.getParam('noneditable_noneditable_class', 'mceNonEditable');
-    };
-    var getEditableClass = function (editor) {
-      return editor.getParam('noneditable_editable_class', 'mceEditable');
-    };
-    var getNonEditableRegExps = function (editor) {
-      var nonEditableRegExps = editor.getParam('noneditable_regexp', []);
-      if (nonEditableRegExps && nonEditableRegExps.constructor === RegExp) {
-        return [nonEditableRegExps];
-      } else {
-        return nonEditableRegExps;
-      }
-    };
-
-    var hasClass = function (checkClassName) {
-      return function (node) {
-        return (' ' + node.attr('class') + ' ').indexOf(checkClassName) !== -1;
-      };
-    };
-    var replaceMatchWithSpan = function (editor, content, cls) {
-      return function (match) {
-        var args = arguments, index = args[args.length - 2];
-        var prevChar = index > 0 ? content.charAt(index - 1) : '';
-        if (prevChar === '"') {
-          return match;
-        }
-        if (prevChar === '>') {
-          var findStartTagIndex = content.lastIndexOf('<', index);
-          if (findStartTagIndex !== -1) {
-            var tagHtml = content.substring(findStartTagIndex, index);
-            if (tagHtml.indexOf('contenteditable="false"') !== -1) {
-              return match;
-            }
-          }
-        }
-        return '<span class="' + cls + '" data-mce-content="' + editor.dom.encode(args[0]) + '">' + editor.dom.encode(typeof args[1] === 'string' ? args[1] : args[0]) + '</span>';
-      };
-    };
-    var convertRegExpsToNonEditable = function (editor, nonEditableRegExps, e) {
-      var i = nonEditableRegExps.length, content = e.content;
-      if (e.format === 'raw') {
-        return;
-      }
-      while (i--) {
-        content = content.replace(nonEditableRegExps[i], replaceMatchWithSpan(editor, content, getNonEditableClass(editor)));
-      }
-      e.content = content;
-    };
-    var setup = function (editor) {
-      var contentEditableAttrName = 'contenteditable';
-      var editClass = ' ' + global.trim(getEditableClass(editor)) + ' ';
-      var nonEditClass = ' ' + global.trim(getNonEditableClass(editor)) + ' ';
-      var hasEditClass = hasClass(editClass);
-      var hasNonEditClass = hasClass(nonEditClass);
-      var nonEditableRegExps = getNonEditableRegExps(editor);
-      editor.on('PreInit', function () {
-        if (nonEditableRegExps.length > 0) {
-          editor.on('BeforeSetContent', function (e) {
-            convertRegExpsToNonEditable(editor, nonEditableRegExps, e);
-          });
-        }
-        editor.parser.addAttributeFilter('class', function (nodes) {
-          var i = nodes.length, node;
-          while (i--) {
-            node = nodes[i];
-            if (hasEditClass(node)) {
-              node.attr(contentEditableAttrName, 'true');
-            } else if (hasNonEditClass(node)) {
-              node.attr(contentEditableAttrName, 'false');
-            }
-          }
-        });
-        editor.serializer.addAttributeFilter(contentEditableAttrName, function (nodes) {
-          var i = nodes.length, node;
-          while (i--) {
-            node = nodes[i];
-            if (!hasEditClass(node) && !hasNonEditClass(node)) {
-              continue;
-            }
-            if (nonEditableRegExps.length > 0 && node.attr('data-mce-content')) {
-              node.name = '#text';
-              node.type = 3;
-              node.raw = true;
-              node.value = node.attr('data-mce-content');
-            } else {
-              node.attr(contentEditableAttrName, null);
-            }
-          }
-        });
-      });
-    };
-
-    function Plugin () {
-      global$1.add('noneditable', function (editor) {
-        setup(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
     var global = tinymce.util.Tools.resolve('tinymce.Env');
 
     var getSeparatorHtml = function (editor) {
@@ -65976,6 +65976,133 @@ tinymce.IconManager.add('default', {
         register(editor);
         setup$1(editor);
         setup(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var getContentStyle = function (editor) {
+      return editor.getParam('content_style', '', 'string');
+    };
+    var shouldUseContentCssCors = function (editor) {
+      return editor.getParam('content_css_cors', false, 'boolean');
+    };
+    var getBodyClassByHash = function (editor) {
+      var bodyClass = editor.getParam('body_class', '', 'hash');
+      return bodyClass[editor.id] || '';
+    };
+    var getBodyClass = function (editor) {
+      var bodyClass = editor.getParam('body_class', '', 'string');
+      if (bodyClass.indexOf('=') === -1) {
+        return bodyClass;
+      } else {
+        return getBodyClassByHash(editor);
+      }
+    };
+    var getBodyIdByHash = function (editor) {
+      var bodyId = editor.getParam('body_id', '', 'hash');
+      return bodyId[editor.id] || bodyId;
+    };
+    var getBodyId = function (editor) {
+      var bodyId = editor.getParam('body_id', 'tinymce', 'string');
+      if (bodyId.indexOf('=') === -1) {
+        return bodyId;
+      } else {
+        return getBodyIdByHash(editor);
+      }
+    };
+
+    var getPreviewHtml = function (editor) {
+      var headHtml = '';
+      var encode = editor.dom.encode;
+      var contentStyle = getContentStyle(editor);
+      headHtml += '<base href="' + encode(editor.documentBaseURI.getURI()) + '">';
+      var cors = shouldUseContentCssCors(editor) ? ' crossorigin="anonymous"' : '';
+      global.each(editor.contentCSS, function (url) {
+        headHtml += '<link type="text/css" rel="stylesheet" href="' + encode(editor.documentBaseURI.toAbsolute(url)) + '"' + cors + '>';
+      });
+      if (contentStyle) {
+        headHtml += '<style type="text/css">' + contentStyle + '</style>';
+      }
+      var bodyId = getBodyId(editor);
+      var bodyClass = getBodyClass(editor);
+      var isMetaKeyPressed = global$1.mac ? 'e.metaKey' : 'e.ctrlKey && !e.altKey';
+      var preventClicksOnLinksScript = '<script>' + 'document.addEventListener && document.addEventListener("click", function(e) {' + 'for (var elm = e.target; elm; elm = elm.parentNode) {' + 'if (elm.nodeName === "A" && !(' + isMetaKeyPressed + ')) {' + 'e.preventDefault();' + '}' + '}' + '}, false);' + '</script> ';
+      var directionality = editor.getBody().dir;
+      var dirAttr = directionality ? ' dir="' + encode(directionality) + '"' : '';
+      var previewHtml = '<!DOCTYPE html>' + '<html>' + '<head>' + headHtml + '</head>' + '<body id="' + encode(bodyId) + '" class="mce-content-body ' + encode(bodyClass) + '"' + dirAttr + '>' + editor.getContent() + preventClicksOnLinksScript + '</body>' + '</html>';
+      return previewHtml;
+    };
+
+    var open = function (editor) {
+      var content = getPreviewHtml(editor);
+      var dataApi = editor.windowManager.open({
+        title: 'Preview',
+        size: 'large',
+        body: {
+          type: 'panel',
+          items: [{
+              name: 'preview',
+              type: 'iframe',
+              sandboxed: true
+            }]
+        },
+        buttons: [{
+            type: 'cancel',
+            name: 'close',
+            text: 'Close',
+            primary: true
+          }],
+        initialData: { preview: content }
+      });
+      dataApi.focus('close');
+    };
+
+    var register$1 = function (editor) {
+      editor.addCommand('mcePreview', function () {
+        open(editor);
+      });
+    };
+
+    var register = function (editor) {
+      var onAction = function () {
+        return editor.execCommand('mcePreview');
+      };
+      editor.ui.registry.addButton('preview', {
+        icon: 'preview',
+        tooltip: 'Preview',
+        onAction: onAction
+      });
+      editor.ui.registry.addMenuItem('preview', {
+        icon: 'preview',
+        text: 'Preview',
+        onAction: onAction
+      });
+    };
+
+    function Plugin () {
+      global$2.add('preview', function (editor) {
+        register$1(editor);
+        register(editor);
       });
     }
 
@@ -67798,133 +67925,6 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
-    var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var getContentStyle = function (editor) {
-      return editor.getParam('content_style', '', 'string');
-    };
-    var shouldUseContentCssCors = function (editor) {
-      return editor.getParam('content_css_cors', false, 'boolean');
-    };
-    var getBodyClassByHash = function (editor) {
-      var bodyClass = editor.getParam('body_class', '', 'hash');
-      return bodyClass[editor.id] || '';
-    };
-    var getBodyClass = function (editor) {
-      var bodyClass = editor.getParam('body_class', '', 'string');
-      if (bodyClass.indexOf('=') === -1) {
-        return bodyClass;
-      } else {
-        return getBodyClassByHash(editor);
-      }
-    };
-    var getBodyIdByHash = function (editor) {
-      var bodyId = editor.getParam('body_id', '', 'hash');
-      return bodyId[editor.id] || bodyId;
-    };
-    var getBodyId = function (editor) {
-      var bodyId = editor.getParam('body_id', 'tinymce', 'string');
-      if (bodyId.indexOf('=') === -1) {
-        return bodyId;
-      } else {
-        return getBodyIdByHash(editor);
-      }
-    };
-
-    var getPreviewHtml = function (editor) {
-      var headHtml = '';
-      var encode = editor.dom.encode;
-      var contentStyle = getContentStyle(editor);
-      headHtml += '<base href="' + encode(editor.documentBaseURI.getURI()) + '">';
-      var cors = shouldUseContentCssCors(editor) ? ' crossorigin="anonymous"' : '';
-      global.each(editor.contentCSS, function (url) {
-        headHtml += '<link type="text/css" rel="stylesheet" href="' + encode(editor.documentBaseURI.toAbsolute(url)) + '"' + cors + '>';
-      });
-      if (contentStyle) {
-        headHtml += '<style type="text/css">' + contentStyle + '</style>';
-      }
-      var bodyId = getBodyId(editor);
-      var bodyClass = getBodyClass(editor);
-      var isMetaKeyPressed = global$1.mac ? 'e.metaKey' : 'e.ctrlKey && !e.altKey';
-      var preventClicksOnLinksScript = '<script>' + 'document.addEventListener && document.addEventListener("click", function(e) {' + 'for (var elm = e.target; elm; elm = elm.parentNode) {' + 'if (elm.nodeName === "A" && !(' + isMetaKeyPressed + ')) {' + 'e.preventDefault();' + '}' + '}' + '}, false);' + '</script> ';
-      var directionality = editor.getBody().dir;
-      var dirAttr = directionality ? ' dir="' + encode(directionality) + '"' : '';
-      var previewHtml = '<!DOCTYPE html>' + '<html>' + '<head>' + headHtml + '</head>' + '<body id="' + encode(bodyId) + '" class="mce-content-body ' + encode(bodyClass) + '"' + dirAttr + '>' + editor.getContent() + preventClicksOnLinksScript + '</body>' + '</html>';
-      return previewHtml;
-    };
-
-    var open = function (editor) {
-      var content = getPreviewHtml(editor);
-      var dataApi = editor.windowManager.open({
-        title: 'Preview',
-        size: 'large',
-        body: {
-          type: 'panel',
-          items: [{
-              name: 'preview',
-              type: 'iframe',
-              sandboxed: true
-            }]
-        },
-        buttons: [{
-            type: 'cancel',
-            name: 'close',
-            text: 'Close',
-            primary: true
-          }],
-        initialData: { preview: content }
-      });
-      dataApi.focus('close');
-    };
-
-    var register$1 = function (editor) {
-      editor.addCommand('mcePreview', function () {
-        open(editor);
-      });
-    };
-
-    var register = function (editor) {
-      var onAction = function () {
-        return editor.execCommand('mcePreview');
-      };
-      editor.ui.registry.addButton('preview', {
-        icon: 'preview',
-        tooltip: 'Preview',
-        onAction: onAction
-      });
-      editor.ui.registry.addMenuItem('preview', {
-        icon: 'preview',
-        text: 'Preview',
-        onAction: onAction
-      });
-    };
-
-    function Plugin () {
-      global$2.add('preview', function (editor) {
-        register$1(editor);
-        register(editor);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
     var global = tinymce.util.Tools.resolve('tinymce.Env');
@@ -68556,6 +68556,737 @@ tinymce.IconManager.add('default', {
       global$2.add('save', function (editor) {
         register(editor);
         register$1(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
+    var Cell = function (initial) {
+      var value = initial;
+      var get = function () {
+        return value;
+      };
+      var set = function (v) {
+        value = v;
+      };
+      return {
+        get: get,
+        set: set
+      };
+    };
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var hasProPlugin = function (editor) {
+      if (editor.hasPlugin('tinymcespellchecker', true)) {
+        if (typeof window.console !== 'undefined' && window.console.log) {
+          window.console.log('Spell Checker Pro is incompatible with Spell Checker plugin! ' + 'Remove \'spellchecker\' from the \'plugins\' option.');
+        }
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    var hasOwnProperty = Object.hasOwnProperty;
+    var isEmpty = function (r) {
+      for (var x in r) {
+        if (hasOwnProperty.call(r, x)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.util.URI');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.XHR');
+
+    var fireSpellcheckStart = function (editor) {
+      return editor.fire('SpellcheckStart');
+    };
+    var fireSpellcheckEnd = function (editor) {
+      return editor.fire('SpellcheckEnd');
+    };
+
+    var getLanguages = function (editor) {
+      var defaultLanguages = 'English=en,Danish=da,Dutch=nl,Finnish=fi,French=fr_FR,German=de,Italian=it,Polish=pl,Portuguese=pt_BR,Spanish=es,Swedish=sv';
+      return editor.getParam('spellchecker_languages', defaultLanguages);
+    };
+    var getLanguage = function (editor) {
+      var defaultLanguage = editor.getParam('language', 'en');
+      return editor.getParam('spellchecker_language', defaultLanguage);
+    };
+    var getRpcUrl = function (editor) {
+      return editor.getParam('spellchecker_rpc_url');
+    };
+    var getSpellcheckerCallback = function (editor) {
+      return editor.getParam('spellchecker_callback');
+    };
+    var getSpellcheckerWordcharPattern = function (editor) {
+      var defaultPattern = new RegExp('[^' + '\\s!"#$%&()*+,-./:;<=>?@[\\]^_{|}`' + '\xA7\xA9\xAB\xAE\xB1\xB6\xB7\xB8\xBB' + '\xBC\xBD\xBE\xBF\xD7\xF7\xA4\u201D\u201C\u201E\xA0\u2002\u2003\u2009' + ']+', 'g');
+      return editor.getParam('spellchecker_wordchar_pattern', defaultPattern);
+    };
+
+    var isContentEditableFalse = function (node) {
+      return node && node.nodeType === 1 && node.contentEditable === 'false';
+    };
+    var DomTextMatcher = function (node, editor) {
+      var m, matches = [];
+      var dom = editor.dom;
+      var blockElementsMap = editor.schema.getBlockElements();
+      var hiddenTextElementsMap = editor.schema.getWhiteSpaceElements();
+      var shortEndedElementsMap = editor.schema.getShortEndedElements();
+      var createMatch = function (m, data) {
+        if (!m[0]) {
+          throw new Error('findAndReplaceDOMText cannot handle zero-length matches');
+        }
+        return {
+          start: m.index,
+          end: m.index + m[0].length,
+          text: m[0],
+          data: data
+        };
+      };
+      var getText = function (node) {
+        if (node.nodeType === 3) {
+          return node.data;
+        }
+        if (hiddenTextElementsMap[node.nodeName] && !blockElementsMap[node.nodeName]) {
+          return '';
+        }
+        if (isContentEditableFalse(node)) {
+          return '\n';
+        }
+        var txt = '';
+        if (blockElementsMap[node.nodeName] || shortEndedElementsMap[node.nodeName]) {
+          txt += '\n';
+        }
+        if (node = node.firstChild) {
+          do {
+            txt += getText(node);
+          } while (node = node.nextSibling);
+        }
+        return txt;
+      };
+      var stepThroughMatches = function (node, matches, replaceFn) {
+        var startNode, endNode, startNodeIndex, endNodeIndex, innerNodes = [], atIndex = 0, curNode = node, matchLocation, matchIndex = 0;
+        matches = matches.slice(0);
+        matches.sort(function (a, b) {
+          return a.start - b.start;
+        });
+        matchLocation = matches.shift();
+        out:
+          while (true) {
+            if (blockElementsMap[curNode.nodeName] || shortEndedElementsMap[curNode.nodeName] || isContentEditableFalse(curNode)) {
+              atIndex++;
+            }
+            if (curNode.nodeType === 3) {
+              if (!endNode && curNode.length + atIndex >= matchLocation.end) {
+                endNode = curNode;
+                endNodeIndex = matchLocation.end - atIndex;
+              } else if (startNode) {
+                innerNodes.push(curNode);
+              }
+              if (!startNode && curNode.length + atIndex > matchLocation.start) {
+                startNode = curNode;
+                startNodeIndex = matchLocation.start - atIndex;
+              }
+              atIndex += curNode.length;
+            }
+            if (startNode && endNode) {
+              curNode = replaceFn({
+                startNode: startNode,
+                startNodeIndex: startNodeIndex,
+                endNode: endNode,
+                endNodeIndex: endNodeIndex,
+                innerNodes: innerNodes,
+                match: matchLocation.text,
+                matchIndex: matchIndex
+              });
+              atIndex -= endNode.length - endNodeIndex;
+              startNode = null;
+              endNode = null;
+              innerNodes = [];
+              matchLocation = matches.shift();
+              matchIndex++;
+              if (!matchLocation) {
+                break;
+              }
+            } else if ((!hiddenTextElementsMap[curNode.nodeName] || blockElementsMap[curNode.nodeName]) && curNode.firstChild) {
+              if (!isContentEditableFalse(curNode)) {
+                curNode = curNode.firstChild;
+                continue;
+              }
+            } else if (curNode.nextSibling) {
+              curNode = curNode.nextSibling;
+              continue;
+            }
+            while (true) {
+              if (curNode.nextSibling) {
+                curNode = curNode.nextSibling;
+                break;
+              } else if (curNode.parentNode !== node) {
+                curNode = curNode.parentNode;
+              } else {
+                break out;
+              }
+            }
+          }
+      };
+      var genReplacer = function (callback) {
+        var makeReplacementNode = function (fill, matchIndex) {
+          var match = matches[matchIndex];
+          if (!match.stencil) {
+            match.stencil = callback(match);
+          }
+          var clone = match.stencil.cloneNode(false);
+          clone.setAttribute('data-mce-index', '' + matchIndex);
+          if (fill) {
+            clone.appendChild(dom.doc.createTextNode(fill));
+          }
+          return clone;
+        };
+        return function (range) {
+          var before;
+          var after;
+          var parentNode;
+          var startNode = range.startNode;
+          var endNode = range.endNode;
+          var matchIndex = range.matchIndex;
+          var doc = dom.doc;
+          if (startNode === endNode) {
+            var node_1 = startNode;
+            parentNode = node_1.parentNode;
+            if (range.startNodeIndex > 0) {
+              before = doc.createTextNode(node_1.data.substring(0, range.startNodeIndex));
+              parentNode.insertBefore(before, node_1);
+            }
+            var el = makeReplacementNode(range.match, matchIndex);
+            parentNode.insertBefore(el, node_1);
+            if (range.endNodeIndex < node_1.length) {
+              after = doc.createTextNode(node_1.data.substring(range.endNodeIndex));
+              parentNode.insertBefore(after, node_1);
+            }
+            node_1.parentNode.removeChild(node_1);
+            return el;
+          }
+          before = doc.createTextNode(startNode.data.substring(0, range.startNodeIndex));
+          after = doc.createTextNode(endNode.data.substring(range.endNodeIndex));
+          var elA = makeReplacementNode(startNode.data.substring(range.startNodeIndex), matchIndex);
+          for (var i = 0, l = range.innerNodes.length; i < l; ++i) {
+            var innerNode = range.innerNodes[i];
+            var innerEl = makeReplacementNode(innerNode.data, matchIndex);
+            innerNode.parentNode.replaceChild(innerEl, innerNode);
+          }
+          var elB = makeReplacementNode(endNode.data.substring(0, range.endNodeIndex), matchIndex);
+          parentNode = startNode.parentNode;
+          parentNode.insertBefore(before, startNode);
+          parentNode.insertBefore(elA, startNode);
+          parentNode.removeChild(startNode);
+          parentNode = endNode.parentNode;
+          parentNode.insertBefore(elB, endNode);
+          parentNode.insertBefore(after, endNode);
+          parentNode.removeChild(endNode);
+          return elB;
+        };
+      };
+      var unwrapElement = function (element) {
+        var parentNode = element.parentNode;
+        while (element.childNodes.length > 0) {
+          parentNode.insertBefore(element.childNodes[0], element);
+        }
+        parentNode.removeChild(element);
+      };
+      var hasClass = function (elm) {
+        return elm.className.indexOf('mce-spellchecker-word') !== -1;
+      };
+      var getWrappersByIndex = function (index) {
+        var elements = node.getElementsByTagName('*'), wrappers = [];
+        index = typeof index === 'number' ? '' + index : null;
+        for (var i = 0; i < elements.length; i++) {
+          var element = elements[i], dataIndex = element.getAttribute('data-mce-index');
+          if (dataIndex !== null && dataIndex.length && hasClass(element)) {
+            if (dataIndex === index || index === null) {
+              wrappers.push(element);
+            }
+          }
+        }
+        return wrappers;
+      };
+      var indexOf = function (match) {
+        var i = matches.length;
+        while (i--) {
+          if (matches[i] === match) {
+            return i;
+          }
+        }
+        return -1;
+      };
+      function filter(callback) {
+        var filteredMatches = [];
+        each(function (match, i) {
+          if (callback(match, i)) {
+            filteredMatches.push(match);
+          }
+        });
+        matches = filteredMatches;
+        return this;
+      }
+      function each(callback) {
+        for (var i = 0, l = matches.length; i < l; i++) {
+          if (callback(matches[i], i) === false) {
+            break;
+          }
+        }
+        return this;
+      }
+      function wrap(callback) {
+        if (matches.length) {
+          stepThroughMatches(node, matches, genReplacer(callback));
+        }
+        return this;
+      }
+      function find(regex, data) {
+        if (text && regex.global) {
+          while (m = regex.exec(text)) {
+            matches.push(createMatch(m, data));
+          }
+        }
+        return this;
+      }
+      function unwrap(match) {
+        var i;
+        var elements = getWrappersByIndex(match ? indexOf(match) : null);
+        i = elements.length;
+        while (i--) {
+          unwrapElement(elements[i]);
+        }
+        return this;
+      }
+      var matchFromElement = function (element) {
+        return matches[element.getAttribute('data-mce-index')];
+      };
+      var elementFromMatch = function (match) {
+        return getWrappersByIndex(indexOf(match))[0];
+      };
+      function add(start, length, data) {
+        matches.push({
+          start: start,
+          end: start + length,
+          text: text.substr(start, length),
+          data: data
+        });
+        return this;
+      }
+      var rangeFromMatch = function (match) {
+        var wrappers = getWrappersByIndex(indexOf(match));
+        var rng = editor.dom.createRng();
+        rng.setStartBefore(wrappers[0]);
+        rng.setEndAfter(wrappers[wrappers.length - 1]);
+        return rng;
+      };
+      var replace = function (match, text) {
+        var rng = rangeFromMatch(match);
+        rng.deleteContents();
+        if (text.length > 0) {
+          rng.insertNode(editor.dom.doc.createTextNode(text));
+        }
+        return rng;
+      };
+      function reset() {
+        matches.splice(0, matches.length);
+        unwrap();
+        return this;
+      }
+      var text = getText(node);
+      return {
+        text: text,
+        matches: matches,
+        each: each,
+        filter: filter,
+        reset: reset,
+        matchFromElement: matchFromElement,
+        elementFromMatch: elementFromMatch,
+        find: find,
+        add: add,
+        wrap: wrap,
+        unwrap: unwrap,
+        replace: replace,
+        rangeFromMatch: rangeFromMatch,
+        indexOf: indexOf
+      };
+    };
+
+    var getTextMatcher = function (editor, textMatcherState) {
+      if (!textMatcherState.get()) {
+        var textMatcher = DomTextMatcher(editor.getBody(), editor);
+        textMatcherState.set(textMatcher);
+      }
+      return textMatcherState.get();
+    };
+    var defaultSpellcheckCallback = function (editor, pluginUrl, currentLanguageState) {
+      return function (method, text, doneCallback, errorCallback) {
+        var data = {
+          method: method,
+          lang: currentLanguageState.get()
+        };
+        var postData = '';
+        data[method === 'addToDictionary' ? 'word' : 'text'] = text;
+        global$2.each(data, function (value, key) {
+          if (postData) {
+            postData += '&';
+          }
+          postData += key + '=' + encodeURIComponent(value);
+        });
+        global.send({
+          url: new global$1(pluginUrl).toAbsolute(getRpcUrl(editor)),
+          type: 'post',
+          content_type: 'application/x-www-form-urlencoded',
+          data: postData,
+          success: function (result) {
+            var parseResult = JSON.parse(result);
+            if (!parseResult) {
+              var message = editor.translate('Server response wasn\'t proper JSON.');
+              errorCallback(message);
+            } else if (parseResult.error) {
+              errorCallback(parseResult.error);
+            } else {
+              doneCallback(parseResult);
+            }
+          },
+          error: function () {
+            var message = editor.translate('The spelling service was not found: (') + getRpcUrl(editor) + editor.translate(')');
+            errorCallback(message);
+          }
+        });
+      };
+    };
+    var sendRpcCall = function (editor, pluginUrl, currentLanguageState, name, data, successCallback, errorCallback) {
+      var userSpellcheckCallback = getSpellcheckerCallback(editor);
+      var spellCheckCallback = userSpellcheckCallback ? userSpellcheckCallback : defaultSpellcheckCallback(editor, pluginUrl, currentLanguageState);
+      spellCheckCallback.call(editor.plugins.spellchecker, name, data, successCallback, errorCallback);
+    };
+    var spellcheck = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
+      if (finish(editor, startedState, textMatcherState)) {
+        return;
+      }
+      var errorCallback = function (message) {
+        editor.notificationManager.open({
+          text: message,
+          type: 'error'
+        });
+        editor.setProgressState(false);
+        finish(editor, startedState, textMatcherState);
+      };
+      var successCallback = function (data) {
+        markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
+      };
+      editor.setProgressState(true);
+      sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
+      editor.focus();
+    };
+    var checkIfFinished = function (editor, startedState, textMatcherState) {
+      if (!editor.dom.select('span.mce-spellchecker-word').length) {
+        finish(editor, startedState, textMatcherState);
+      }
+    };
+    var addToDictionary = function (editor, pluginUrl, startedState, textMatcherState, currentLanguageState, word, spans) {
+      editor.setProgressState(true);
+      sendRpcCall(editor, pluginUrl, currentLanguageState, 'addToDictionary', word, function () {
+        editor.setProgressState(false);
+        editor.dom.remove(spans, true);
+        checkIfFinished(editor, startedState, textMatcherState);
+      }, function (message) {
+        editor.notificationManager.open({
+          text: message,
+          type: 'error'
+        });
+        editor.setProgressState(false);
+      });
+    };
+    var ignoreWord = function (editor, startedState, textMatcherState, word, spans, all) {
+      editor.selection.collapse();
+      if (all) {
+        global$2.each(editor.dom.select('span.mce-spellchecker-word'), function (span) {
+          if (span.getAttribute('data-mce-word') === word) {
+            editor.dom.remove(span, true);
+          }
+        });
+      } else {
+        editor.dom.remove(spans, true);
+      }
+      checkIfFinished(editor, startedState, textMatcherState);
+    };
+    var finish = function (editor, startedState, textMatcherState) {
+      var bookmark = editor.selection.getBookmark();
+      getTextMatcher(editor, textMatcherState).reset();
+      editor.selection.moveToBookmark(bookmark);
+      textMatcherState.set(null);
+      if (startedState.get()) {
+        startedState.set(false);
+        fireSpellcheckEnd(editor);
+        return true;
+      }
+    };
+    var getElmIndex = function (elm) {
+      var value = elm.getAttribute('data-mce-index');
+      if (typeof value === 'number') {
+        return '' + value;
+      }
+      return value;
+    };
+    var findSpansByIndex = function (editor, index) {
+      var spans = [];
+      var nodes = global$2.toArray(editor.getBody().getElementsByTagName('span'));
+      if (nodes.length) {
+        for (var i = 0; i < nodes.length; i++) {
+          var nodeIndex = getElmIndex(nodes[i]);
+          if (nodeIndex === null || !nodeIndex.length) {
+            continue;
+          }
+          if (nodeIndex === index.toString()) {
+            spans.push(nodes[i]);
+          }
+        }
+      }
+      return spans;
+    };
+    var markErrors = function (editor, startedState, textMatcherState, lastSuggestionsState, data) {
+      var hasDictionarySupport = !!data.dictionary;
+      var suggestions = data.words;
+      editor.setProgressState(false);
+      if (isEmpty(suggestions)) {
+        var message = editor.translate('No misspellings found.');
+        editor.notificationManager.open({
+          text: message,
+          type: 'info'
+        });
+        startedState.set(false);
+        return;
+      }
+      lastSuggestionsState.set({
+        suggestions: suggestions,
+        hasDictionarySupport: hasDictionarySupport
+      });
+      var bookmark = editor.selection.getBookmark();
+      getTextMatcher(editor, textMatcherState).find(getSpellcheckerWordcharPattern(editor)).filter(function (match) {
+        return !!suggestions[match.text];
+      }).wrap(function (match) {
+        return editor.dom.create('span', {
+          'class': 'mce-spellchecker-word',
+          'aria-invalid': 'spelling',
+          'data-mce-bogus': 1,
+          'data-mce-word': match.text
+        });
+      });
+      editor.selection.moveToBookmark(bookmark);
+      startedState.set(true);
+      fireSpellcheckStart(editor);
+    };
+
+    var get = function (editor, startedState, lastSuggestionsState, textMatcherState, currentLanguageState) {
+      var getWordCharPattern = function () {
+        return getSpellcheckerWordcharPattern(editor);
+      };
+      var markErrors$1 = function (data) {
+        markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
+      };
+      return {
+        getTextMatcher: textMatcherState.get,
+        getWordCharPattern: getWordCharPattern,
+        markErrors: markErrors$1,
+        getLanguage: currentLanguageState.get
+      };
+    };
+
+    var register$1 = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
+      editor.addCommand('mceSpellCheck', function () {
+        spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
+      });
+    };
+
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+
+    var spellcheckerEvents = 'SpellcheckStart SpellcheckEnd';
+    var buildMenuItems = function (listName, languageValues) {
+      var items = [];
+      global$2.each(languageValues, function (languageValue) {
+        items.push({
+          selectable: true,
+          text: languageValue.name,
+          data: languageValue.value
+        });
+      });
+      return items;
+    };
+    var getItems = function (editor) {
+      return global$2.map(getLanguages(editor).split(','), function (langPair) {
+        var langPairs = langPair.split('=');
+        return {
+          name: langPairs[0],
+          value: langPairs[1]
+        };
+      });
+    };
+    var register = function (editor, pluginUrl, startedState, textMatcherState, currentLanguageState, lastSuggestionsState) {
+      var languageMenuItems = buildMenuItems('Language', getItems(editor));
+      var startSpellchecking = function () {
+        spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
+      };
+      var buttonArgs = {
+        tooltip: 'Spellcheck',
+        onAction: startSpellchecking,
+        icon: 'spell-check',
+        onSetup: function (buttonApi) {
+          var setButtonState = function () {
+            buttonApi.setActive(startedState.get());
+          };
+          editor.on(spellcheckerEvents, setButtonState);
+          return function () {
+            editor.off(spellcheckerEvents, setButtonState);
+          };
+        }
+      };
+      var splitButtonArgs = __assign(__assign({}, buttonArgs), {
+        type: 'splitbutton',
+        select: function (value) {
+          return value === currentLanguageState.get();
+        },
+        fetch: function (callback) {
+          var items = global$2.map(languageMenuItems, function (languageItem) {
+            return {
+              type: 'choiceitem',
+              value: languageItem.data,
+              text: languageItem.text
+            };
+          });
+          callback(items);
+        },
+        onItemAction: function (splitButtonApi, value) {
+          currentLanguageState.set(value);
+        }
+      });
+      if (languageMenuItems.length > 1) {
+        editor.ui.registry.addSplitButton('spellchecker', splitButtonArgs);
+      } else {
+        editor.ui.registry.addToggleButton('spellchecker', buttonArgs);
+      }
+      editor.ui.registry.addToggleMenuItem('spellchecker', {
+        text: 'Spellcheck',
+        icon: 'spell-check',
+        onSetup: function (menuApi) {
+          menuApi.setActive(startedState.get());
+          var setMenuItemCheck = function () {
+            menuApi.setActive(startedState.get());
+          };
+          editor.on(spellcheckerEvents, setMenuItemCheck);
+          return function () {
+            editor.off(spellcheckerEvents, setMenuItemCheck);
+          };
+        },
+        onAction: startSpellchecking
+      });
+    };
+
+    var ignoreAll = true;
+    var getSuggestions = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, word, spans) {
+      var items = [];
+      var suggestions = lastSuggestionsState.get().suggestions[word];
+      global$2.each(suggestions, function (suggestion) {
+        items.push({
+          text: suggestion,
+          onAction: function () {
+            editor.insertContent(editor.dom.encode(suggestion));
+            editor.dom.remove(spans);
+            checkIfFinished(editor, startedState, textMatcherState);
+          }
+        });
+      });
+      var hasDictionarySupport = lastSuggestionsState.get().hasDictionarySupport;
+      if (hasDictionarySupport) {
+        items.push({ type: 'separator' });
+        items.push({
+          text: 'Add to dictionary',
+          onAction: function () {
+            addToDictionary(editor, pluginUrl, startedState, textMatcherState, currentLanguageState, word, spans);
+          }
+        });
+      }
+      items.push.apply(items, [
+        { type: 'separator' },
+        {
+          text: 'Ignore',
+          onAction: function () {
+            ignoreWord(editor, startedState, textMatcherState, word, spans);
+          }
+        },
+        {
+          text: 'Ignore all',
+          onAction: function () {
+            ignoreWord(editor, startedState, textMatcherState, word, spans, ignoreAll);
+          }
+        }
+      ]);
+      return items;
+    };
+    var setup = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState) {
+      var update = function (element) {
+        var target = element;
+        if (target.className === 'mce-spellchecker-word') {
+          var spans = findSpansByIndex(editor, getElmIndex(target));
+          if (spans.length > 0) {
+            var rng = editor.dom.createRng();
+            rng.setStartBefore(spans[0]);
+            rng.setEndAfter(spans[spans.length - 1]);
+            editor.selection.setRng(rng);
+            return getSuggestions(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, target.getAttribute('data-mce-word'), spans);
+          }
+        } else {
+          return [];
+        }
+      };
+      editor.ui.registry.addContextMenu('spellchecker', { update: update });
+    };
+
+    function Plugin () {
+      global$3.add('spellchecker', function (editor, pluginUrl) {
+        if (hasProPlugin(editor) === false) {
+          var startedState = Cell(false);
+          var currentLanguageState = Cell(getLanguage(editor));
+          var textMatcherState = Cell(null);
+          var lastSuggestionsState = Cell(null);
+          register(editor, pluginUrl, startedState, textMatcherState, currentLanguageState, lastSuggestionsState);
+          setup(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState);
+          register$1(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
+          return get(editor, startedState, lastSuggestionsState, textMatcherState, currentLanguageState);
+        }
       });
     }
 
@@ -69723,868 +70454,6 @@ tinymce.IconManager.add('default', {
         register$1(editor, currentSearchState);
         register(editor, currentSearchState);
         return get(editor, currentSearchState);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var Cell = function (initial) {
-      var value = initial;
-      var get = function () {
-        return value;
-      };
-      var set = function (v) {
-        value = v;
-      };
-      return {
-        get: get,
-        set: set
-      };
-    };
-
-    var global$3 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var hasProPlugin = function (editor) {
-      if (editor.hasPlugin('tinymcespellchecker', true)) {
-        if (typeof window.console !== 'undefined' && window.console.log) {
-          window.console.log('Spell Checker Pro is incompatible with Spell Checker plugin! ' + 'Remove \'spellchecker\' from the \'plugins\' option.');
-        }
-        return true;
-      } else {
-        return false;
-      }
-    };
-
-    var hasOwnProperty = Object.hasOwnProperty;
-    var isEmpty = function (r) {
-      for (var x in r) {
-        if (hasOwnProperty.call(r, x)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.util.URI');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.XHR');
-
-    var fireSpellcheckStart = function (editor) {
-      return editor.fire('SpellcheckStart');
-    };
-    var fireSpellcheckEnd = function (editor) {
-      return editor.fire('SpellcheckEnd');
-    };
-
-    var getLanguages = function (editor) {
-      var defaultLanguages = 'English=en,Danish=da,Dutch=nl,Finnish=fi,French=fr_FR,German=de,Italian=it,Polish=pl,Portuguese=pt_BR,Spanish=es,Swedish=sv';
-      return editor.getParam('spellchecker_languages', defaultLanguages);
-    };
-    var getLanguage = function (editor) {
-      var defaultLanguage = editor.getParam('language', 'en');
-      return editor.getParam('spellchecker_language', defaultLanguage);
-    };
-    var getRpcUrl = function (editor) {
-      return editor.getParam('spellchecker_rpc_url');
-    };
-    var getSpellcheckerCallback = function (editor) {
-      return editor.getParam('spellchecker_callback');
-    };
-    var getSpellcheckerWordcharPattern = function (editor) {
-      var defaultPattern = new RegExp('[^' + '\\s!"#$%&()*+,-./:;<=>?@[\\]^_{|}`' + '\xA7\xA9\xAB\xAE\xB1\xB6\xB7\xB8\xBB' + '\xBC\xBD\xBE\xBF\xD7\xF7\xA4\u201D\u201C\u201E\xA0\u2002\u2003\u2009' + ']+', 'g');
-      return editor.getParam('spellchecker_wordchar_pattern', defaultPattern);
-    };
-
-    var isContentEditableFalse = function (node) {
-      return node && node.nodeType === 1 && node.contentEditable === 'false';
-    };
-    var DomTextMatcher = function (node, editor) {
-      var m, matches = [];
-      var dom = editor.dom;
-      var blockElementsMap = editor.schema.getBlockElements();
-      var hiddenTextElementsMap = editor.schema.getWhiteSpaceElements();
-      var shortEndedElementsMap = editor.schema.getShortEndedElements();
-      var createMatch = function (m, data) {
-        if (!m[0]) {
-          throw new Error('findAndReplaceDOMText cannot handle zero-length matches');
-        }
-        return {
-          start: m.index,
-          end: m.index + m[0].length,
-          text: m[0],
-          data: data
-        };
-      };
-      var getText = function (node) {
-        if (node.nodeType === 3) {
-          return node.data;
-        }
-        if (hiddenTextElementsMap[node.nodeName] && !blockElementsMap[node.nodeName]) {
-          return '';
-        }
-        if (isContentEditableFalse(node)) {
-          return '\n';
-        }
-        var txt = '';
-        if (blockElementsMap[node.nodeName] || shortEndedElementsMap[node.nodeName]) {
-          txt += '\n';
-        }
-        if (node = node.firstChild) {
-          do {
-            txt += getText(node);
-          } while (node = node.nextSibling);
-        }
-        return txt;
-      };
-      var stepThroughMatches = function (node, matches, replaceFn) {
-        var startNode, endNode, startNodeIndex, endNodeIndex, innerNodes = [], atIndex = 0, curNode = node, matchLocation, matchIndex = 0;
-        matches = matches.slice(0);
-        matches.sort(function (a, b) {
-          return a.start - b.start;
-        });
-        matchLocation = matches.shift();
-        out:
-          while (true) {
-            if (blockElementsMap[curNode.nodeName] || shortEndedElementsMap[curNode.nodeName] || isContentEditableFalse(curNode)) {
-              atIndex++;
-            }
-            if (curNode.nodeType === 3) {
-              if (!endNode && curNode.length + atIndex >= matchLocation.end) {
-                endNode = curNode;
-                endNodeIndex = matchLocation.end - atIndex;
-              } else if (startNode) {
-                innerNodes.push(curNode);
-              }
-              if (!startNode && curNode.length + atIndex > matchLocation.start) {
-                startNode = curNode;
-                startNodeIndex = matchLocation.start - atIndex;
-              }
-              atIndex += curNode.length;
-            }
-            if (startNode && endNode) {
-              curNode = replaceFn({
-                startNode: startNode,
-                startNodeIndex: startNodeIndex,
-                endNode: endNode,
-                endNodeIndex: endNodeIndex,
-                innerNodes: innerNodes,
-                match: matchLocation.text,
-                matchIndex: matchIndex
-              });
-              atIndex -= endNode.length - endNodeIndex;
-              startNode = null;
-              endNode = null;
-              innerNodes = [];
-              matchLocation = matches.shift();
-              matchIndex++;
-              if (!matchLocation) {
-                break;
-              }
-            } else if ((!hiddenTextElementsMap[curNode.nodeName] || blockElementsMap[curNode.nodeName]) && curNode.firstChild) {
-              if (!isContentEditableFalse(curNode)) {
-                curNode = curNode.firstChild;
-                continue;
-              }
-            } else if (curNode.nextSibling) {
-              curNode = curNode.nextSibling;
-              continue;
-            }
-            while (true) {
-              if (curNode.nextSibling) {
-                curNode = curNode.nextSibling;
-                break;
-              } else if (curNode.parentNode !== node) {
-                curNode = curNode.parentNode;
-              } else {
-                break out;
-              }
-            }
-          }
-      };
-      var genReplacer = function (callback) {
-        var makeReplacementNode = function (fill, matchIndex) {
-          var match = matches[matchIndex];
-          if (!match.stencil) {
-            match.stencil = callback(match);
-          }
-          var clone = match.stencil.cloneNode(false);
-          clone.setAttribute('data-mce-index', '' + matchIndex);
-          if (fill) {
-            clone.appendChild(dom.doc.createTextNode(fill));
-          }
-          return clone;
-        };
-        return function (range) {
-          var before;
-          var after;
-          var parentNode;
-          var startNode = range.startNode;
-          var endNode = range.endNode;
-          var matchIndex = range.matchIndex;
-          var doc = dom.doc;
-          if (startNode === endNode) {
-            var node_1 = startNode;
-            parentNode = node_1.parentNode;
-            if (range.startNodeIndex > 0) {
-              before = doc.createTextNode(node_1.data.substring(0, range.startNodeIndex));
-              parentNode.insertBefore(before, node_1);
-            }
-            var el = makeReplacementNode(range.match, matchIndex);
-            parentNode.insertBefore(el, node_1);
-            if (range.endNodeIndex < node_1.length) {
-              after = doc.createTextNode(node_1.data.substring(range.endNodeIndex));
-              parentNode.insertBefore(after, node_1);
-            }
-            node_1.parentNode.removeChild(node_1);
-            return el;
-          }
-          before = doc.createTextNode(startNode.data.substring(0, range.startNodeIndex));
-          after = doc.createTextNode(endNode.data.substring(range.endNodeIndex));
-          var elA = makeReplacementNode(startNode.data.substring(range.startNodeIndex), matchIndex);
-          for (var i = 0, l = range.innerNodes.length; i < l; ++i) {
-            var innerNode = range.innerNodes[i];
-            var innerEl = makeReplacementNode(innerNode.data, matchIndex);
-            innerNode.parentNode.replaceChild(innerEl, innerNode);
-          }
-          var elB = makeReplacementNode(endNode.data.substring(0, range.endNodeIndex), matchIndex);
-          parentNode = startNode.parentNode;
-          parentNode.insertBefore(before, startNode);
-          parentNode.insertBefore(elA, startNode);
-          parentNode.removeChild(startNode);
-          parentNode = endNode.parentNode;
-          parentNode.insertBefore(elB, endNode);
-          parentNode.insertBefore(after, endNode);
-          parentNode.removeChild(endNode);
-          return elB;
-        };
-      };
-      var unwrapElement = function (element) {
-        var parentNode = element.parentNode;
-        while (element.childNodes.length > 0) {
-          parentNode.insertBefore(element.childNodes[0], element);
-        }
-        parentNode.removeChild(element);
-      };
-      var hasClass = function (elm) {
-        return elm.className.indexOf('mce-spellchecker-word') !== -1;
-      };
-      var getWrappersByIndex = function (index) {
-        var elements = node.getElementsByTagName('*'), wrappers = [];
-        index = typeof index === 'number' ? '' + index : null;
-        for (var i = 0; i < elements.length; i++) {
-          var element = elements[i], dataIndex = element.getAttribute('data-mce-index');
-          if (dataIndex !== null && dataIndex.length && hasClass(element)) {
-            if (dataIndex === index || index === null) {
-              wrappers.push(element);
-            }
-          }
-        }
-        return wrappers;
-      };
-      var indexOf = function (match) {
-        var i = matches.length;
-        while (i--) {
-          if (matches[i] === match) {
-            return i;
-          }
-        }
-        return -1;
-      };
-      function filter(callback) {
-        var filteredMatches = [];
-        each(function (match, i) {
-          if (callback(match, i)) {
-            filteredMatches.push(match);
-          }
-        });
-        matches = filteredMatches;
-        return this;
-      }
-      function each(callback) {
-        for (var i = 0, l = matches.length; i < l; i++) {
-          if (callback(matches[i], i) === false) {
-            break;
-          }
-        }
-        return this;
-      }
-      function wrap(callback) {
-        if (matches.length) {
-          stepThroughMatches(node, matches, genReplacer(callback));
-        }
-        return this;
-      }
-      function find(regex, data) {
-        if (text && regex.global) {
-          while (m = regex.exec(text)) {
-            matches.push(createMatch(m, data));
-          }
-        }
-        return this;
-      }
-      function unwrap(match) {
-        var i;
-        var elements = getWrappersByIndex(match ? indexOf(match) : null);
-        i = elements.length;
-        while (i--) {
-          unwrapElement(elements[i]);
-        }
-        return this;
-      }
-      var matchFromElement = function (element) {
-        return matches[element.getAttribute('data-mce-index')];
-      };
-      var elementFromMatch = function (match) {
-        return getWrappersByIndex(indexOf(match))[0];
-      };
-      function add(start, length, data) {
-        matches.push({
-          start: start,
-          end: start + length,
-          text: text.substr(start, length),
-          data: data
-        });
-        return this;
-      }
-      var rangeFromMatch = function (match) {
-        var wrappers = getWrappersByIndex(indexOf(match));
-        var rng = editor.dom.createRng();
-        rng.setStartBefore(wrappers[0]);
-        rng.setEndAfter(wrappers[wrappers.length - 1]);
-        return rng;
-      };
-      var replace = function (match, text) {
-        var rng = rangeFromMatch(match);
-        rng.deleteContents();
-        if (text.length > 0) {
-          rng.insertNode(editor.dom.doc.createTextNode(text));
-        }
-        return rng;
-      };
-      function reset() {
-        matches.splice(0, matches.length);
-        unwrap();
-        return this;
-      }
-      var text = getText(node);
-      return {
-        text: text,
-        matches: matches,
-        each: each,
-        filter: filter,
-        reset: reset,
-        matchFromElement: matchFromElement,
-        elementFromMatch: elementFromMatch,
-        find: find,
-        add: add,
-        wrap: wrap,
-        unwrap: unwrap,
-        replace: replace,
-        rangeFromMatch: rangeFromMatch,
-        indexOf: indexOf
-      };
-    };
-
-    var getTextMatcher = function (editor, textMatcherState) {
-      if (!textMatcherState.get()) {
-        var textMatcher = DomTextMatcher(editor.getBody(), editor);
-        textMatcherState.set(textMatcher);
-      }
-      return textMatcherState.get();
-    };
-    var defaultSpellcheckCallback = function (editor, pluginUrl, currentLanguageState) {
-      return function (method, text, doneCallback, errorCallback) {
-        var data = {
-          method: method,
-          lang: currentLanguageState.get()
-        };
-        var postData = '';
-        data[method === 'addToDictionary' ? 'word' : 'text'] = text;
-        global$2.each(data, function (value, key) {
-          if (postData) {
-            postData += '&';
-          }
-          postData += key + '=' + encodeURIComponent(value);
-        });
-        global.send({
-          url: new global$1(pluginUrl).toAbsolute(getRpcUrl(editor)),
-          type: 'post',
-          content_type: 'application/x-www-form-urlencoded',
-          data: postData,
-          success: function (result) {
-            var parseResult = JSON.parse(result);
-            if (!parseResult) {
-              var message = editor.translate('Server response wasn\'t proper JSON.');
-              errorCallback(message);
-            } else if (parseResult.error) {
-              errorCallback(parseResult.error);
-            } else {
-              doneCallback(parseResult);
-            }
-          },
-          error: function () {
-            var message = editor.translate('The spelling service was not found: (') + getRpcUrl(editor) + editor.translate(')');
-            errorCallback(message);
-          }
-        });
-      };
-    };
-    var sendRpcCall = function (editor, pluginUrl, currentLanguageState, name, data, successCallback, errorCallback) {
-      var userSpellcheckCallback = getSpellcheckerCallback(editor);
-      var spellCheckCallback = userSpellcheckCallback ? userSpellcheckCallback : defaultSpellcheckCallback(editor, pluginUrl, currentLanguageState);
-      spellCheckCallback.call(editor.plugins.spellchecker, name, data, successCallback, errorCallback);
-    };
-    var spellcheck = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
-      if (finish(editor, startedState, textMatcherState)) {
-        return;
-      }
-      var errorCallback = function (message) {
-        editor.notificationManager.open({
-          text: message,
-          type: 'error'
-        });
-        editor.setProgressState(false);
-        finish(editor, startedState, textMatcherState);
-      };
-      var successCallback = function (data) {
-        markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
-      };
-      editor.setProgressState(true);
-      sendRpcCall(editor, pluginUrl, currentLanguageState, 'spellcheck', getTextMatcher(editor, textMatcherState).text, successCallback, errorCallback);
-      editor.focus();
-    };
-    var checkIfFinished = function (editor, startedState, textMatcherState) {
-      if (!editor.dom.select('span.mce-spellchecker-word').length) {
-        finish(editor, startedState, textMatcherState);
-      }
-    };
-    var addToDictionary = function (editor, pluginUrl, startedState, textMatcherState, currentLanguageState, word, spans) {
-      editor.setProgressState(true);
-      sendRpcCall(editor, pluginUrl, currentLanguageState, 'addToDictionary', word, function () {
-        editor.setProgressState(false);
-        editor.dom.remove(spans, true);
-        checkIfFinished(editor, startedState, textMatcherState);
-      }, function (message) {
-        editor.notificationManager.open({
-          text: message,
-          type: 'error'
-        });
-        editor.setProgressState(false);
-      });
-    };
-    var ignoreWord = function (editor, startedState, textMatcherState, word, spans, all) {
-      editor.selection.collapse();
-      if (all) {
-        global$2.each(editor.dom.select('span.mce-spellchecker-word'), function (span) {
-          if (span.getAttribute('data-mce-word') === word) {
-            editor.dom.remove(span, true);
-          }
-        });
-      } else {
-        editor.dom.remove(spans, true);
-      }
-      checkIfFinished(editor, startedState, textMatcherState);
-    };
-    var finish = function (editor, startedState, textMatcherState) {
-      var bookmark = editor.selection.getBookmark();
-      getTextMatcher(editor, textMatcherState).reset();
-      editor.selection.moveToBookmark(bookmark);
-      textMatcherState.set(null);
-      if (startedState.get()) {
-        startedState.set(false);
-        fireSpellcheckEnd(editor);
-        return true;
-      }
-    };
-    var getElmIndex = function (elm) {
-      var value = elm.getAttribute('data-mce-index');
-      if (typeof value === 'number') {
-        return '' + value;
-      }
-      return value;
-    };
-    var findSpansByIndex = function (editor, index) {
-      var spans = [];
-      var nodes = global$2.toArray(editor.getBody().getElementsByTagName('span'));
-      if (nodes.length) {
-        for (var i = 0; i < nodes.length; i++) {
-          var nodeIndex = getElmIndex(nodes[i]);
-          if (nodeIndex === null || !nodeIndex.length) {
-            continue;
-          }
-          if (nodeIndex === index.toString()) {
-            spans.push(nodes[i]);
-          }
-        }
-      }
-      return spans;
-    };
-    var markErrors = function (editor, startedState, textMatcherState, lastSuggestionsState, data) {
-      var hasDictionarySupport = !!data.dictionary;
-      var suggestions = data.words;
-      editor.setProgressState(false);
-      if (isEmpty(suggestions)) {
-        var message = editor.translate('No misspellings found.');
-        editor.notificationManager.open({
-          text: message,
-          type: 'info'
-        });
-        startedState.set(false);
-        return;
-      }
-      lastSuggestionsState.set({
-        suggestions: suggestions,
-        hasDictionarySupport: hasDictionarySupport
-      });
-      var bookmark = editor.selection.getBookmark();
-      getTextMatcher(editor, textMatcherState).find(getSpellcheckerWordcharPattern(editor)).filter(function (match) {
-        return !!suggestions[match.text];
-      }).wrap(function (match) {
-        return editor.dom.create('span', {
-          'class': 'mce-spellchecker-word',
-          'aria-invalid': 'spelling',
-          'data-mce-bogus': 1,
-          'data-mce-word': match.text
-        });
-      });
-      editor.selection.moveToBookmark(bookmark);
-      startedState.set(true);
-      fireSpellcheckStart(editor);
-    };
-
-    var get = function (editor, startedState, lastSuggestionsState, textMatcherState, currentLanguageState) {
-      var getWordCharPattern = function () {
-        return getSpellcheckerWordcharPattern(editor);
-      };
-      var markErrors$1 = function (data) {
-        markErrors(editor, startedState, textMatcherState, lastSuggestionsState, data);
-      };
-      return {
-        getTextMatcher: textMatcherState.get,
-        getWordCharPattern: getWordCharPattern,
-        markErrors: markErrors$1,
-        getLanguage: currentLanguageState.get
-      };
-    };
-
-    var register$1 = function (editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState) {
-      editor.addCommand('mceSpellCheck', function () {
-        spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
-      });
-    };
-
-    var __assign = function () {
-      __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s)
-            if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-        }
-        return t;
-      };
-      return __assign.apply(this, arguments);
-    };
-
-    var spellcheckerEvents = 'SpellcheckStart SpellcheckEnd';
-    var buildMenuItems = function (listName, languageValues) {
-      var items = [];
-      global$2.each(languageValues, function (languageValue) {
-        items.push({
-          selectable: true,
-          text: languageValue.name,
-          data: languageValue.value
-        });
-      });
-      return items;
-    };
-    var getItems = function (editor) {
-      return global$2.map(getLanguages(editor).split(','), function (langPair) {
-        var langPairs = langPair.split('=');
-        return {
-          name: langPairs[0],
-          value: langPairs[1]
-        };
-      });
-    };
-    var register = function (editor, pluginUrl, startedState, textMatcherState, currentLanguageState, lastSuggestionsState) {
-      var languageMenuItems = buildMenuItems('Language', getItems(editor));
-      var startSpellchecking = function () {
-        spellcheck(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
-      };
-      var buttonArgs = {
-        tooltip: 'Spellcheck',
-        onAction: startSpellchecking,
-        icon: 'spell-check',
-        onSetup: function (buttonApi) {
-          var setButtonState = function () {
-            buttonApi.setActive(startedState.get());
-          };
-          editor.on(spellcheckerEvents, setButtonState);
-          return function () {
-            editor.off(spellcheckerEvents, setButtonState);
-          };
-        }
-      };
-      var splitButtonArgs = __assign(__assign({}, buttonArgs), {
-        type: 'splitbutton',
-        select: function (value) {
-          return value === currentLanguageState.get();
-        },
-        fetch: function (callback) {
-          var items = global$2.map(languageMenuItems, function (languageItem) {
-            return {
-              type: 'choiceitem',
-              value: languageItem.data,
-              text: languageItem.text
-            };
-          });
-          callback(items);
-        },
-        onItemAction: function (splitButtonApi, value) {
-          currentLanguageState.set(value);
-        }
-      });
-      if (languageMenuItems.length > 1) {
-        editor.ui.registry.addSplitButton('spellchecker', splitButtonArgs);
-      } else {
-        editor.ui.registry.addToggleButton('spellchecker', buttonArgs);
-      }
-      editor.ui.registry.addToggleMenuItem('spellchecker', {
-        text: 'Spellcheck',
-        icon: 'spell-check',
-        onSetup: function (menuApi) {
-          menuApi.setActive(startedState.get());
-          var setMenuItemCheck = function () {
-            menuApi.setActive(startedState.get());
-          };
-          editor.on(spellcheckerEvents, setMenuItemCheck);
-          return function () {
-            editor.off(spellcheckerEvents, setMenuItemCheck);
-          };
-        },
-        onAction: startSpellchecking
-      });
-    };
-
-    var ignoreAll = true;
-    var getSuggestions = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, word, spans) {
-      var items = [];
-      var suggestions = lastSuggestionsState.get().suggestions[word];
-      global$2.each(suggestions, function (suggestion) {
-        items.push({
-          text: suggestion,
-          onAction: function () {
-            editor.insertContent(editor.dom.encode(suggestion));
-            editor.dom.remove(spans);
-            checkIfFinished(editor, startedState, textMatcherState);
-          }
-        });
-      });
-      var hasDictionarySupport = lastSuggestionsState.get().hasDictionarySupport;
-      if (hasDictionarySupport) {
-        items.push({ type: 'separator' });
-        items.push({
-          text: 'Add to dictionary',
-          onAction: function () {
-            addToDictionary(editor, pluginUrl, startedState, textMatcherState, currentLanguageState, word, spans);
-          }
-        });
-      }
-      items.push.apply(items, [
-        { type: 'separator' },
-        {
-          text: 'Ignore',
-          onAction: function () {
-            ignoreWord(editor, startedState, textMatcherState, word, spans);
-          }
-        },
-        {
-          text: 'Ignore all',
-          onAction: function () {
-            ignoreWord(editor, startedState, textMatcherState, word, spans, ignoreAll);
-          }
-        }
-      ]);
-      return items;
-    };
-    var setup = function (editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState) {
-      var update = function (element) {
-        var target = element;
-        if (target.className === 'mce-spellchecker-word') {
-          var spans = findSpansByIndex(editor, getElmIndex(target));
-          if (spans.length > 0) {
-            var rng = editor.dom.createRng();
-            rng.setStartBefore(spans[0]);
-            rng.setEndAfter(spans[spans.length - 1]);
-            editor.selection.setRng(rng);
-            return getSuggestions(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState, target.getAttribute('data-mce-word'), spans);
-          }
-        } else {
-          return [];
-        }
-      };
-      editor.ui.registry.addContextMenu('spellchecker', { update: update });
-    };
-
-    function Plugin () {
-      global$3.add('spellchecker', function (editor, pluginUrl) {
-        if (hasProPlugin(editor) === false) {
-          var startedState = Cell(false);
-          var currentLanguageState = Cell(getLanguage(editor));
-          var textMatcherState = Cell(null);
-          var lastSuggestionsState = Cell(null);
-          register(editor, pluginUrl, startedState, textMatcherState, currentLanguageState, lastSuggestionsState);
-          setup(editor, pluginUrl, lastSuggestionsState, startedState, textMatcherState, currentLanguageState);
-          register$1(editor, pluginUrl, startedState, textMatcherState, lastSuggestionsState, currentLanguageState);
-          return get(editor, startedState, lastSuggestionsState, textMatcherState, currentLanguageState);
-        }
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$6 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var global$5 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
-
-    var global$4 = tinymce.util.Tools.resolve('tinymce.EditorManager');
-
-    var global$3 = tinymce.util.Tools.resolve('tinymce.Env');
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Delay');
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Tools');
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.VK');
-
-    var getTabFocusElements = function (editor) {
-      return editor.getParam('tabfocus_elements', ':prev,:next');
-    };
-    var getTabFocus = function (editor) {
-      return editor.getParam('tab_focus', getTabFocusElements(editor));
-    };
-
-    var DOM = global$5.DOM;
-    var tabCancel = function (e) {
-      if (e.keyCode === global.TAB && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        e.preventDefault();
-      }
-    };
-    var setup = function (editor) {
-      var tabHandler = function (e) {
-        var x;
-        if (e.keyCode !== global.TAB || e.ctrlKey || e.altKey || e.metaKey || e.isDefaultPrevented()) {
-          return;
-        }
-        var find = function (direction) {
-          var el = DOM.select(':input:enabled,*[tabindex]:not(iframe)');
-          var canSelectRecursive = function (e) {
-            var castElem = e;
-            return e.nodeName === 'BODY' || castElem.type !== 'hidden' && castElem.style.display !== 'none' && castElem.style.visibility !== 'hidden' && canSelectRecursive(e.parentNode);
-          };
-          var canSelect = function (el) {
-            return /INPUT|TEXTAREA|BUTTON/.test(el.tagName) && global$4.get(e.id) && el.tabIndex !== -1 && canSelectRecursive(el);
-          };
-          global$1.each(el, function (e, i) {
-            if (e.id === editor.id) {
-              x = i;
-              return false;
-            }
-          });
-          if (direction > 0) {
-            for (var i = x + 1; i < el.length; i++) {
-              if (canSelect(el[i])) {
-                return el[i];
-              }
-            }
-          } else {
-            for (var i = x - 1; i >= 0; i--) {
-              if (canSelect(el[i])) {
-                return el[i];
-              }
-            }
-          }
-          return null;
-        };
-        var v = global$1.explode(getTabFocus(editor));
-        if (v.length === 1) {
-          v[1] = v[0];
-          v[0] = ':prev';
-        }
-        var el;
-        if (e.shiftKey) {
-          if (v[0] === ':prev') {
-            el = find(-1);
-          } else {
-            el = DOM.get(v[0]);
-          }
-        } else {
-          if (v[1] === ':next') {
-            el = find(1);
-          } else {
-            el = DOM.get(v[1]);
-          }
-        }
-        if (el) {
-          var focusEditor = global$4.get(el.id || el.name);
-          if (el.id && focusEditor) {
-            focusEditor.focus();
-          } else {
-            global$2.setTimeout(function () {
-              if (!global$3.webkit) {
-                window.focus();
-              }
-              el.focus();
-            }, 10);
-          }
-          e.preventDefault();
-        }
-      };
-      editor.on('init', function () {
-        if (editor.inline) {
-          DOM.setAttrib(editor.getBody(), 'tabIndex', null);
-        }
-        editor.on('keyup', tabCancel);
-        if (global$3.gecko) {
-          editor.on('keypress keydown', tabHandler);
-        } else {
-          editor.on('keydown', tabHandler);
-        }
-      });
-    };
-
-    function Plugin () {
-      global$6.add('tabfocus', function (editor) {
-        setup(editor);
       });
     }
 
@@ -82706,6 +82575,137 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
+    var global$6 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var global$5 = tinymce.util.Tools.resolve('tinymce.dom.DOMUtils');
+
+    var global$4 = tinymce.util.Tools.resolve('tinymce.EditorManager');
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.Env');
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Delay');
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.util.Tools');
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.VK');
+
+    var getTabFocusElements = function (editor) {
+      return editor.getParam('tabfocus_elements', ':prev,:next');
+    };
+    var getTabFocus = function (editor) {
+      return editor.getParam('tab_focus', getTabFocusElements(editor));
+    };
+
+    var DOM = global$5.DOM;
+    var tabCancel = function (e) {
+      if (e.keyCode === global.TAB && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+      }
+    };
+    var setup = function (editor) {
+      var tabHandler = function (e) {
+        var x;
+        if (e.keyCode !== global.TAB || e.ctrlKey || e.altKey || e.metaKey || e.isDefaultPrevented()) {
+          return;
+        }
+        var find = function (direction) {
+          var el = DOM.select(':input:enabled,*[tabindex]:not(iframe)');
+          var canSelectRecursive = function (e) {
+            var castElem = e;
+            return e.nodeName === 'BODY' || castElem.type !== 'hidden' && castElem.style.display !== 'none' && castElem.style.visibility !== 'hidden' && canSelectRecursive(e.parentNode);
+          };
+          var canSelect = function (el) {
+            return /INPUT|TEXTAREA|BUTTON/.test(el.tagName) && global$4.get(e.id) && el.tabIndex !== -1 && canSelectRecursive(el);
+          };
+          global$1.each(el, function (e, i) {
+            if (e.id === editor.id) {
+              x = i;
+              return false;
+            }
+          });
+          if (direction > 0) {
+            for (var i = x + 1; i < el.length; i++) {
+              if (canSelect(el[i])) {
+                return el[i];
+              }
+            }
+          } else {
+            for (var i = x - 1; i >= 0; i--) {
+              if (canSelect(el[i])) {
+                return el[i];
+              }
+            }
+          }
+          return null;
+        };
+        var v = global$1.explode(getTabFocus(editor));
+        if (v.length === 1) {
+          v[1] = v[0];
+          v[0] = ':prev';
+        }
+        var el;
+        if (e.shiftKey) {
+          if (v[0] === ':prev') {
+            el = find(-1);
+          } else {
+            el = DOM.get(v[0]);
+          }
+        } else {
+          if (v[1] === ':next') {
+            el = find(1);
+          } else {
+            el = DOM.get(v[1]);
+          }
+        }
+        if (el) {
+          var focusEditor = global$4.get(el.id || el.name);
+          if (el.id && focusEditor) {
+            focusEditor.focus();
+          } else {
+            global$2.setTimeout(function () {
+              if (!global$3.webkit) {
+                window.focus();
+              }
+              el.focus();
+            }, 10);
+          }
+          e.preventDefault();
+        }
+      };
+      editor.on('init', function () {
+        if (editor.inline) {
+          DOM.setAttrib(editor.getBody(), 'tabIndex', null);
+        }
+        editor.on('keyup', tabCancel);
+        if (global$3.gecko) {
+          editor.on('keypress keydown', tabHandler);
+        } else {
+          editor.on('keydown', tabHandler);
+        }
+      });
+    };
+
+    function Plugin () {
+      global$6.add('tabfocus', function (editor) {
+        setup(editor);
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
     var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
     function Plugin () {
@@ -84446,6 +84446,432 @@ tinymce.IconManager.add('default', {
 (function () {
     'use strict';
 
+    var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+    var identity = function (x) {
+      return x;
+    };
+
+    var __assign = function () {
+      __assign = Object.assign || function __assign(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+          s = arguments[i];
+          for (var p in s)
+            if (Object.prototype.hasOwnProperty.call(s, p))
+              t[p] = s[p];
+        }
+        return t;
+      };
+      return __assign.apply(this, arguments);
+    };
+
+    var zeroWidth = '\uFEFF';
+    var removeZwsp$1 = function (s) {
+      return s.replace(/\uFEFF/g, '');
+    };
+
+    var map = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+
+    var punctuationStr = '[!-#%-*,-\\/:;?@\\[-\\]_{}\xA1\xAB\xB7\xBB\xBF;\xB7\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1361-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CD3\u2010-\u2027\u2030-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u3008\u3009\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30\u2E31\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uff3f\uFF5B\uFF5D\uFF5F-\uFF65]';
+    var regExps = {
+      aletter: '[A-Za-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05F3\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u10a0-\u10c5\u10d0-\u10fa\u10fc\u1100-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1a00-\u1a16\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bc0-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u24B6-\u24E9\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2d00-\u2d25\u2d30-\u2d65\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005\u303b\u303c\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790\ua791\ua7a0-\ua7a9\ua7fa-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uffa0-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc]',
+      midnumlet: '[-\'\\.\u2018\u2019\u2024\uFE52\uFF07\uFF0E]',
+      midletter: '[:\xB7\xB7\u05F4\u2027\uFE13\uFE55\uFF1A]',
+      midnum: '[\xB1+*/,;;\u0589\u060C\u060D\u066C\u07F8\u2044\uFE10\uFE14\uFE50\uFE54\uFF0C\uFF1B]',
+      numeric: '[0-9\u0660-\u0669\u066B\u06f0-\u06f9\u07c0-\u07c9\u0966-\u096f\u09e6-\u09ef\u0a66-\u0a6f\u0ae6-\u0aef\u0b66-\u0b6f\u0be6-\u0bef\u0c66-\u0c6f\u0ce6-\u0cef\u0d66-\u0d6f\u0e50-\u0e59\u0ed0-\u0ed9\u0f20-\u0f29\u1040-\u1049\u1090-\u1099\u17e0-\u17e9\u1810-\u1819\u1946-\u194f\u19d0-\u19d9\u1a80-\u1a89\u1a90-\u1a99\u1b50-\u1b59\u1bb0-\u1bb9\u1c40-\u1c49\u1c50-\u1c59\ua620-\ua629\ua8d0-\ua8d9\ua900-\ua909\ua9d0-\ua9d9\uaa50-\uaa59\uabf0-\uabf9]',
+      cr: '\\r',
+      lf: '\\n',
+      newline: '[\x0B\f\x85\u2028\u2029]',
+      extend: '[\u0300-\u036f\u0483-\u0489\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u0711\u0730-\u074a\u07a6-\u07b0\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0827\u0829-\u082d\u0859-\u085b\u0900-\u0903\u093a-\u093c\u093e-\u094f\u0951-\u0957\u0962\u0963\u0981-\u0983\u09bc\u09be-\u09c4\u09c7\u09c8\u09cb-\u09cd\u09d7\u09e2\u09e3\u0a01-\u0a03\u0a3c\u0a3e-\u0a42\u0a47\u0a48\u0a4b-\u0a4d\u0a51\u0a70\u0a71\u0a75\u0a81-\u0a83\u0abc\u0abe-\u0ac5\u0ac7-\u0ac9\u0acb-\u0acd\u0ae2\u0ae3\u0b01-\u0b03\u0b3c\u0b3e-\u0b44\u0b47\u0b48\u0b4b-\u0b4d\u0b56\u0b57\u0b62\u0b63\u0b82\u0bbe-\u0bc2\u0bc6-\u0bc8\u0bca-\u0bcd\u0bd7\u0c01-\u0c03\u0c3e-\u0c44\u0c46-\u0c48\u0c4a-\u0c4d\u0c55\u0c56\u0c62\u0c63\u0c82\u0c83\u0cbc\u0cbe-\u0cc4\u0cc6-\u0cc8\u0cca-\u0ccd\u0cd5\u0cd6\u0ce2\u0ce3\u0d02\u0d03\u0d3e-\u0d44\u0d46-\u0d48\u0d4a-\u0d4d\u0d57\u0d62\u0d63\u0d82\u0d83\u0dca\u0dcf-\u0dd4\u0dd6\u0dd8-\u0ddf\u0df2\u0df3\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\u0eb1\u0eb4-\u0eb9\u0ebb\u0ebc\u0ec8-\u0ecd\u0f18\u0f19\u0f35\u0f37\u0f39\u0f3e\u0f3f\u0f71-\u0f84\u0f86\u0f87\u0f8d-\u0f97\u0f99-\u0fbc\u0fc6\u102b-\u103e\u1056-\u1059\u105e-\u1060\u1062-\u1064\u1067-\u106d\u1071-\u1074\u1082-\u108d\u108f\u109a-\u109d\u135d-\u135f\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17b6-\u17d3\u17dd\u180b-\u180d\u18a9\u1920-\u192b\u1930-\u193b\u19b0-\u19c0\u19c8\u19c9\u1a17-\u1a1b\u1a55-\u1a5e\u1a60-\u1a7c\u1a7f\u1b00-\u1b04\u1b34-\u1b44\u1b6b-\u1b73\u1b80-\u1b82\u1ba1-\u1baa\u1be6-\u1bf3\u1c24-\u1c37\u1cd0-\u1cd2\u1cd4-\u1ce8\u1ced\u1cf2\u1dc0-\u1de6\u1dfc-\u1dff\u200c\u200d\u20d0-\u20f0\u2cef-\u2cf1\u2d7f\u2de0-\u2dff\u302a-\u302f\u3099\u309a\ua66f-\uA672\ua67c\ua67d\ua6f0\ua6f1\ua802\ua806\ua80b\ua823-\ua827\ua880\ua881\ua8b4-\ua8c4\ua8e0-\ua8f1\ua926-\ua92d\ua947-\ua953\ua980-\ua983\ua9b3-\ua9c0\uaa29-\uaa36\uaa43\uaa4c\uaa4d\uaa7b\uaab0\uaab2-\uaab4\uaab7\uaab8\uaabe\uaabf\uaac1\uabe3-\uabea\uabec\uabed\ufb1e\ufe00-\ufe0f\ufe20-\ufe26\uff9e\uff9f]',
+      format: '[\xAD\u0600-\u0603\u06DD\u070F\u17b4\u17b5\u200E\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\uFFF9-\uFFFB]',
+      katakana: '[\u3031-\u3035\u309B\u309C\u30A0-\u30fa\u30fc-\u30ff\u31f0-\u31ff\u32D0-\u32FE\u3300-\u3357\uff66-\uff9d]',
+      extendnumlet: '[=_\u203f\u2040\u2054\ufe33\ufe34\ufe4d-\ufe4f\uff3f\u2200-\u22FF<>]',
+      punctuation: punctuationStr
+    };
+    var characterIndices = {
+      ALETTER: 0,
+      MIDNUMLET: 1,
+      MIDLETTER: 2,
+      MIDNUM: 3,
+      NUMERIC: 4,
+      CR: 5,
+      LF: 6,
+      NEWLINE: 7,
+      EXTEND: 8,
+      FORMAT: 9,
+      KATAKANA: 10,
+      EXTENDNUMLET: 11,
+      AT: 12,
+      OTHER: 13
+    };
+    var SETS$1 = [
+      new RegExp(regExps.aletter),
+      new RegExp(regExps.midnumlet),
+      new RegExp(regExps.midletter),
+      new RegExp(regExps.midnum),
+      new RegExp(regExps.numeric),
+      new RegExp(regExps.cr),
+      new RegExp(regExps.lf),
+      new RegExp(regExps.newline),
+      new RegExp(regExps.extend),
+      new RegExp(regExps.format),
+      new RegExp(regExps.katakana),
+      new RegExp(regExps.extendnumlet),
+      new RegExp('@')
+    ];
+    var EMPTY_STRING$1 = '';
+    var PUNCTUATION$1 = new RegExp('^' + regExps.punctuation + '$');
+    var WHITESPACE$1 = /^\s+$/;
+
+    var SETS = SETS$1;
+    var OTHER = characterIndices.OTHER;
+    var getType = function (char) {
+      var type = OTHER;
+      var setsLength = SETS.length;
+      for (var j = 0; j < setsLength; ++j) {
+        var set = SETS[j];
+        if (set && set.test(char)) {
+          type = j;
+          break;
+        }
+      }
+      return type;
+    };
+    var memoize = function (func) {
+      var cache = {};
+      return function (char) {
+        if (cache[char]) {
+          return cache[char];
+        } else {
+          var result = func(char);
+          cache[char] = result;
+          return result;
+        }
+      };
+    };
+    var classify = function (characters) {
+      var memoized = memoize(getType);
+      return map(characters, memoized);
+    };
+
+    var isWordBoundary = function (map, index) {
+      var type = map[index];
+      var nextType = map[index + 1];
+      if (index < 0 || index > map.length - 1 && index !== 0) {
+        return false;
+      }
+      if (type === characterIndices.ALETTER && nextType === characterIndices.ALETTER) {
+        return false;
+      }
+      var nextNextType = map[index + 2];
+      if (type === characterIndices.ALETTER && (nextType === characterIndices.MIDLETTER || nextType === characterIndices.MIDNUMLET || nextType === characterIndices.AT) && nextNextType === characterIndices.ALETTER) {
+        return false;
+      }
+      var prevType = map[index - 1];
+      if ((type === characterIndices.MIDLETTER || type === characterIndices.MIDNUMLET || nextType === characterIndices.AT) && nextType === characterIndices.ALETTER && prevType === characterIndices.ALETTER) {
+        return false;
+      }
+      if ((type === characterIndices.NUMERIC || type === characterIndices.ALETTER) && (nextType === characterIndices.NUMERIC || nextType === characterIndices.ALETTER)) {
+        return false;
+      }
+      if ((type === characterIndices.MIDNUM || type === characterIndices.MIDNUMLET) && nextType === characterIndices.NUMERIC && prevType === characterIndices.NUMERIC) {
+        return false;
+      }
+      if (type === characterIndices.NUMERIC && (nextType === characterIndices.MIDNUM || nextType === characterIndices.MIDNUMLET) && nextNextType === characterIndices.NUMERIC) {
+        return false;
+      }
+      if (type === characterIndices.EXTEND || type === characterIndices.FORMAT || prevType === characterIndices.EXTEND || prevType === characterIndices.FORMAT || nextType === characterIndices.EXTEND || nextType === characterIndices.FORMAT) {
+        return false;
+      }
+      if (type === characterIndices.CR && nextType === characterIndices.LF) {
+        return false;
+      }
+      if (type === characterIndices.NEWLINE || type === characterIndices.CR || type === characterIndices.LF) {
+        return true;
+      }
+      if (nextType === characterIndices.NEWLINE || nextType === characterIndices.CR || nextType === characterIndices.LF) {
+        return true;
+      }
+      if (type === characterIndices.KATAKANA && nextType === characterIndices.KATAKANA) {
+        return false;
+      }
+      if (nextType === characterIndices.EXTENDNUMLET && (type === characterIndices.ALETTER || type === characterIndices.NUMERIC || type === characterIndices.KATAKANA || type === characterIndices.EXTENDNUMLET)) {
+        return false;
+      }
+      if (type === characterIndices.EXTENDNUMLET && (nextType === characterIndices.ALETTER || nextType === characterIndices.NUMERIC || nextType === characterIndices.KATAKANA)) {
+        return false;
+      }
+      if (type === characterIndices.AT) {
+        return false;
+      }
+      return true;
+    };
+
+    var EMPTY_STRING = EMPTY_STRING$1;
+    var WHITESPACE = WHITESPACE$1;
+    var PUNCTUATION = PUNCTUATION$1;
+    var isProtocol = function (str) {
+      return str === 'http' || str === 'https';
+    };
+    var findWordEnd = function (characters, startIndex) {
+      var i;
+      for (i = startIndex; i < characters.length; i++) {
+        if (WHITESPACE.test(characters[i])) {
+          break;
+        }
+      }
+      return i;
+    };
+    var findUrlEnd = function (characters, startIndex) {
+      var endIndex = findWordEnd(characters, startIndex + 1);
+      var peakedWord = characters.slice(startIndex + 1, endIndex).join(EMPTY_STRING);
+      return peakedWord.substr(0, 3) === '://' ? endIndex : startIndex;
+    };
+    var findWords = function (chars, sChars, characterMap, options) {
+      var words = [];
+      var word = [];
+      for (var i = 0; i < characterMap.length; ++i) {
+        word.push(chars[i]);
+        if (isWordBoundary(characterMap, i)) {
+          var ch = sChars[i];
+          if ((options.includeWhitespace || !WHITESPACE.test(ch)) && (options.includePunctuation || !PUNCTUATION.test(ch))) {
+            var startOfWord = i - word.length + 1;
+            var endOfWord = i + 1;
+            var str = sChars.slice(startOfWord, endOfWord).join(EMPTY_STRING);
+            if (isProtocol(str)) {
+              var endOfUrl = findUrlEnd(sChars, i);
+              var url = chars.slice(endOfWord, endOfUrl);
+              Array.prototype.push.apply(word, url);
+              i = endOfUrl;
+            }
+            words.push(word);
+          }
+          word = [];
+        }
+      }
+      return words;
+    };
+    var getDefaultOptions = function () {
+      return {
+        includeWhitespace: false,
+        includePunctuation: false
+      };
+    };
+    var getWords$1 = function (chars, extract, options) {
+      options = __assign(__assign({}, getDefaultOptions()), options);
+      var filteredChars = [];
+      var extractedChars = [];
+      for (var i = 0; i < chars.length; i++) {
+        var ch = extract(chars[i]);
+        if (ch !== zeroWidth) {
+          filteredChars.push(chars[i]);
+          extractedChars.push(ch);
+        }
+      }
+      var characterMap = classify(extractedChars);
+      return findWords(filteredChars, extractedChars, characterMap, options);
+    };
+
+    var getWords = getWords$1;
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.dom.TreeWalker');
+
+    var getText = function (node, schema) {
+      var blockElements = schema.getBlockElements();
+      var shortEndedElements = schema.getShortEndedElements();
+      var isNewline = function (node) {
+        return blockElements[node.nodeName] || shortEndedElements[node.nodeName];
+      };
+      var textBlocks = [];
+      var txt = '';
+      var treeWalker = new global$1(node, node);
+      while (node = treeWalker.next()) {
+        if (node.nodeType === 3) {
+          txt += removeZwsp$1(node.data);
+        } else if (isNewline(node) && txt.length) {
+          textBlocks.push(txt);
+          txt = '';
+        }
+      }
+      if (txt.length) {
+        textBlocks.push(txt);
+      }
+      return textBlocks;
+    };
+
+    var removeZwsp = function (text) {
+      return text.replace(/\u200B/g, '');
+    };
+    var strLen = function (str) {
+      return str.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '_').length;
+    };
+    var countWords = function (node, schema) {
+      var text = removeZwsp(getText(node, schema).join('\n'));
+      return getWords(text.split(''), identity).length;
+    };
+    var countCharacters = function (node, schema) {
+      var text = getText(node, schema).join('');
+      return strLen(text);
+    };
+    var countCharactersWithoutSpaces = function (node, schema) {
+      var text = getText(node, schema).join('').replace(/\s/g, '');
+      return strLen(text);
+    };
+
+    var createBodyCounter = function (editor, count) {
+      return function () {
+        return count(editor.getBody(), editor.schema);
+      };
+    };
+    var createSelectionCounter = function (editor, count) {
+      return function () {
+        return count(editor.selection.getRng().cloneContents(), editor.schema);
+      };
+    };
+    var createBodyWordCounter = function (editor) {
+      return createBodyCounter(editor, countWords);
+    };
+    var get = function (editor) {
+      return {
+        body: {
+          getWordCount: createBodyWordCounter(editor),
+          getCharacterCount: createBodyCounter(editor, countCharacters),
+          getCharacterCountWithoutSpaces: createBodyCounter(editor, countCharactersWithoutSpaces)
+        },
+        selection: {
+          getWordCount: createSelectionCounter(editor, countWords),
+          getCharacterCount: createSelectionCounter(editor, countCharacters),
+          getCharacterCountWithoutSpaces: createSelectionCounter(editor, countCharactersWithoutSpaces)
+        },
+        getCount: createBodyWordCounter(editor)
+      };
+    };
+
+    var open = function (editor, api) {
+      editor.windowManager.open({
+        title: 'Word Count',
+        body: {
+          type: 'panel',
+          items: [{
+              type: 'table',
+              header: [
+                'Count',
+                'Document',
+                'Selection'
+              ],
+              cells: [
+                [
+                  'Words',
+                  String(api.body.getWordCount()),
+                  String(api.selection.getWordCount())
+                ],
+                [
+                  'Characters (no spaces)',
+                  String(api.body.getCharacterCountWithoutSpaces()),
+                  String(api.selection.getCharacterCountWithoutSpaces())
+                ],
+                [
+                  'Characters',
+                  String(api.body.getCharacterCount()),
+                  String(api.selection.getCharacterCount())
+                ]
+              ]
+            }]
+        },
+        buttons: [{
+            type: 'cancel',
+            name: 'close',
+            text: 'Close',
+            primary: true
+          }]
+      });
+    };
+
+    var register$1 = function (editor, api) {
+      editor.addCommand('mceWordCount', function () {
+        return open(editor, api);
+      });
+    };
+
+    var global = tinymce.util.Tools.resolve('tinymce.util.Delay');
+
+    var fireWordCountUpdate = function (editor, api) {
+      editor.fire('wordCountUpdate', {
+        wordCount: {
+          words: api.body.getWordCount(),
+          characters: api.body.getCharacterCount(),
+          charactersWithoutSpaces: api.body.getCharacterCountWithoutSpaces()
+        }
+      });
+    };
+
+    var updateCount = function (editor, api) {
+      fireWordCountUpdate(editor, api);
+    };
+    var setup = function (editor, api, delay) {
+      var debouncedUpdate = global.debounce(function () {
+        return updateCount(editor, api);
+      }, delay);
+      editor.on('init', function () {
+        updateCount(editor, api);
+        global.setEditorTimeout(editor, function () {
+          editor.on('SetContent BeforeAddUndo Undo Redo ViewUpdate keyup', debouncedUpdate);
+        }, 0);
+      });
+    };
+
+    var register = function (editor) {
+      var onAction = function () {
+        return editor.execCommand('mceWordCount');
+      };
+      editor.ui.registry.addButton('wordcount', {
+        tooltip: 'Word count',
+        icon: 'character-count',
+        onAction: onAction
+      });
+      editor.ui.registry.addMenuItem('wordcount', {
+        text: 'Word count',
+        icon: 'character-count',
+        onAction: onAction
+      });
+    };
+
+    function Plugin (delay) {
+      if (delay === void 0) {
+        delay = 300;
+      }
+      global$2.add('wordcount', function (editor) {
+        var api = get(editor);
+        register$1(editor, api);
+        register(editor);
+        setup(editor, api, delay);
+        return api;
+      });
+    }
+
+    Plugin();
+
+}());
+
+/**
+ * Copyright (c) Tiny Technologies, Inc. All rights reserved.
+ * Licensed under the LGPL or a commercial license.
+ * For LGPL see License.txt in the project root for license information.
+ * For commercial licenses see https://www.tiny.cloud/
+ *
+ * Version: 5.10.9 (2023-11-15)
+ */
+(function () {
+    'use strict';
+
     var Cell = function (initial) {
       var value = initial;
       var get = function () {
@@ -84955,432 +85381,6 @@ tinymce.IconManager.add('default', {
         setup(editor, toggleState);
         setup$1(editor, toggleState);
         return get$2(toggleState);
-      });
-    }
-
-    Plugin();
-
-}());
-
-/**
- * Copyright (c) Tiny Technologies, Inc. All rights reserved.
- * Licensed under the LGPL or a commercial license.
- * For LGPL see License.txt in the project root for license information.
- * For commercial licenses see https://www.tiny.cloud/
- *
- * Version: 5.10.9 (2023-11-15)
- */
-(function () {
-    'use strict';
-
-    var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
-
-    var identity = function (x) {
-      return x;
-    };
-
-    var __assign = function () {
-      __assign = Object.assign || function __assign(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s)
-            if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-        }
-        return t;
-      };
-      return __assign.apply(this, arguments);
-    };
-
-    var zeroWidth = '\uFEFF';
-    var removeZwsp$1 = function (s) {
-      return s.replace(/\uFEFF/g, '');
-    };
-
-    var map = function (xs, f) {
-      var len = xs.length;
-      var r = new Array(len);
-      for (var i = 0; i < len; i++) {
-        var x = xs[i];
-        r[i] = f(x, i);
-      }
-      return r;
-    };
-
-    var punctuationStr = '[!-#%-*,-\\/:;?@\\[-\\]_{}\xA1\xAB\xB7\xBB\xBF;\xB7\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1361-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CD3\u2010-\u2027\u2030-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u3008\u3009\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30\u2E31\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uff3f\uFF5B\uFF5D\uFF5F-\uFF65]';
-    var regExps = {
-      aletter: '[A-Za-z\xaa\xb5\xba\xc0-\xd6\xd8-\xf6\xf8-\u02c1\u02c6-\u02d1\u02e0-\u02e4\u02ec\u02ee\u0370-\u0374\u0376\u0377\u037a-\u037d\u0386\u0388-\u038a\u038c\u038e-\u03a1\u03a3-\u03f5\u03f7-\u0481\u048a-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05d0-\u05ea\u05f0-\u05F3\u0620-\u064a\u066e\u066f\u0671-\u06d3\u06d5\u06e5\u06e6\u06ee\u06ef\u06fa-\u06fc\u06ff\u0710\u0712-\u072f\u074d-\u07a5\u07b1\u07ca-\u07ea\u07f4\u07f5\u07fa\u0800-\u0815\u081a\u0824\u0828\u0840-\u0858\u0904-\u0939\u093d\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097f\u0985-\u098c\u098f\u0990\u0993-\u09a8\u09aa-\u09b0\u09b2\u09b6-\u09b9\u09bd\u09ce\u09dc\u09dd\u09df-\u09e1\u09f0\u09f1\u0a05-\u0a0a\u0a0f\u0a10\u0a13-\u0a28\u0a2a-\u0a30\u0a32\u0a33\u0a35\u0a36\u0a38\u0a39\u0a59-\u0a5c\u0a5e\u0a72-\u0a74\u0a85-\u0a8d\u0a8f-\u0a91\u0a93-\u0aa8\u0aaa-\u0ab0\u0ab2\u0ab3\u0ab5-\u0ab9\u0abd\u0ad0\u0ae0\u0ae1\u0b05-\u0b0c\u0b0f\u0b10\u0b13-\u0b28\u0b2a-\u0b30\u0b32\u0b33\u0b35-\u0b39\u0b3d\u0b5c\u0b5d\u0b5f-\u0b61\u0b71\u0b83\u0b85-\u0b8a\u0b8e-\u0b90\u0b92-\u0b95\u0b99\u0b9a\u0b9c\u0b9e\u0b9f\u0ba3\u0ba4\u0ba8-\u0baa\u0bae-\u0bb9\u0bd0\u0c05-\u0c0c\u0c0e-\u0c10\u0c12-\u0c28\u0c2a-\u0c33\u0c35-\u0c39\u0c3d\u0c58\u0c59\u0c60\u0c61\u0c85-\u0c8c\u0c8e-\u0c90\u0c92-\u0ca8\u0caa-\u0cb3\u0cb5-\u0cb9\u0cbd\u0cde\u0ce0\u0ce1\u0cf1\u0cf2\u0d05-\u0d0c\u0d0e-\u0d10\u0d12-\u0d3a\u0d3d\u0d4e\u0d60\u0d61\u0d7a-\u0d7f\u0d85-\u0d96\u0d9a-\u0db1\u0db3-\u0dbb\u0dbd\u0dc0-\u0dc6\u0f00\u0f40-\u0f47\u0f49-\u0f6c\u0f88-\u0f8c\u10a0-\u10c5\u10d0-\u10fa\u10fc\u1100-\u1248\u124a-\u124d\u1250-\u1256\u1258\u125a-\u125d\u1260-\u1288\u128a-\u128d\u1290-\u12b0\u12b2-\u12b5\u12b8-\u12be\u12c0\u12c2-\u12c5\u12c8-\u12d6\u12d8-\u1310\u1312-\u1315\u1318-\u135a\u1380-\u138f\u13a0-\u13f4\u1401-\u166c\u166f-\u167f\u1681-\u169a\u16a0-\u16ea\u16ee-\u16f0\u1700-\u170c\u170e-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176c\u176e-\u1770\u1820-\u1877\u1880-\u18a8\u18aa\u18b0-\u18f5\u1900-\u191c\u1a00-\u1a16\u1b05-\u1b33\u1b45-\u1b4b\u1b83-\u1ba0\u1bae\u1baf\u1bc0-\u1be5\u1c00-\u1c23\u1c4d-\u1c4f\u1c5a-\u1c7d\u1ce9-\u1cec\u1cee-\u1cf1\u1d00-\u1dbf\u1e00-\u1f15\u1f18-\u1f1d\u1f20-\u1f45\u1f48-\u1f4d\u1f50-\u1f57\u1f59\u1f5b\u1f5d\u1f5f-\u1f7d\u1f80-\u1fb4\u1fb6-\u1fbc\u1fbe\u1fc2-\u1fc4\u1fc6-\u1fcc\u1fd0-\u1fd3\u1fd6-\u1fdb\u1fe0-\u1fec\u1ff2-\u1ff4\u1ff6-\u1ffc\u2071\u207f\u2090-\u209c\u2102\u2107\u210a-\u2113\u2115\u2119-\u211d\u2124\u2126\u2128\u212a-\u212d\u212f-\u2139\u213c-\u213f\u2145-\u2149\u214e\u2160-\u2188\u24B6-\u24E9\u2c00-\u2c2e\u2c30-\u2c5e\u2c60-\u2ce4\u2ceb-\u2cee\u2d00-\u2d25\u2d30-\u2d65\u2d6f\u2d80-\u2d96\u2da0-\u2da6\u2da8-\u2dae\u2db0-\u2db6\u2db8-\u2dbe\u2dc0-\u2dc6\u2dc8-\u2dce\u2dd0-\u2dd6\u2dd8-\u2dde\u2e2f\u3005\u303b\u303c\u3105-\u312d\u3131-\u318e\u31a0-\u31ba\ua000-\ua48c\ua4d0-\ua4fd\ua500-\ua60c\ua610-\ua61f\ua62a\ua62b\ua640-\ua66e\ua67f-\ua697\ua6a0-\ua6ef\ua717-\ua71f\ua722-\ua788\ua78b-\ua78e\ua790\ua791\ua7a0-\ua7a9\ua7fa-\ua801\ua803-\ua805\ua807-\ua80a\ua80c-\ua822\ua840-\ua873\ua882-\ua8b3\ua8f2-\ua8f7\ua8fb\ua90a-\ua925\ua930-\ua946\ua960-\ua97c\ua984-\ua9b2\ua9cf\uaa00-\uaa28\uaa40-\uaa42\uaa44-\uaa4b\uab01-\uab06\uab09-\uab0e\uab11-\uab16\uab20-\uab26\uab28-\uab2e\uabc0-\uabe2\uac00-\ud7a3\ud7b0-\ud7c6\ud7cb-\ud7fb\ufb00-\ufb06\ufb13-\ufb17\ufb1d\ufb1f-\ufb28\ufb2a-\ufb36\ufb38-\ufb3c\ufb3e\ufb40\ufb41\ufb43\ufb44\ufb46-\ufbb1\ufbd3-\ufd3d\ufd50-\ufd8f\ufd92-\ufdc7\ufdf0-\ufdfb\ufe70-\ufe74\ufe76-\ufefc\uff21-\uff3a\uff41-\uff5a\uffa0-\uffbe\uffc2-\uffc7\uffca-\uffcf\uffd2-\uffd7\uffda-\uffdc]',
-      midnumlet: '[-\'\\.\u2018\u2019\u2024\uFE52\uFF07\uFF0E]',
-      midletter: '[:\xB7\xB7\u05F4\u2027\uFE13\uFE55\uFF1A]',
-      midnum: '[\xB1+*/,;;\u0589\u060C\u060D\u066C\u07F8\u2044\uFE10\uFE14\uFE50\uFE54\uFF0C\uFF1B]',
-      numeric: '[0-9\u0660-\u0669\u066B\u06f0-\u06f9\u07c0-\u07c9\u0966-\u096f\u09e6-\u09ef\u0a66-\u0a6f\u0ae6-\u0aef\u0b66-\u0b6f\u0be6-\u0bef\u0c66-\u0c6f\u0ce6-\u0cef\u0d66-\u0d6f\u0e50-\u0e59\u0ed0-\u0ed9\u0f20-\u0f29\u1040-\u1049\u1090-\u1099\u17e0-\u17e9\u1810-\u1819\u1946-\u194f\u19d0-\u19d9\u1a80-\u1a89\u1a90-\u1a99\u1b50-\u1b59\u1bb0-\u1bb9\u1c40-\u1c49\u1c50-\u1c59\ua620-\ua629\ua8d0-\ua8d9\ua900-\ua909\ua9d0-\ua9d9\uaa50-\uaa59\uabf0-\uabf9]',
-      cr: '\\r',
-      lf: '\\n',
-      newline: '[\x0B\f\x85\u2028\u2029]',
-      extend: '[\u0300-\u036f\u0483-\u0489\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u0711\u0730-\u074a\u07a6-\u07b0\u07eb-\u07f3\u0816-\u0819\u081b-\u0823\u0825-\u0827\u0829-\u082d\u0859-\u085b\u0900-\u0903\u093a-\u093c\u093e-\u094f\u0951-\u0957\u0962\u0963\u0981-\u0983\u09bc\u09be-\u09c4\u09c7\u09c8\u09cb-\u09cd\u09d7\u09e2\u09e3\u0a01-\u0a03\u0a3c\u0a3e-\u0a42\u0a47\u0a48\u0a4b-\u0a4d\u0a51\u0a70\u0a71\u0a75\u0a81-\u0a83\u0abc\u0abe-\u0ac5\u0ac7-\u0ac9\u0acb-\u0acd\u0ae2\u0ae3\u0b01-\u0b03\u0b3c\u0b3e-\u0b44\u0b47\u0b48\u0b4b-\u0b4d\u0b56\u0b57\u0b62\u0b63\u0b82\u0bbe-\u0bc2\u0bc6-\u0bc8\u0bca-\u0bcd\u0bd7\u0c01-\u0c03\u0c3e-\u0c44\u0c46-\u0c48\u0c4a-\u0c4d\u0c55\u0c56\u0c62\u0c63\u0c82\u0c83\u0cbc\u0cbe-\u0cc4\u0cc6-\u0cc8\u0cca-\u0ccd\u0cd5\u0cd6\u0ce2\u0ce3\u0d02\u0d03\u0d3e-\u0d44\u0d46-\u0d48\u0d4a-\u0d4d\u0d57\u0d62\u0d63\u0d82\u0d83\u0dca\u0dcf-\u0dd4\u0dd6\u0dd8-\u0ddf\u0df2\u0df3\u0e31\u0e34-\u0e3a\u0e47-\u0e4e\u0eb1\u0eb4-\u0eb9\u0ebb\u0ebc\u0ec8-\u0ecd\u0f18\u0f19\u0f35\u0f37\u0f39\u0f3e\u0f3f\u0f71-\u0f84\u0f86\u0f87\u0f8d-\u0f97\u0f99-\u0fbc\u0fc6\u102b-\u103e\u1056-\u1059\u105e-\u1060\u1062-\u1064\u1067-\u106d\u1071-\u1074\u1082-\u108d\u108f\u109a-\u109d\u135d-\u135f\u1712-\u1714\u1732-\u1734\u1752\u1753\u1772\u1773\u17b6-\u17d3\u17dd\u180b-\u180d\u18a9\u1920-\u192b\u1930-\u193b\u19b0-\u19c0\u19c8\u19c9\u1a17-\u1a1b\u1a55-\u1a5e\u1a60-\u1a7c\u1a7f\u1b00-\u1b04\u1b34-\u1b44\u1b6b-\u1b73\u1b80-\u1b82\u1ba1-\u1baa\u1be6-\u1bf3\u1c24-\u1c37\u1cd0-\u1cd2\u1cd4-\u1ce8\u1ced\u1cf2\u1dc0-\u1de6\u1dfc-\u1dff\u200c\u200d\u20d0-\u20f0\u2cef-\u2cf1\u2d7f\u2de0-\u2dff\u302a-\u302f\u3099\u309a\ua66f-\uA672\ua67c\ua67d\ua6f0\ua6f1\ua802\ua806\ua80b\ua823-\ua827\ua880\ua881\ua8b4-\ua8c4\ua8e0-\ua8f1\ua926-\ua92d\ua947-\ua953\ua980-\ua983\ua9b3-\ua9c0\uaa29-\uaa36\uaa43\uaa4c\uaa4d\uaa7b\uaab0\uaab2-\uaab4\uaab7\uaab8\uaabe\uaabf\uaac1\uabe3-\uabea\uabec\uabed\ufb1e\ufe00-\ufe0f\ufe20-\ufe26\uff9e\uff9f]',
-      format: '[\xAD\u0600-\u0603\u06DD\u070F\u17b4\u17b5\u200E\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\uFFF9-\uFFFB]',
-      katakana: '[\u3031-\u3035\u309B\u309C\u30A0-\u30fa\u30fc-\u30ff\u31f0-\u31ff\u32D0-\u32FE\u3300-\u3357\uff66-\uff9d]',
-      extendnumlet: '[=_\u203f\u2040\u2054\ufe33\ufe34\ufe4d-\ufe4f\uff3f\u2200-\u22FF<>]',
-      punctuation: punctuationStr
-    };
-    var characterIndices = {
-      ALETTER: 0,
-      MIDNUMLET: 1,
-      MIDLETTER: 2,
-      MIDNUM: 3,
-      NUMERIC: 4,
-      CR: 5,
-      LF: 6,
-      NEWLINE: 7,
-      EXTEND: 8,
-      FORMAT: 9,
-      KATAKANA: 10,
-      EXTENDNUMLET: 11,
-      AT: 12,
-      OTHER: 13
-    };
-    var SETS$1 = [
-      new RegExp(regExps.aletter),
-      new RegExp(regExps.midnumlet),
-      new RegExp(regExps.midletter),
-      new RegExp(regExps.midnum),
-      new RegExp(regExps.numeric),
-      new RegExp(regExps.cr),
-      new RegExp(regExps.lf),
-      new RegExp(regExps.newline),
-      new RegExp(regExps.extend),
-      new RegExp(regExps.format),
-      new RegExp(regExps.katakana),
-      new RegExp(regExps.extendnumlet),
-      new RegExp('@')
-    ];
-    var EMPTY_STRING$1 = '';
-    var PUNCTUATION$1 = new RegExp('^' + regExps.punctuation + '$');
-    var WHITESPACE$1 = /^\s+$/;
-
-    var SETS = SETS$1;
-    var OTHER = characterIndices.OTHER;
-    var getType = function (char) {
-      var type = OTHER;
-      var setsLength = SETS.length;
-      for (var j = 0; j < setsLength; ++j) {
-        var set = SETS[j];
-        if (set && set.test(char)) {
-          type = j;
-          break;
-        }
-      }
-      return type;
-    };
-    var memoize = function (func) {
-      var cache = {};
-      return function (char) {
-        if (cache[char]) {
-          return cache[char];
-        } else {
-          var result = func(char);
-          cache[char] = result;
-          return result;
-        }
-      };
-    };
-    var classify = function (characters) {
-      var memoized = memoize(getType);
-      return map(characters, memoized);
-    };
-
-    var isWordBoundary = function (map, index) {
-      var type = map[index];
-      var nextType = map[index + 1];
-      if (index < 0 || index > map.length - 1 && index !== 0) {
-        return false;
-      }
-      if (type === characterIndices.ALETTER && nextType === characterIndices.ALETTER) {
-        return false;
-      }
-      var nextNextType = map[index + 2];
-      if (type === characterIndices.ALETTER && (nextType === characterIndices.MIDLETTER || nextType === characterIndices.MIDNUMLET || nextType === characterIndices.AT) && nextNextType === characterIndices.ALETTER) {
-        return false;
-      }
-      var prevType = map[index - 1];
-      if ((type === characterIndices.MIDLETTER || type === characterIndices.MIDNUMLET || nextType === characterIndices.AT) && nextType === characterIndices.ALETTER && prevType === characterIndices.ALETTER) {
-        return false;
-      }
-      if ((type === characterIndices.NUMERIC || type === characterIndices.ALETTER) && (nextType === characterIndices.NUMERIC || nextType === characterIndices.ALETTER)) {
-        return false;
-      }
-      if ((type === characterIndices.MIDNUM || type === characterIndices.MIDNUMLET) && nextType === characterIndices.NUMERIC && prevType === characterIndices.NUMERIC) {
-        return false;
-      }
-      if (type === characterIndices.NUMERIC && (nextType === characterIndices.MIDNUM || nextType === characterIndices.MIDNUMLET) && nextNextType === characterIndices.NUMERIC) {
-        return false;
-      }
-      if (type === characterIndices.EXTEND || type === characterIndices.FORMAT || prevType === characterIndices.EXTEND || prevType === characterIndices.FORMAT || nextType === characterIndices.EXTEND || nextType === characterIndices.FORMAT) {
-        return false;
-      }
-      if (type === characterIndices.CR && nextType === characterIndices.LF) {
-        return false;
-      }
-      if (type === characterIndices.NEWLINE || type === characterIndices.CR || type === characterIndices.LF) {
-        return true;
-      }
-      if (nextType === characterIndices.NEWLINE || nextType === characterIndices.CR || nextType === characterIndices.LF) {
-        return true;
-      }
-      if (type === characterIndices.KATAKANA && nextType === characterIndices.KATAKANA) {
-        return false;
-      }
-      if (nextType === characterIndices.EXTENDNUMLET && (type === characterIndices.ALETTER || type === characterIndices.NUMERIC || type === characterIndices.KATAKANA || type === characterIndices.EXTENDNUMLET)) {
-        return false;
-      }
-      if (type === characterIndices.EXTENDNUMLET && (nextType === characterIndices.ALETTER || nextType === characterIndices.NUMERIC || nextType === characterIndices.KATAKANA)) {
-        return false;
-      }
-      if (type === characterIndices.AT) {
-        return false;
-      }
-      return true;
-    };
-
-    var EMPTY_STRING = EMPTY_STRING$1;
-    var WHITESPACE = WHITESPACE$1;
-    var PUNCTUATION = PUNCTUATION$1;
-    var isProtocol = function (str) {
-      return str === 'http' || str === 'https';
-    };
-    var findWordEnd = function (characters, startIndex) {
-      var i;
-      for (i = startIndex; i < characters.length; i++) {
-        if (WHITESPACE.test(characters[i])) {
-          break;
-        }
-      }
-      return i;
-    };
-    var findUrlEnd = function (characters, startIndex) {
-      var endIndex = findWordEnd(characters, startIndex + 1);
-      var peakedWord = characters.slice(startIndex + 1, endIndex).join(EMPTY_STRING);
-      return peakedWord.substr(0, 3) === '://' ? endIndex : startIndex;
-    };
-    var findWords = function (chars, sChars, characterMap, options) {
-      var words = [];
-      var word = [];
-      for (var i = 0; i < characterMap.length; ++i) {
-        word.push(chars[i]);
-        if (isWordBoundary(characterMap, i)) {
-          var ch = sChars[i];
-          if ((options.includeWhitespace || !WHITESPACE.test(ch)) && (options.includePunctuation || !PUNCTUATION.test(ch))) {
-            var startOfWord = i - word.length + 1;
-            var endOfWord = i + 1;
-            var str = sChars.slice(startOfWord, endOfWord).join(EMPTY_STRING);
-            if (isProtocol(str)) {
-              var endOfUrl = findUrlEnd(sChars, i);
-              var url = chars.slice(endOfWord, endOfUrl);
-              Array.prototype.push.apply(word, url);
-              i = endOfUrl;
-            }
-            words.push(word);
-          }
-          word = [];
-        }
-      }
-      return words;
-    };
-    var getDefaultOptions = function () {
-      return {
-        includeWhitespace: false,
-        includePunctuation: false
-      };
-    };
-    var getWords$1 = function (chars, extract, options) {
-      options = __assign(__assign({}, getDefaultOptions()), options);
-      var filteredChars = [];
-      var extractedChars = [];
-      for (var i = 0; i < chars.length; i++) {
-        var ch = extract(chars[i]);
-        if (ch !== zeroWidth) {
-          filteredChars.push(chars[i]);
-          extractedChars.push(ch);
-        }
-      }
-      var characterMap = classify(extractedChars);
-      return findWords(filteredChars, extractedChars, characterMap, options);
-    };
-
-    var getWords = getWords$1;
-
-    var global$1 = tinymce.util.Tools.resolve('tinymce.dom.TreeWalker');
-
-    var getText = function (node, schema) {
-      var blockElements = schema.getBlockElements();
-      var shortEndedElements = schema.getShortEndedElements();
-      var isNewline = function (node) {
-        return blockElements[node.nodeName] || shortEndedElements[node.nodeName];
-      };
-      var textBlocks = [];
-      var txt = '';
-      var treeWalker = new global$1(node, node);
-      while (node = treeWalker.next()) {
-        if (node.nodeType === 3) {
-          txt += removeZwsp$1(node.data);
-        } else if (isNewline(node) && txt.length) {
-          textBlocks.push(txt);
-          txt = '';
-        }
-      }
-      if (txt.length) {
-        textBlocks.push(txt);
-      }
-      return textBlocks;
-    };
-
-    var removeZwsp = function (text) {
-      return text.replace(/\u200B/g, '');
-    };
-    var strLen = function (str) {
-      return str.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '_').length;
-    };
-    var countWords = function (node, schema) {
-      var text = removeZwsp(getText(node, schema).join('\n'));
-      return getWords(text.split(''), identity).length;
-    };
-    var countCharacters = function (node, schema) {
-      var text = getText(node, schema).join('');
-      return strLen(text);
-    };
-    var countCharactersWithoutSpaces = function (node, schema) {
-      var text = getText(node, schema).join('').replace(/\s/g, '');
-      return strLen(text);
-    };
-
-    var createBodyCounter = function (editor, count) {
-      return function () {
-        return count(editor.getBody(), editor.schema);
-      };
-    };
-    var createSelectionCounter = function (editor, count) {
-      return function () {
-        return count(editor.selection.getRng().cloneContents(), editor.schema);
-      };
-    };
-    var createBodyWordCounter = function (editor) {
-      return createBodyCounter(editor, countWords);
-    };
-    var get = function (editor) {
-      return {
-        body: {
-          getWordCount: createBodyWordCounter(editor),
-          getCharacterCount: createBodyCounter(editor, countCharacters),
-          getCharacterCountWithoutSpaces: createBodyCounter(editor, countCharactersWithoutSpaces)
-        },
-        selection: {
-          getWordCount: createSelectionCounter(editor, countWords),
-          getCharacterCount: createSelectionCounter(editor, countCharacters),
-          getCharacterCountWithoutSpaces: createSelectionCounter(editor, countCharactersWithoutSpaces)
-        },
-        getCount: createBodyWordCounter(editor)
-      };
-    };
-
-    var open = function (editor, api) {
-      editor.windowManager.open({
-        title: 'Word Count',
-        body: {
-          type: 'panel',
-          items: [{
-              type: 'table',
-              header: [
-                'Count',
-                'Document',
-                'Selection'
-              ],
-              cells: [
-                [
-                  'Words',
-                  String(api.body.getWordCount()),
-                  String(api.selection.getWordCount())
-                ],
-                [
-                  'Characters (no spaces)',
-                  String(api.body.getCharacterCountWithoutSpaces()),
-                  String(api.selection.getCharacterCountWithoutSpaces())
-                ],
-                [
-                  'Characters',
-                  String(api.body.getCharacterCount()),
-                  String(api.selection.getCharacterCount())
-                ]
-              ]
-            }]
-        },
-        buttons: [{
-            type: 'cancel',
-            name: 'close',
-            text: 'Close',
-            primary: true
-          }]
-      });
-    };
-
-    var register$1 = function (editor, api) {
-      editor.addCommand('mceWordCount', function () {
-        return open(editor, api);
-      });
-    };
-
-    var global = tinymce.util.Tools.resolve('tinymce.util.Delay');
-
-    var fireWordCountUpdate = function (editor, api) {
-      editor.fire('wordCountUpdate', {
-        wordCount: {
-          words: api.body.getWordCount(),
-          characters: api.body.getCharacterCount(),
-          charactersWithoutSpaces: api.body.getCharacterCountWithoutSpaces()
-        }
-      });
-    };
-
-    var updateCount = function (editor, api) {
-      fireWordCountUpdate(editor, api);
-    };
-    var setup = function (editor, api, delay) {
-      var debouncedUpdate = global.debounce(function () {
-        return updateCount(editor, api);
-      }, delay);
-      editor.on('init', function () {
-        updateCount(editor, api);
-        global.setEditorTimeout(editor, function () {
-          editor.on('SetContent BeforeAddUndo Undo Redo ViewUpdate keyup', debouncedUpdate);
-        }, 0);
-      });
-    };
-
-    var register = function (editor) {
-      var onAction = function () {
-        return editor.execCommand('mceWordCount');
-      };
-      editor.ui.registry.addButton('wordcount', {
-        tooltip: 'Word count',
-        icon: 'character-count',
-        onAction: onAction
-      });
-      editor.ui.registry.addMenuItem('wordcount', {
-        text: 'Word count',
-        icon: 'character-count',
-        onAction: onAction
-      });
-    };
-
-    function Plugin (delay) {
-      if (delay === void 0) {
-        delay = 300;
-      }
-      global$2.add('wordcount', function (editor) {
-        var api = get(editor);
-        register$1(editor, api);
-        register(editor);
-        setup(editor, api, delay);
-        return api;
       });
     }
 
