@@ -7,6 +7,8 @@ use BrickLayer\Lay\Core\View\DomainResource;
 use BrickLayer\Lay\Core\View\SrcFilter;
 use BrickLayer\Lay\Core\View\Tags\Link;
 use BrickLayer\Lay\Core\View\Tags\Script;
+use Utils\PillarDash\Header;
+use Utils\PillarDash\Menu;
 
 final class Layout
 {

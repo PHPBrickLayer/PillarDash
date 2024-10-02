@@ -1,5 +1,5 @@
 <?php
-\utils\PillarDash\Layout::outside(function () {
+\Utils\PillarDash\Layout::outside(function () {
     $meta = \BrickLayer\Lay\Core\View\DomainResource::plaster();
     $section = $meta->local->section;
 
@@ -17,12 +17,12 @@
     return true;
 });
 
-\utils\PillarDash\Layout::header(
-    \utils\PillarDash\Header::logo(
+\Utils\PillarDash\Layout::header(
+    \Utils\PillarDash\Header::logo(
         "@shared_img/logo.png",
     ),
 
-    \utils\PillarDash\Header::favourite(
+    \Utils\PillarDash\Header::favourite(
         function (){ ?>
             <a href="blog/compose" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-warning">
@@ -54,7 +54,7 @@
         <?php }
     ),
 
-    \utils\PillarDash\Header::user_nav(
+    \Utils\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
         "@ui/static/assets/media/avatars/300-2.jpg",
@@ -74,9 +74,9 @@
     ),
 );
 
-\utils\PillarDash\Layout::sidebar(
+\Utils\PillarDash\Layout::sidebar(
     "auto",
-    \utils\PillarDash\Menu::make(
+    \Utils\PillarDash\Menu::make(
         "Dashboard",
         "ki-home-3",
         true,
@@ -86,7 +86,7 @@
             "title" => "This page consists of all published articles"
         ],
     ),
-    \utils\PillarDash\Menu::make(
+    \Utils\PillarDash\Menu::make(
         "Blog",
         "ki-message-edit",
         true,
@@ -108,4 +108,4 @@
     ),
 );
 
-\utils\PillarDash\Layout::body();
+\Utils\PillarDash\Layout::body();
