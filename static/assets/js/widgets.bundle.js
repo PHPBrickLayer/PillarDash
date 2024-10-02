@@ -1,94 +1,6 @@
 "use strict";
 
 // Class definition
-var KTFormsWidget1 = (function () {
-    // Private methods
-    var initForm1 = function () {
-        var element = document.querySelector('#kt_forms_widget_1_select_1');
-
-        if ( !element ) {
-            return;
-        }
-
-        var optionFormat = function(item) {
-            if ( !item.id ) {
-                return item.text;
-            }
-
-            var span = document.createElement('span');
-            var template = '';
-
-            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
-            template += item.text;
-
-            span.innerHTML = template;
-
-            return $(span);
-        }
-
-        // Init Select2 --- more info: https://select2.org/
-        $(element).select2({
-            placeholder: "Select coin",
-            minimumResultsForSearch: Infinity,
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-    };
-
-    var initForm2 = function () {
-        var element = document.querySelector('#kt_forms_widget_1_select_2');
-
-        if ( !element ) {
-            return;
-        }
-
-        var optionFormat = function(item) {
-            if ( !item.id ) {
-                return item.text;
-            }
-
-            var span = document.createElement('span');
-            var template = '';
-
-            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
-            template += item.text;
-
-            span.innerHTML = template;
-
-            return $(span);
-        }
-
-        // Init Select2 --- more info: https://select2.org/
-        $(element).select2({
-            placeholder: "Select coin",
-            minimumResultsForSearch: Infinity,
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-    };
-
-    // Public methods
-    return {
-        init: function () {
-            initForm1();
-            initForm2();
-        },
-    };
-})();
-
-// Webpack support
-if (typeof module !== "undefined") {
-    module.exports = KTFormsWidget1;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTFormsWidget1.init();
-});
-
-"use strict";
-
-// Class definition
 var KTCardsWidget1 = function () {
     // Private methods
     var initChart = function() {
@@ -1433,3468 +1345,6 @@ if (typeof module !== 'undefined') {
 KTUtil.onDOMContentLoaded(function() {
     KTCardWidget9.init();
 });
-"use strict";
-
-// Class definition
-var KTTimelineWidget24 = function () {
-    // Private methods
-    var handleActions = function() {
-        var card = document.querySelector('#kt_list_widget_24');        
-        
-        if ( !card ) {
-            return;
-        }
-
-        // Checkbox Handler
-        KTUtil.on(card, '[data-kt-element="follow"]', 'click', function (e) {
-            if ( this.innerText === 'Following' ) {
-                this.innerText = 'Follow';
-                this.classList.add('btn-light-primary');
-                this.classList.remove('btn-primary');
-                this.blur();
-            } else {
-                this.innerText = 'Following';
-                this.classList.add('btn-primary');
-                this.classList.remove('btn-light-primary');
-                this.blur();
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {           
-            handleActions();             
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTimelineWidget24;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTimelineWidget24.init();
-}); 
-
-"use strict";
-
-// Class definition
-var KTPlayersWidget1 = function () {
-    // Private methods
-    var initPlayers = function() {
-        // https://www.w3schools.com/jsref/dom_obj_audio.asp
-        // Toggle Handler
-        KTUtil.on(document.body, '[data-kt-element="list-play-button"]', 'click', function (e) {
-            var currentButton = this;
-
-            var audio = document.querySelector('[data-kt-element="audio-track-1"]');
-            var playIcon = this.querySelector('[data-kt-element="list-play-icon"]');
-            var pauseIcon = this.querySelector('[data-kt-element="list-pause-icon"]');
-
-            if (pauseIcon.classList.contains('d-none')) {
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            } else {
-                audio.pause();
-
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            }
-            
-            var buttons = [].slice.call(document.querySelectorAll('[data-kt-element="list-play-button"]'));
-            buttons.map(function (button) {
-                if (button !== currentButton) {
-                    var playIcon = button.querySelector('[data-kt-element="list-play-icon"]');
-                    var pauseIcon = button.querySelector('[data-kt-element="list-pause-icon"]');
-
-                    playIcon.classList.remove('d-none');
-                    pauseIcon.classList.add('d-none');
-                }
-            });
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initPlayers();
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTPlayersWidget1;
-}
-
-// Window load
-window.addEventListener("load", function() {
-    KTPlayersWidget1.init();
-}); 
-        
-        
-        
-           
-"use strict";
-
-// Class definition
-var KTPlayersWidget2 = function () {
-    // Private methods
-    var initPlayer = function() {
-        // https://www.w3schools.com/jsref/dom_obj_audio.asp
-        var element = document.getElementById("kt_player_widget_2");
-
-        if ( !element ) {
-            return;
-        }
-
-        var audio = element.querySelector('[data-kt-element="audio-track-1"]');
-        var progress = element.querySelector('[data-kt-element="progress"]');        
-        var currentTime = element.querySelector('[data-kt-element="current-time"]');
-        var duration = element.querySelector('[data-kt-element="duration"]');
-        var playButton = element.querySelector('[data-kt-element="play-button"]');
-        var playIcon = element.querySelector('[data-kt-element="play-icon"]');
-        var pauseIcon = element.querySelector('[data-kt-element="pause-icon"]');
-
-        var replayButton = element.querySelector('[data-kt-element="replay-button"]');
-        var shuffleButton = element.querySelector('[data-kt-element="shuffle-button"]');
-        var playNextButton = element.querySelector('[data-kt-element="play-next-button"]');
-        var playPrevButton = element.querySelector('[data-kt-element="play-prev-button"]');
-
-        var formatTime = function(time) {
-            var s = parseInt(time % 60);
-            var m = parseInt((time / 60) % 60);
-
-            return m + ':' + (s < 10 ? '0' : '') + s;
-        }
-
-        // Duration
-        duration.innerHTML = formatTime(audio.duration); 
-
-        // Update progress
-        var setBarProgress = function() {
-            progress.value = (audio.currentTime / audio.duration) * 100;
-        }
-        
-        // Handle audio update
-        var handleAudioUpdate = function() {
-            currentTime.innerHTML = formatTime(audio.currentTime);
-
-            setBarProgress();
-
-            if (this.ended) {
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            }
-        }
-
-        audio.addEventListener('timeupdate', handleAudioUpdate);
-
-        // Handle play
-        playButton.addEventListener('click', function() {
-            if (audio.duration > 0 && !audio.paused) {
-                audio.pause();
-
-                playIcon.classList.remove('d-none');
-                pauseIcon.classList.add('d-none');
-            } else if (audio.readyState >= 2) {
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle replay
-        replayButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle prev play
-        playPrevButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle next play
-        playNextButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Shuffle replay
-        shuffleButton.addEventListener('click', function() {
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play();
-
-                playIcon.classList.add('d-none');
-                pauseIcon.classList.remove('d-none');
-            }
-        });
-
-        // Handle track change
-        progress.addEventListener('change', function() {
-            audio.currentTime = progress.value;
-
-            playIcon.classList.add('d-none');
-            pauseIcon.classList.remove('d-none');
-            audio.play();
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initPlayer();
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTPlayersWidget2;
-}
-
-// Window load
-window.addEventListener("load", function() {
-    KTPlayersWidget2.init();
-}); 
-"use strict";
-
-// Class definition
-var KTSlidersWidget1 = function() {
-    var chart1 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart3 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, query, data) {
-        var element = document.querySelector(query);
-
-        if ( !element) {
-            return;
-        }              
-        
-        if ( chart.rendered === true && element.classList.contains("initialized") ) {
-            return;
-        }
-
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + 'primary');
-        var lightColor = KTUtil.getCssVariableValue('--bs-' + 'primary-light' );         
-
-        var options = {
-            series: [data],
-            chart: {
-                fontFamily: 'inherit',
-                height: height,
-                type: 'radialBar',
-                sparkline: {
-                    enabled: true,
-                }
-            },
-            plotOptions: {
-                radialBar: {
-                    hollow: {
-                        margin: 0,
-                        size: "45%"
-                    },
-                    dataLabels: {
-                        showOn: "always",
-                        name: {
-                            show: false                                 
-                        },
-                        value: {                                 
-                            show: false                              
-                        }
-                    },
-                    track: {
-                        background: lightColor,
-                        strokeWidth: '100%'
-                    }
-                }
-            },
-            colors: [baseColor],
-            stroke: {
-                lineCap: "round",
-            },
-            labels: ["Progress"]
-        };
-
-        chart.self = new ApexCharts(element, options);
-        chart.self.render();
-        chart.rendered = true;
-
-        element.classList.add('initialized');
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            // Init default chart
-            initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
-
-            var carousel = document.querySelector('#kt_sliders_widget_1_slider');
-            
-            if ( !carousel ) {
-                return;
-            }
-
-            // Init slide charts
-            carousel.addEventListener('slid.bs.carousel', function (e) {
-                if (e.to === 1) {
-                    // Init second chart
-                    initChart(chart2, '#kt_slider_widget_1_chart_2', 55);
-                }
-
-                if (e.to === 2) {
-                    // Init third chart
-                    initChart(chart3, '#kt_slider_widget_1_chart_3', 25);
-                }
-            });
-
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {                
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                    chart1.rendered = false;
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                    chart2.rendered = false;
-                }
-
-                if (chart3.rendered) {
-                    chart3.self.destroy();
-                    chart3.rendered = false;
-                }
-
-                initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
-                initChart(chart2, '#kt_slider_widget_1_chart_2', 55);
-                initChart(chart3, '#kt_slider_widget_1_chart_3', 25);
-            });
-        }   
-    }        
-}();
-
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTSlidersWidget1;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTSlidersWidget1.init();
-});
-   
-        
-        
-        
-           
-"use strict";
-
-// Class definition
-var KTSlidersWidget3 = function () {
-    var chart1 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, query, color, data) {
-        var element = document.querySelector(query);
-
-        if (!element) {
-            return;
-        }
-        
-        if ( chart.rendered === true && element.classList.contains("initialized") ) {
-            return;
-        }
-
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var labelColor = KTUtil.getCssVariableValue('--bs-gray-500');
-        var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
-
-        var options = {
-            series: [{
-                name: 'Lessons',
-                data: data
-            }],            
-            chart: {
-                fontFamily: 'inherit',
-                type: 'area',
-                height: height,
-                toolbar: {
-                    show: false
-                }
-            },
-            plotOptions: {
-
-            },
-            legend: {
-                show: false
-            },
-            dataLabels: {
-                enabled: false
-            },
-            fill: {
-                type: "gradient",
-                gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.4,
-                    opacityTo: 0,
-                    stops: [0, 80, 100]
-                }
-            },
-            stroke: {
-                curve: 'smooth',
-                show: true,
-                width: 3,
-                colors: [baseColor]
-            },
-            xaxis: {
-                categories: ['', 'Apr 05', 'Apr 06', 'Apr 07', 'Apr 08', 'Apr 09', 'Apr 11', 'Apr 12', 'Apr 14', 'Apr 15', 'Apr 16', 'Apr 17', 'Apr 18', ''],
-                axisBorder: {
-                    show: false,
-                },
-                axisTicks: {
-                    show: false
-                },
-                tickAmount: 6,
-                labels: {
-                    rotate: 0,
-                    rotateAlways: true,
-                    style: {
-                        colors: labelColor,
-                        fontSize: '12px'
-                    }
-                },
-                crosshairs: {
-                    position: 'front',
-                    stroke: {
-                        color: baseColor,
-                        width: 1,
-                        dashArray: 3
-                    }
-                },
-                tooltip: {
-                    enabled: true,
-                    formatter: undefined,
-                    offsetY: 0,
-                    style: {
-                        fontSize: '12px'
-                    }
-                }
-            },
-            yaxis: {
-                tickAmount: 4,
-                max: 24,
-                min: 10,
-                labels: {
-                    style: {
-                        colors: labelColor,
-                        fontSize: '12px'
-                    } 
-                }
-            },
-            states: {
-                normal: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                active: {
-                    allowMultipleDataPointsSelection: false,
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                }
-            },
-            tooltip: {
-                style: {
-                    fontSize: '12px'
-                } 
-            },
-            colors: [baseColor],
-            grid: {
-                borderColor: borderColor,
-                strokeDashArray: 4,
-                yaxis: {
-                    lines: {
-                        show: true
-                    }
-                }
-            },
-            markers: {
-                strokeColor: baseColor,
-                strokeWidth: 3
-            }
-        };
-
-        chart.self = new ApexCharts(element, options);
-        chart.self.render();
-        chart.rendered = true;
-
-        element.classList.add('initialized');   
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            var data1 = [19, 21, 21, 20, 20, 18, 18, 20, 20, 22, 22, 21, 21, 22];
-            var data2 = [18, 22, 22, 20, 20, 18, 18, 20, 20, 18, 18, 20, 20, 22];
-            
-            // Init default chart
-            initChart(chart1, '#kt_sliders_widget_3_chart_1', 'danger', data1);
-
-            var carousel = document.querySelector('#kt_sliders_widget_3_slider');
-
-            if ( !carousel ){
-                return;
-            }
-            
-            carousel.addEventListener('slid.bs.carousel', function (e) {
-                if (e.to === 1) {
-                    // Init second chart
-                    initChart(chart2, '#kt_sliders_widget_3_chart_2', 'primary', data2);
-                }                
-            });
-
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {                
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                    chart1.rendered = false;
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                    chart2.rendered = false;
-                }
-
-                initChart(chart1, '#kt_sliders_widget_3_chart_1', 'danger', data1);
-                initChart(chart2, '#kt_sliders_widget_3_chart_2', 'primary', data2);
-            });
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTSlidersWidget3;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTSlidersWidget3.init();
-});
-
-"use strict";
-
-// Class definition
-var KTSlidersWidget7 = function() {
-    var chart1 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart3 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, query, data) {
-        var element = document.querySelector(query);
-
-        if ( !element) {
-            return;
-        }              
-        
-        if ( chart.rendered === true && element.classList.contains("initialized") ) {
-            return;
-        }
-
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + 'danger');
-        var lightColor = KTUtil.getCssVariableValue('--bs-' + 'white' );         
-
-        var options = {
-            series: [data],
-            chart: {
-                fontFamily: 'inherit',
-                height: height,
-                type: 'radialBar',
-                sparkline: {
-                    enabled: true,
-                }
-            },
-            plotOptions: {
-                radialBar: {
-                    hollow: {
-                        margin: 0,
-                        size: "45%"
-                    },
-                    dataLabels: {
-                        showOn: "always",
-                        name: {
-                            show: false                                 
-                        },
-                        value: {                                 
-                            show: false                              
-                        }
-                    },
-                    track: {
-                        background: lightColor,
-                        strokeWidth: '100%'
-                    }
-                }
-            },
-            colors: [baseColor],
-            stroke: {
-                lineCap: "round",
-            },
-            labels: ["Progress"]
-        };
-
-        chart.self = new ApexCharts(element, options);
-        chart.self.render();
-        chart.rendered = true;
-
-        element.classList.add('initialized');
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            // Init default chart
-            initChart(chart1, '#kt_slider_widget_7_chart_1', 76);
-
-            var carousel = document.querySelector('#kt_sliders_widget_7_slider');
-            
-            if ( !carousel ) {
-                return;
-            }
-
-            // Init slide charts
-            carousel.addEventListener('slid.bs.carousel', function (e) {
-                if (e.to === 1) {
-                    // Init second chart
-                    initChart(chart2, '#kt_slider_widget_7_chart_2', 55);
-                }
-
-                if (e.to === 2) {
-                    // Init third chart
-                    initChart(chart3, '#kt_slider_widget_7_chart_3', 25);
-                }
-            });
-
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {                
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                    chart1.rendered = false;
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                    chart2.rendered = false;
-                }
-
-                if (chart3.rendered) {
-                    chart3.self.destroy();
-                    chart3.rendered = false;
-                }
-
-                initChart(chart1, '#kt_slider_widget_7_chart_1', 76);
-                initChart(chart2, '#kt_slider_widget_7_chart_2', 55);
-                initChart(chart3, '#kt_slider_widget_7_chart_3', 25);
-            });
-        }   
-    }        
-}();
-
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTSlidersWidget7;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTSlidersWidget7.init();
-});
-   
-        
-        
-        
-           
-"use strict";
-
-// Class definition
-var KTTablesWidget14 = function () {
-    var chart1 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart3 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart4 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart5 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, chartSelector, data, initByDefault) {
-        var element = document.querySelector(chartSelector);
-
-        if (!element) {
-            return;
-        }
-        
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var color = element.getAttribute('data-kt-chart-color');
-       
-        var strokeColor = KTUtil.getCssVariableValue('--bs-' + 'gray-300');
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
-        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
-
-        var options = {
-            series: [{
-                name: 'Net Profit',
-                data: data
-            }],
-            chart: {
-                fontFamily: 'inherit',
-                type: 'area',
-                height: height,
-                toolbar: {
-                    show: false
-                },
-                zoom: {
-                    enabled: false
-                },
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {},
-            legend: {
-                show: false
-            },
-            dataLabels: {
-                enabled: false
-            },
-            fill: {
-                type: 'solid',
-                opacity: 1
-            },
-            stroke: {
-                curve: 'smooth',
-                show: true,
-                width: 2,
-                colors: [baseColor]
-            },
-            xaxis: {                 
-                axisBorder: {
-                    show: false,
-                },
-                axisTicks: {
-                    show: false
-                },
-                labels: {
-                    show: false                   
-                },
-                crosshairs: {
-                    show: false,
-                    position: 'front',
-                    stroke: {
-                        color: strokeColor,
-                        width: 1,
-                        dashArray: 3
-                    }
-                },
-                tooltip: {
-                    enabled: false
-                }
-            },
-            yaxis: {
-                min: 0,
-                max: 60,
-                labels: {
-                    show: false                     
-                }
-            },
-            states: {
-                normal: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                active: {
-                    allowMultipleDataPointsSelection: false,
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                }
-            },
-            tooltip: {
-                enabled: false
-            },
-            colors: [lightColor],
-            markers: {
-                colors: [lightColor],
-                strokeColor: [baseColor],
-                strokeWidth: 3
-            }
-        };
-
-        chart.self = new ApexCharts(element, options);          
-        
-        if (initByDefault === true) {
-            // Set timeout to properly get the parent elements width
-            setTimeout(function() {
-                chart.self.render();  
-                chart.rendered = true;
-            }, 200);
-        }            
-    }
-
-    // Public methods
-    return {
-        init: function () { 
-            var chart1Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];            
-            initChart(chart1, '#kt_table_widget_14_chart_1', chart1Data, true);
-
-            var chart2Data = [17, 5, 23, 2, 21, 9, 17, 23, 4, 24, 9, 17, 21,7];            
-            initChart(chart2, '#kt_table_widget_14_chart_2', chart2Data, true);
-
-            var chart3Data = [2, 24, 5, 17, 7, 2, 12, 24, 5, 24, 2, 8, 12,7];            
-            initChart(chart3, '#kt_table_widget_14_chart_3', chart3Data, true);
-
-            var chart4Data = [24, 3, 5, 19, 3, 7, 25, 14, 5, 14, 2, 8, 5,17];            
-            initChart(chart4, '#kt_table_widget_14_chart_4', chart4Data, true);
-
-            var chart5Data = [3, 23, 1, 19, 3, 17, 3, 9, 25, 4, 2, 18, 25,3];            
-            initChart(chart5, '#kt_table_widget_14_chart_5', chart5Data, true); 
-
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                }
-
-                if (chart3.rendered) {
-                    chart3.self.destroy();
-                }
-
-                if (chart4.rendered) {
-                    chart4.self.destroy();
-                }
-
-                if (chart5.rendered) {
-                    chart5.self.destroy();
-                }
-
-                initChart(chart1, '#kt_table_widget_14_chart_1', chart1Data, chart1.rendered);
-                initChart(chart2, '#kt_table_widget_14_chart_2', chart2Data, chart2.rendered);  
-                initChart(chart3, '#kt_table_widget_14_chart_3', chart3Data, chart3.rendered);
-                initChart(chart4, '#kt_table_widget_14_chart_4', chart4Data, chart4.rendered); 
-                initChart(chart5, '#kt_table_widget_14_chart_5', chart5Data, chart5.rendered); 
-            });
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget14;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTablesWidget14.init();
-}); 
-"use strict";
-
-// Class definition
-var KTTablesWidget15 = function () {
-    var chart1 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart3 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart4 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart5 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, chartSelector, data, initByDefault) {
-        var element = document.querySelector(chartSelector);
-
-        if (!element) {
-            return;
-        }
-        
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var color = element.getAttribute('data-kt-chart-color');
-         
-        var strokeColor = KTUtil.getCssVariableValue('--bs-' + 'gray-300');
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
-        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
-
-        var options = {
-            series: [{
-                name: 'Net Profit',
-                data: data
-            }],
-            chart: {
-                fontFamily: 'inherit',
-                type: 'area',
-                height: height,
-                toolbar: {
-                    show: false
-                },
-                zoom: {
-                    enabled: false
-                },
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {},
-            legend: {
-                show: false
-            },
-            dataLabels: {
-                enabled: false
-            },
-            fill: {
-                type: 'solid',
-                opacity: 1
-            },
-            stroke: {
-                curve: 'smooth',
-                show: true,
-                width: 2,
-                colors: [baseColor]
-            },
-            xaxis: {                
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                labels: {
-                    show: false                    
-                },
-                crosshairs: {
-                    show: false,
-                    position: 'front',
-                    stroke: {
-                        color: strokeColor,
-                        width: 1,
-                        dashArray: 3
-                    }
-                },
-                tooltip: {
-                    enabled: false
-                }
-            },
-            yaxis: {
-                min: 0,
-                max: 60,
-                labels: {
-                    show: false,
-                    ontSize: '12px'                   
-                }
-            },
-            states: {
-                normal: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                active: {
-                    allowMultipleDataPointsSelection: false,
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                }
-            },
-            tooltip: {
-                enabled: false
-            },
-            colors: [lightColor],
-            markers: {
-                colors: [lightColor],
-                strokeColor: [baseColor],
-                strokeWidth: 3
-            }
-        };
-
-        chart.self = new ApexCharts(element, options);          
-        
-        if (initByDefault === true) {
-            // Set timeout to properly get the parent elements width
-            setTimeout(function() {
-                chart.self.render();  
-                chart.rendered = true;
-            }, 200);
-        }              
-    }
-
-    // Public methods
-    return {
-        init: function () { 
-            var chart1Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];            
-            initChart(chart1, '#kt_table_widget_15_chart_1', chart1Data, true);
-
-            var chart2Data = [17, 5, 23, 2, 21, 9, 17, 23, 4, 24, 9, 17, 21,7];            
-            initChart(chart2, '#kt_table_widget_15_chart_2', chart2Data, true);
-
-            var chart3Data = [2, 24, 5, 17, 7, 2, 12, 24, 5, 24, 2, 8, 12,7];            
-            initChart(chart3, '#kt_table_widget_15_chart_3', chart3Data, true);
-
-            var chart4Data = [24, 3, 5, 19, 3, 7, 25, 14, 5, 14, 2, 8, 5,17];            
-            initChart(chart4, '#kt_table_widget_15_chart_4', chart4Data, true);
-
-            var chart5Data = [3, 23, 1, 19, 3, 17, 3, 9, 25, 4, 2, 18, 25,3];            
-            initChart(chart5, '#kt_table_widget_15_chart_5', chart5Data, true);
-            
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                }
-
-                if (chart3.rendered) {
-                    chart3.self.destroy();
-                }
-
-                if (chart4.rendered) {
-                    chart4.self.destroy();
-                }
-
-                if (chart5.rendered) {
-                    chart5.self.destroy();
-                }
-
-                initChart(chart1, '#kt_table_widget_15_chart_1', chart1Data, chart1.rendered);
-                initChart(chart2, '#kt_table_widget_15_chart_2', chart2Data, chart2.rendered);  
-                initChart(chart3, '#kt_table_widget_15_chart_3', chart3Data, chart3.rendered);
-                initChart(chart4, '#kt_table_widget_15_chart_4', chart4Data, chart4.rendered); 
-                initChart(chart5, '#kt_table_widget_15_chart_5', chart5Data, chart5.rendered); 
-            });
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget15;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTablesWidget15.init();
-});
-
-
- 
-"use strict";
-
-// Class definition
-var KTTablesWidget16 = function () {
-    var chart1 = {
-        self: null,
-        rendered: false
-    }; 
-
-    var chart2 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart3 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart4 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart5 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart6 = {
-        self: null,
-        rendered: false
-    }; 
-
-    var chart7 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart8 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart9 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart10 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart11 = {
-        self: null,
-        rendered: false
-    }; 
-
-    var chart12 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart13 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart14 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart15 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart16 = {
-        self: null,
-        rendered: false
-    }; 
-
-    var chart17 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart18 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart19 = {
-        self: null,
-        rendered: false
-    };
-
-    var chart20 = {
-        self: null,
-        rendered: false
-    };
-
-    // Private methods
-    var initChart = function(chart, toggle, selector, data, initByDefault) {
-        var element = document.querySelector(selector);
-
-        if ( !element ) {
-            return;
-        }
-        
-        var height = parseInt(KTUtil.css(element, 'height'));
-        var color = element.getAttribute('data-kt-chart-color');
-        var labelColor = KTUtil.getCssVariableValue('--bs-gray-800');
-        var strokeColor = KTUtil.getCssVariableValue('--bs-gray-300');
-        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
-        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
-
-        var options = {
-            series: [{
-                name: 'Net Profit',
-                data: data
-            }],
-            chart: {
-                fontFamily: 'inherit',
-                type: 'area',
-                height: height,
-                toolbar: {
-                    show: false
-                },
-                zoom: {
-                    enabled: false
-                },
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {},
-            legend: {
-                show: false
-            },
-            dataLabels: {
-                enabled: false
-            },
-            fill: {
-                type: 'solid',
-                opacity: 1
-            },
-            stroke: {
-                curve: 'smooth',
-                show: true,
-                width: 2,
-                colors: [baseColor]
-            },
-            xaxis: {                
-                axisBorder: {
-                    show: false
-                },
-                axisTicks: {
-                    show: false
-                },
-                labels: {
-                    show: false                    
-                },
-                crosshairs: {
-                    show: false,
-                    position: 'front',
-                    stroke: {
-                        color: strokeColor,
-                        width: 1,
-                        dashArray: 3
-                    }
-                },
-                tooltip: {
-                    enabled: false
-                }
-            },
-            yaxis: {
-                min: 0,
-                max: 60,
-                labels: {
-                    show: false,
-                    ontSize: '12px'                   
-                }
-            },
-            states: {
-                normal: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                active: {
-                    allowMultipleDataPointsSelection: false,
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                }
-            },
-            tooltip: {
-                enabled: false
-            },
-            colors: [lightColor],
-            markers: {
-                colors: [lightColor],
-                strokeColor: [baseColor],
-                strokeWidth: 3
-            }
-        };
-
-        chart.self = new ApexCharts(element, options);        
-        var tab = document.querySelector(toggle);
-        
-        if (initByDefault === true) {
-            // Set timeout to properly get the parent elements width
-            setTimeout(function() {
-                chart.self.render();  
-                chart.rendered = true;
-            }, 200);
-        }        
-
-        tab.addEventListener('shown.bs.tab', function (event) {
-            if (chart.rendered === false) {
-                chart.self.render();  
-                chart.rendered = true;
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {  
-            var chart1Data = [16, 10, 15, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21, 13];  
-            initChart(chart1, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_1', chart1Data, true);        
-             
-            var chart2Data = [8, 5, 16, 3, 23, 16, 11, 15, 3, 11, 15, 7, 17, 9];  
-            initChart(chart2, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_2', chart2Data, true);    
-            
-            var chart3Data = [8, 6, 16, 3, 23, 16, 11, 14, 3, 11, 15, 8, 17, 9];  
-            initChart(chart3, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_3', chart3Data, true);  
-            
-            var chart4Data = [12, 5, 23, 12, 21, 9, 17, 20, 4, 24, 9, 13, 18, 9];  
-            initChart(chart4, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_4', chart4Data, true); 
-
-
-            var chart5Data = [13, 10, 15, 21, 6, 11, 5, 21, 5, 12, 18, 7, 21, 13];  
-            initChart(chart5, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_1', chart5Data, false);        
-             
-            var chart6Data = [13, 5, 21, 12, 21, 9, 17, 20, 4, 23, 9, 17, 21, 7];  
-            initChart(chart6, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_2', chart6Data, false);    
-            
-            var chart7Data = [8, 10, 14, 21, 6, 31, 5, 21, 5, 11, 15, 7, 23, 13];  
-            initChart(chart7, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_3', chart7Data, false);  
-            
-            var chart8Data = [6, 10, 12, 21, 6, 11, 7, 23, 5, 12, 18, 7, 21, 15];  
-            initChart(chart8, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_4', chart8Data, false); 
-
-
-            var chart9Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];  
-            initChart(chart9, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_1', chart9Data, false);        
-             
-            var chart10Data = [8, 5, 16, 2, 19, 9, 17, 21, 4, 24, 4, 13, 21,5];  
-            initChart(chart10, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_2', chart10Data, false);    
-            
-            var chart11Data = [15, 10, 12, 21, 6, 11, 23, 11, 5, 12, 18, 7, 21, 15];  
-            initChart(chart11, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_3', chart11Data, false);  
-            
-            var chart12Data = [3, 9, 12, 23, 6, 11, 7, 23, 5, 12, 14, 7, 21, 8];  
-            initChart(chart12, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_4', chart12Data, false);
-
-
-            var chart13Data = [9, 14, 15, 21, 8, 11, 5, 23, 5, 11, 18, 5, 23, 8];  
-            initChart(chart13, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_1', chart13Data, false);        
-             
-            var chart14Data = [7, 5, 23, 12, 21, 9, 17, 15, 4, 24, 9, 17, 21, 7];  
-            initChart(chart14, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_2', chart14Data, false);    
-            
-            var chart15Data = [8, 10, 14, 21, 6, 31, 8, 23, 5, 3, 14, 7, 21, 12];  
-            initChart(chart15, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_3', chart15Data, false);  
-            
-            var chart16Data = [6, 12, 12, 19, 6, 11, 7, 23, 5, 12, 18, 7, 21, 15];  
-            initChart(chart16, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_4', chart16Data, false);
-
-
-            var chart17Data = [5, 10, 15, 21, 6, 11, 5, 23, 5, 11, 17, 7, 21, 13];  
-            initChart(chart17, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_1', chart17Data, false);        
-             
-            var chart18Data = [4, 5, 23, 12, 21, 9, 17, 15, 4, 24, 9, 17, 21, 7];  
-            initChart(chart18, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_2', chart18Data, false);    
-            
-            var chart19Data = [7, 10, 14, 21, 6, 31, 5, 23, 5, 11, 15, 7, 21, 17];  
-            initChart(chart19, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_3', chart19Data, false);  
-            
-            var chart20Data = [3, 10, 12, 23, 6, 11, 7, 22, 5, 12, 18, 7, 21, 14];  
-            initChart(chart20, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_4', chart20Data, false);
-
-            // Update chart on theme mode change
-            KTThemeMode.on("kt.thememode.change", function() {
-                if (chart1.rendered) {
-                    chart1.self.destroy();
-                }
-
-                if (chart2.rendered) {
-                    chart2.self.destroy();
-                }
-
-                if (chart3.rendered) {
-                    chart3.self.destroy();
-                }
-
-                if (chart4.rendered) {
-                    chart4.self.destroy();
-                }
-
-                if (chart5.rendered) {
-                    chart5.self.destroy();
-                }
-
-                if (chart6.rendered) {
-                    chart6.self.destroy();
-                }
-
-                if (chart7.rendered) {
-                    chart7.self.destroy();
-                }
-
-                if (chart8.rendered) {
-                    chart8.self.destroy();
-                }
-
-                if (chart9.rendered) {
-                    chart9.self.destroy();
-                }
-
-                if (chart10.rendered) {
-                    chart10.self.destroy();
-                }
-
-                if (chart11.rendered) {
-                    chart11.self.destroy();
-                }
-
-                if (chart12.rendered) {
-                    chart12.self.destroy();
-                }
-
-                if (chart13.rendered) {
-                    chart13.self.destroy();
-                }
-
-                if (chart14.rendered) {
-                    chart14.self.destroy();
-                }
-
-                if (chart15.rendered) {
-                    chart15.self.destroy();
-                }
-
-                if (chart16.rendered) {
-                    chart16.self.destroy();
-                }
-
-                if (chart17.rendered) {
-                    chart17.self.destroy();
-                }
-
-                if (chart18.rendered) {
-                    chart18.self.destroy();
-                }
-
-                if (chart19.rendered) {
-                    chart19.self.destroy();
-                }
-
-                if (chart20.rendered) {
-                    chart20.self.destroy();
-                }                
-
-                initChart(chart1, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_1', chart1Data, chart1.rendered);
-                initChart(chart2, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_2', chart2Data, chart2.rendered);  
-                initChart(chart3, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_3', chart3Data, chart3.rendered);
-                initChart(chart4, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_4', chart4Data, chart4.rendered); 
-
-                initChart(chart5, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_1', chart5Data, chart5.rendered);
-                initChart(chart6, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_2', chart6Data, chart6.rendered);  
-                initChart(chart7, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_3', chart7Data, chart7.rendered);
-                initChart(chart8, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_4', chart8Data, chart8.rendered); 
-
-                initChart(chart9, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_1', chart9Data, chart9.rendered);
-                initChart(chart10, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_2', chart10Data, chart10.rendered);  
-                initChart(chart11, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_3', chart11Data, chart11.rendered);
-                initChart(chart12, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_4', chart12Data, chart12.rendered); 
-
-                initChart(chart13, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_1', chart13Data, chart13.rendered);
-                initChart(chart14, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_2', chart14Data, chart14.rendered);  
-                initChart(chart15, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_3', chart15Data, chart15.rendered);
-                initChart(chart16, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_4', chart16Data, chart16.rendered); 
-
-                initChart(chart17, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_1', chart17Data, chart17.rendered);
-                initChart(chart18, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_2', chart18Data, chart18.rendered);  
-                initChart(chart19, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_3', chart19Data, chart19.rendered);
-                initChart(chart20, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_4', chart20Data, chart20.rendered);                 
-            });            
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget16;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTablesWidget16.init();
-});
-
-
- 
-"use strict";
-
-// Class definition
-var KTTablesWidget3 = function () {
-    var table;
-    var datatable;
-
-    // Private methods
-    const initDatatable = () => {
-        // Init datatable --- more info on datatables: https://datatables.net/manual/
-        datatable = $(table).DataTable({
-            "info": false,
-            'order': [],
-            'paging': false,
-            'pageLength': false,
-        });
-    }
-
-    const handleTabStates = () => {
-        const tabs = document.querySelector('[data-kt-table-widget-3="tabs_nav"]');
-        const tabButtons = tabs.querySelectorAll('[data-kt-table-widget-3="tab"]');
-        const tabClasses = ['border-bottom', 'border-3', 'border-primary'];
-
-        tabButtons.forEach(tab => {
-            tab.addEventListener('click', e => {
-                // Get datatable filter value
-                const value = tab.getAttribute('data-kt-table-widget-3-value');
-                tabButtons.forEach(t => {
-                    t.classList.remove(...tabClasses);
-                    t.classList.add('text-muted');
-                });
-
-                tab.classList.remove('text-muted');
-                tab.classList.add(...tabClasses);
-
-                // Filter datatable
-                if (value === 'Show All') {
-                    datatable.search('').draw();
-                } else {
-                    datatable.search(value).draw();
-                }
-            });
-        });
-    }
-
-    // Handle status filter dropdown
-    const handleStatusFilter = () => {
-        const select = document.querySelector('[data-kt-table-widget-3="filter_status"]');
-
-        $(select).on('select2:select', function (e) {
-            const value = $(this).val();
-            if (value === 'Show All') {
-                datatable.search('').draw();
-            } else {
-                datatable.search(value).draw();
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            table = document.querySelector('#kt_widget_table_3');
-
-            if (!table) {
-                return;
-            }
-
-            initDatatable();
-            handleTabStates();
-            handleStatusFilter();
-        }
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget3;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTTablesWidget3.init();
-});
-
-"use strict";
-
-// Class definition
-var KTTablesWidget4 = function () {
-    var table;
-    var datatable;
-    var template;
-
-    // Private methods
-    const initDatatable = () => {
-        // Get subtable template
-        const subtable = document.querySelector('[data-kt-table-widget-4="subtable_template"]');
-        template = subtable.cloneNode(true);
-        template.classList.remove('d-none');
-
-        // Remove subtable template
-        subtable.parentNode.removeChild(subtable);
-
-        // Init datatable --- more info on datatables: https://datatables.net/manual/
-        datatable = $(table).DataTable({
-            "info": false,
-            'order': [],
-            "lengthChange": false,
-            'pageLength': 6,
-            'ordering': false,
-            'paging': false,
-            'columnDefs': [
-                { orderable: false, targets: 0 }, // Disable ordering on column 0 (checkbox)
-                { orderable: false, targets: 6 }, // Disable ordering on column 6 (actions)
-            ]
-        });
-
-        // Re-init functions on every table re-draw -- more info: https://datatables.net/reference/event/draw
-        datatable.on('draw', function () {
-            resetSubtable();
-            handleActionButton();
-        });
-    }
-
-    // Search Datatable --- official docs reference: https://datatables.net/reference/api/search()
-    var handleSearchDatatable = () => {
-        const filterSearch = document.querySelector('[data-kt-table-widget-4="search"]');
-        filterSearch.addEventListener('keyup', function (e) {
-            datatable.search(e.target.value).draw();
-        });
-    }
-
-    // Handle status filter
-    const handleStatusFilter = () => {
-        const select = document.querySelector('[data-kt-table-widget-4="filter_status"]');
-
-        $(select).on('select2:select', function (e) {
-            const value = $(this).val();
-            if (value === 'Show All') {
-                datatable.search('').draw();
-            } else {
-                datatable.search(value).draw();
-            }
-        });
-    }
-
-    // Subtable data sample
-    const data = [
-        {
-            image: '76',
-            name: 'Go Pro 8',
-            description: 'Latest  version of Go Pro.',
-            cost: '500.00',
-            qty: '1',
-            total: '500.00',
-            stock: '12'
-        },
-        {
-            image: '60',
-            name: 'Bose Earbuds',
-            description: 'Top quality earbuds from Bose.',
-            cost: '300.00',
-            qty: '1',
-            total: '300.00',
-            stock: '8'
-        },
-        {
-            image: '211',
-            name: 'Dry-fit Sports T-shirt',
-            description: 'Comfortable sportswear.',
-            cost: '89.00',
-            qty: '1',
-            total: '89.00',
-            stock: '18'
-        },
-        {
-            image: '21',
-            name: 'Apple Airpod 3',
-            description: 'Apple\'s latest earbuds.',
-            cost: '200.00',
-            qty: '2',
-            total: '400.00',
-            stock: '32'
-        },
-        {
-            image: '83',
-            name: 'Nike Pumps',
-            description: 'Apple\'s latest headphones.',
-            cost: '200.00',
-            qty: '1',
-            total: '200.00',
-            stock: '8'
-        }
-    ];
-
-    // Handle action button
-    const handleActionButton = () => {
-        const buttons = document.querySelectorAll('[data-kt-table-widget-4="expand_row"]');
-
-        // Sample row items counter --- for demo purpose only, remove this variable in your project
-        const rowItems = [3, 1, 3, 1, 2, 1];
-
-        buttons.forEach((button, index) => {
-            button.addEventListener('click', e => {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-
-                const row = button.closest('tr');
-                const rowClasses = ['isOpen', 'border-bottom-0'];
-
-                // Get total number of items to generate --- for demo purpose only, remove this code snippet in your project
-                const demoData = [];
-                for (var j = 0; j < rowItems[index]; j++) {
-                    demoData.push(data[j]);
-                }
-                // End of generating demo data
-
-                // Handle subtable expanded state
-                if (row.classList.contains('isOpen')) {
-                    // Remove all subtables from current order row
-                    while (row.nextSibling && row.nextSibling.getAttribute('data-kt-table-widget-4') === 'subtable_template') {
-                        row.nextSibling.parentNode.removeChild(row.nextSibling);
-                    }
-                    row.classList.remove(...rowClasses);
-                    button.classList.remove('active');
-                } else {
-                    populateTemplate(demoData, row);
-                    row.classList.add(...rowClasses);
-                    button.classList.add('active');
-                }
-            });
-        });
-    }
-
-    // Populate template with content/data -- content/data can be replaced with relevant data from database or API
-    const populateTemplate = (data, target) => {
-        data.forEach((d, index) => {
-            // Clone template node
-            const newTemplate = template.cloneNode(true);
-
-            // Stock badges
-            const lowStock = `<div class="badge badge-light-warning">Low Stock</div>`;
-            const inStock = `<div class="badge badge-light-success">In Stock</div>`;
-
-            // Select data elements
-            const image = newTemplate.querySelector('[data-kt-table-widget-4="template_image"]');
-            const name = newTemplate.querySelector('[data-kt-table-widget-4="template_name"]');
-            const description = newTemplate.querySelector('[data-kt-table-widget-4="template_description"]');
-            const cost = newTemplate.querySelector('[data-kt-table-widget-4="template_cost"]');
-            const qty = newTemplate.querySelector('[data-kt-table-widget-4="template_qty"]');
-            const total = newTemplate.querySelector('[data-kt-table-widget-4="template_total"]');
-            const stock = newTemplate.querySelector('[data-kt-table-widget-4="template_stock"]');
-
-            // Populate elements with data
-            const imageSrc = image.getAttribute('data-kt-src-path');
-            image.setAttribute('src', imageSrc + d.image + '.png');
-            name.innerText = d.name;
-            description.innerText = d.description;
-            cost.innerText = d.cost;
-            qty.innerText = d.qty;
-            total.innerText = d.total;
-            if (d.stock > 10) {
-                stock.innerHTML = inStock;
-            } else {
-                stock.innerHTML = lowStock;
-            }
-
-            // New template border controller
-            // When only 1 row is available
-            if (data.length === 1) {
-                //let borderClasses = ['rounded', 'rounded-end-0'];
-                //newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
-                //borderClasses = ['rounded', 'rounded-start-0'];
-                //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
-
-                // Remove bottom border
-                //newTemplate.classList.add('border-bottom-0');
-            } else {
-                // When multiple rows detected
-                if (index === (data.length - 1)) { // first row
-                    //let borderClasses = ['rounded-start', 'rounded-bottom-0'];
-                   // newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
-                    //borderClasses = ['rounded-end', 'rounded-bottom-0'];
-                    //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
-                }
-                if (index === 0) { // last row
-                    //let borderClasses = ['rounded-start', 'rounded-top-0'];
-                    //newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
-                    //borderClasses = ['rounded-end', 'rounded-top-0'];
-                    //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
-
-                    // Remove bottom border on last row
-                    //newTemplate.classList.add('border-bottom-0');
-                }
-            }
-
-            // Insert new template into table
-            const tbody = table.querySelector('tbody');
-            tbody.insertBefore(newTemplate, target.nextSibling);
-        });
-    }
-
-    // Reset subtable
-    const resetSubtable = () => {
-        const subtables = document.querySelectorAll('[data-kt-table-widget-4="subtable_template"]');
-        subtables.forEach(st => {
-            st.parentNode.removeChild(st);
-        });
-
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(r => {
-            r.classList.remove('isOpen');
-            if (r.querySelector('[data-kt-table-widget-4="expand_row"]')) {
-                r.querySelector('[data-kt-table-widget-4="expand_row"]').classList.remove('active');
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            table = document.querySelector('#kt_table_widget_4_table');
-
-            if (!table) {
-                return;
-            }
-
-            initDatatable();
-            handleSearchDatatable();
-            handleStatusFilter();
-            handleActionButton();
-        }
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget4;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTTablesWidget4.init();
-});
-
-"use strict";
-
-// Class definition
-var KTTablesWidget5 = function () {
-    var table;
-    var datatable;
-
-    // Private methods
-    const initDatatable = () => {
-        // Set date data order
-        const tableRows = table.querySelectorAll('tbody tr');
-
-        tableRows.forEach(row => {
-            const dateRow = row.querySelectorAll('td');
-            const realDate = moment(dateRow[2].innerHTML, "MMM DD, YYYY").format(); // select date from 3rd column in table
-            dateRow[2].setAttribute('data-order', realDate);
-        });
-
-        // Init datatable --- more info on datatables: https://datatables.net/manual/
-        datatable = $(table).DataTable({
-            "info": false,
-            'order': [],
-            "lengthChange": false,
-            'pageLength': 6,
-            'paging': false,
-            'columnDefs': [
-                { orderable: false, targets: 1 }, // Disable ordering on column 1 (product id)
-            ]
-        });
-    }
-
-    // Handle status filter
-    const handleStatusFilter = () => {
-        const select = document.querySelector('[data-kt-table-widget-5="filter_status"]');
-
-        $(select).on('select2:select', function (e) {
-            const value = $(this).val();
-            if (value === 'Show All') {
-                datatable.search('').draw();
-            } else {
-                datatable.search(value).draw();
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            table = document.querySelector('#kt_table_widget_5_table');
-
-            if (!table) {
-                return;
-            }
-
-            initDatatable();
-            handleStatusFilter();
-        }
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTablesWidget5;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTTablesWidget5.init();
-});
-
-"use strict";
-
-// Class definition
-var KTTimelineWidget1 = function () {
-    // Private methods
-    // Day timeline
-    const initTimelineDay = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_1_1');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: "research",
-                content: "Research",
-                order: 1
-            },
-            {
-                id: "qa",
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: "ui",
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: "dev",
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 'research',
-                start: now,
-                end: moment(now).add(1.5, 'hours'),
-                content: 'Meeting',
-                progress: "60%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 'qa',
-                start: moment(now).add(1, 'hours'),
-                end: moment(now).add(2, 'hours'),
-                content: 'Testing',
-                progress: "47%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 'ui',
-                start: moment(now).add(30, 'minutes'),
-                end: moment(now).add(2.5, 'hours'),
-                content: 'Landing page',
-                progress: "55%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 'dev',
-                start: moment(now).add(1.5, 'hours'),
-                end: moment(now).add(3, 'hours'),
-                content: 'Products module',
-                progress: "75%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-
-                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);      
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-
-    // Week timeline
-    const initTimelineWeek = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_1_2');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: 1,
-                content: "Research",
-                order: 1
-            },
-            {
-                id: 2,
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: 3,
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: 4,
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 1,
-                start: now,
-                end: moment(now).add(7, 'days'),
-                content: 'Framework',
-                progress: "71%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 2,
-                start: moment(now).add(7, 'days'),
-                end: moment(now).add(14, 'days'),
-                content: 'Accessibility',
-                progress: "84%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 3,
-                start: moment(now).add(3, 'days'),
-                end: moment(now).add(20, 'days'),
-                content: 'Microsites',
-                progress: "69%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 4,
-                start: moment(now).add(10, 'days'),
-                end: moment(now).add(21, 'days'),
-                content: 'Deployment',
-                progress: "74%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-
-                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);      
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-
-    // Month timeline
-    const initTimelineMonth = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_1_3');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: "research",
-                content: "Research",
-                order: 1
-            },
-            {
-                id: "qa",
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: "ui",
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: "dev",
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 'research',
-                start: now,
-                end: moment(now).add(2, 'months'),
-                content: 'Tags',
-                progress: "79%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 'qa',
-                start: moment(now).add(0.5, 'months'),
-                end: moment(now).add(5, 'months'),
-                content: 'Testing',
-                progress: "64%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 'ui',
-                start: moment(now).add(2, 'months'),
-                end: moment(now).add(6.5, 'months'),
-                content: 'Media',
-                progress: "82%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 'dev',
-                start: moment(now).add(4, 'months'),
-                end: moment(now).add(7, 'months'),
-                content: 'Plugins',
-                progress: "58%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-                
-                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);                    
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-
-    // Handle BlockUI
-    const handleBlockUI = () => {
-        // Select block ui elements
-        const elements = document.querySelectorAll('[data-kt-timeline-widget-1-blockui="true"]');
-
-        // Init block ui
-        elements.forEach(element => {
-            const blockUI = new KTBlockUI(element, {
-                overlayClass: "bg-body",
-            });
-
-            blockUI.block();
-        });
-    }
-
-    // Handle tabs visibility
-    const tabsVisibility = () => {
-        const tabs = document.querySelectorAll('[data-kt-timeline-widget-1="tab"]');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('shown.bs.tab', e => {
-                // Week tab
-                if(tab.getAttribute('href') === '#kt_timeline_widget_1_tab_week'){
-                    initTimelineWeek();
-                }
-
-                // Month tab
-                if(tab.getAttribute('href') === '#kt_timeline_widget_1_tab_month'){
-                    initTimelineMonth();
-                }
-            });
-        });
-    }
-
-    // Handle avatar path conflict
-    const handleAvatarPath = () => {
-        const avatars = document.querySelectorAll('[data-kt-timeline-avatar-src]');
-
-        if(!avatars){
-            return;
-        }
-
-        avatars.forEach(avatar => {
-            avatar.setAttribute('src', avatar.getAttribute('data-kt-timeline-avatar-src'));
-            avatar.removeAttribute('data-kt-timeline-avatar-src');
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initTimelineDay();
-            handleBlockUI();
-            tabsVisibility();
-        }
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTimelineWidget1;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTTimelineWidget1.init();
-});
-
-"use strict";
-
-// Class definition
-var KTTimelineWidget2 = function () {
-    // Private methods
-    var handleCheckbox = function() {
-        var card = document.querySelector('#kt_timeline_widget_2_card');        
-        
-        if (!card) {
-            return;
-        }
-
-        // Checkbox Handler
-        KTUtil.on(card, '[data-kt-element="checkbox"]', 'change', function (e) {
-            var check = this.closest('.form-check');
-            var tr = this.closest('tr');
-            var bullet = tr.querySelector('[data-kt-element="bullet"]');
-            var status = tr.querySelector('[data-kt-element="status"]');
-
-            if ( this.checked === true ) {
-                check.classList.add('form-check-success');
-
-                bullet.classList.remove('bg-primary');
-                bullet.classList.add('bg-success');
-
-                status.innerText = 'Done';
-                status.classList.remove('badge-light-primary');
-                status.classList.add('badge-light-success');
-            } else {
-                check.classList.remove('form-check-success');
-
-                bullet.classList.remove('bg-success');
-                bullet.classList.add('bg-primary');
-
-                status.innerText = 'In Process';
-                status.classList.remove('badge-light-success');
-                status.classList.add('badge-light-primary');
-            }
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {           
-            handleCheckbox();             
-        }   
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTimelineWidget2;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTTimelineWidget2.init();
-});
-
-
- 
-"use strict";
-
-// Class definition
-var KTTimelineWidget4 = function () {
-    // Private methods
-    // Day timeline
-    const initTimelineDay = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_4_1');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: "research",
-                content: "Research",
-                order: 1
-            },
-            {
-                id: "qa",
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: "ui",
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: "dev",
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 'research',
-                start: now,
-                end: moment(now).add(1.5, 'hours'),
-                content: 'Meeting',
-                progress: "60%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 'qa',
-                start: moment(now).add(1, 'hours'),
-                end: moment(now).add(2, 'hours'),
-                content: 'Testing',
-                progress: "47%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 'ui',
-                start: moment(now).add(30, 'minutes'),
-                end: moment(now).add(2.5, 'hours'),
-                content: 'Landing page',
-                progress: "55%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 'dev',
-                start: moment(now).add(1.5, 'hours'),
-                end: moment(now).add(3, 'hours'),
-                content: 'Products module',
-                progress: "75%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-
-                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);      
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-
-    // Week timeline
-    const initTimelineWeek = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_4_2');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: 1,
-                content: "Research",
-                order: 1
-            },
-            {
-                id: 2,
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: 3,
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: 4,
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 1,
-                start: now,
-                end: moment(now).add(7, 'days'),
-                content: 'Framework',
-                progress: "71%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 2,
-                start: moment(now).add(7, 'days'),
-                end: moment(now).add(14, 'days'),
-                content: 'Accessibility',
-                progress: "84%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 3,
-                start: moment(now).add(3, 'days'),
-                end: moment(now).add(20, 'days'),
-                content: 'Microsites',
-                progress: "69%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 4,
-                start: moment(now).add(10, 'days'),
-                end: moment(now).add(21, 'days'),
-                content: 'Deployment',
-                progress: "74%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-
-                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);      
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-
-    // Month timeline
-    const initTimelineMonth = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_4_3');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: "research",
-                content: "Research",
-                order: 1
-            },
-            {
-                id: "qa",
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: "ui",
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: "dev",
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 'research',
-                start: now,
-                end: moment(now).add(2, 'months'),
-                content: 'Tags',
-                progress: "79%",
-                color: 'primary',
-                users: [
-                    'avatars/300-6.jpg',
-                    'avatars/300-1.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 'qa',
-                start: moment(now).add(0.5, 'months'),
-                end: moment(now).add(5, 'months'),
-                content: 'Testing',
-                progress: "64%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 'ui',
-                start: moment(now).add(2, 'months'),
-                end: moment(now).add(6.5, 'months'),
-                content: 'Media',
-                progress: "82%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-20.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 'dev',
-                start: moment(now).add(4, 'months'),
-                end: moment(now).add(7, 'months'),
-                content: 'Plugins',
-                progress: "58%",
-                color: 'info',
-                users: [
-                    'avatars/300-23.jpg',
-                    'avatars/300-12.jpg',
-                    'avatars/300-9.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-                
-                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);                    
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-    
-    // 2022 timeline
-    const initTimeline2022 = () => {
-        // Detect element
-        const element = document.querySelector('#kt_timeline_widget_4_4');
-        if (!element) {
-            return;
-        }
-
-        if(element.innerHTML){
-            return;
-        }
-
-        // Set variables
-        var now = Date.now();
-        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
-
-        // Build vis-timeline datasets
-        var groups = new vis.DataSet([
-            {
-                id: "research",
-                content: "Research",
-                order: 1
-            },
-            {
-                id: "qa",
-                content: "Phase 2.6 QA",
-                order: 2
-            },
-            {
-                id: "ui",
-                content: "UI Design",
-                order: 3
-            },
-            {
-                id: "dev",
-                content: "Development",
-                order: 4
-            }
-        ]);
-
-
-        var items = new vis.DataSet([
-            {
-                id: 1,
-                group: 'research',
-                start: now,
-                end: moment(now).add(2, 'months'),
-                content: 'Tags',
-                progress: "51%",
-                color: 'primary',
-                users: [
-                    'avatars/300-7.jpg',
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 2,
-                group: 'qa',
-                start: moment(now).add(0.5, 'months'),
-                end: moment(now).add(5, 'months'),
-                content: 'Testing',
-                progress: "64%",
-                color: 'success',
-                users: [
-                    'avatars/300-2.jpg'
-                ]
-            },
-            {
-                id: 3,
-                group: 'ui',
-                start: moment(now).add(2, 'months'),
-                end: moment(now).add(6.5, 'months'),
-                content: 'Media',
-                progress: "54%",
-                color: 'danger',
-                users: [
-                    'avatars/300-5.jpg',
-                    'avatars/300-21.jpg'
-                ]
-            },
-            {
-                id: 4,
-                group: 'dev',
-                start: moment(now).add(4, 'months'),
-                end: moment(now).add(7, 'months'),
-                content: 'Plugins',
-                progress: "348%",
-                color: 'info',
-                users: [
-                    'avatars/300-3.jpg',
-                    'avatars/300-11.jpg',
-                    'avatars/300-13.jpg'
-                ]
-            },
-        ]);
-
-        // Set vis-timeline options
-        var options = {
-            zoomable: false,
-            moveable: false,
-            selectable: false,
-
-            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            margin: {
-                item: {
-                    horizontal: 10,
-                    vertical: 35
-                }
-            },
-
-            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            showCurrentTime: false,
-
-            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
-            xss: {
-                disabled: false,
-                filterOptions: {
-                    whiteList: {
-                        div: ['class', 'style'],
-                        img: ['data-kt-timeline-avatar-src', 'alt'],
-                        a: ['href', 'class']
-                    },
-                },
-            },
-            // specify a template for the items
-            template: function (item) {
-                // Build users group
-                const users = item.users;
-                let userTemplate = '';
-                users.forEach(user => {
-                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
-                });
-
-                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
-                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
-        
-                    <div class="d-flex align-items-center position-relative z-index-2">
-                        <div class="symbol-group symbol-hover flex-nowrap me-3">
-                            ${userTemplate}
-                        </div>
-        
-                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
-                    </div>
-        
-                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
-                        ${item.progress}
-                    </div>
-                </div>        
-                `;
-            },
-
-            // Remove block ui on initial draw
-            onInitialDrawComplete: function () {
-                handleAvatarPath();
-                
-                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
-                const blockUI = KTBlockUI.getInstance(target);
-
-                if (blockUI.isBlocked()) {
-                    setTimeout(() => {
-                        blockUI.release();
-                    }, 1000);                    
-                }
-            }
-        };
-
-        // Init vis-timeline
-        const timeline = new vis.Timeline(element, items, groups, options);
-
-        // Prevent infinite loop draws
-        timeline.on("currentTimeTick", () => {            
-            // After fired the first time we un-subscribed
-            timeline.off("currentTimeTick");
-        });
-    }
-    // Handle BlockUI
-    const handleBlockUI = () => {
-        // Select block ui elements
-        const elements = document.querySelectorAll('[data-kt-timeline-widget-4-blockui="true"]');
-
-        // Init block ui
-        elements.forEach(element => {
-            const blockUI = new KTBlockUI(element, {
-                overlayClass: "bg-body",
-            });
-
-            blockUI.block();
-        });
-    }
-
-    // Handle tabs visibility
-    const tabsVisibility = () => {
-        const tabs = document.querySelectorAll('[data-kt-timeline-widget-4="tab"]');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('shown.bs.tab', e => {
-                // Week tab
-                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_week'){
-                    initTimelineWeek();
-                }
-
-                // Month tab
-                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_month'){
-                    initTimelineMonth();
-                }
-
-                // 2022 tab
-                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_2022'){
-                    initTimeline2022();
-                }
-            });
-        });
-    }
-
-    // Handle avatar path conflict
-    const handleAvatarPath = () => {
-        const avatars = document.querySelectorAll('[data-kt-timeline-avatar-src]');
-
-        if(!avatars){
-            return;
-        }
-
-        avatars.forEach(avatar => {
-            avatar.setAttribute('src', avatar.getAttribute('data-kt-timeline-avatar-src'));
-            avatar.removeAttribute('data-kt-timeline-avatar-src');
-        });
-    }
-
-    // Public methods
-    return {
-        init: function () {
-            initTimelineDay();
-            handleBlockUI();
-            tabsVisibility();
-        }
-    }
-}();
-
-// Webpack support
-if (typeof module !== 'undefined') {
-    module.exports = KTTimelineWidget4;
-}
-
-// On document ready
-KTUtil.onDOMContentLoaded(function () {
-    KTTimelineWidget4.init();
-});
-
 "use strict";
 
 // Class definition
@@ -19495,6 +15945,140 @@ KTUtil.onDOMContentLoaded(function() {
 "use strict";
 
 // Class definition
+var KTFormsWidget1 = (function () {
+    // Private methods
+    var initForm1 = function () {
+        var element = document.querySelector('#kt_forms_widget_1_select_1');
+
+        if ( !element ) {
+            return;
+        }
+
+        var optionFormat = function(item) {
+            if ( !item.id ) {
+                return item.text;
+            }
+
+            var span = document.createElement('span');
+            var template = '';
+
+            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
+            template += item.text;
+
+            span.innerHTML = template;
+
+            return $(span);
+        }
+
+        // Init Select2 --- more info: https://select2.org/
+        $(element).select2({
+            placeholder: "Select coin",
+            minimumResultsForSearch: Infinity,
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+    };
+
+    var initForm2 = function () {
+        var element = document.querySelector('#kt_forms_widget_1_select_2');
+
+        if ( !element ) {
+            return;
+        }
+
+        var optionFormat = function(item) {
+            if ( !item.id ) {
+                return item.text;
+            }
+
+            var span = document.createElement('span');
+            var template = '';
+
+            template += '<img src="' + item.element.getAttribute('data-kt-select2-icon') + '" class="rounded-circle h-20px me-2" alt="image"/>';
+            template += item.text;
+
+            span.innerHTML = template;
+
+            return $(span);
+        }
+
+        // Init Select2 --- more info: https://select2.org/
+        $(element).select2({
+            placeholder: "Select coin",
+            minimumResultsForSearch: Infinity,
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+    };
+
+    // Public methods
+    return {
+        init: function () {
+            initForm1();
+            initForm2();
+        },
+    };
+})();
+
+// Webpack support
+if (typeof module !== "undefined") {
+    module.exports = KTFormsWidget1;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTFormsWidget1.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTimelineWidget24 = function () {
+    // Private methods
+    var handleActions = function() {
+        var card = document.querySelector('#kt_list_widget_24');        
+        
+        if ( !card ) {
+            return;
+        }
+
+        // Checkbox Handler
+        KTUtil.on(card, '[data-kt-element="follow"]', 'click', function (e) {
+            if ( this.innerText === 'Following' ) {
+                this.innerText = 'Follow';
+                this.classList.add('btn-light-primary');
+                this.classList.remove('btn-primary');
+                this.blur();
+            } else {
+                this.innerText = 'Following';
+                this.classList.add('btn-primary');
+                this.classList.remove('btn-light-primary');
+                this.blur();
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {           
+            handleActions();             
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTimelineWidget24;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTimelineWidget24.init();
+}); 
+
+"use strict";
+
+// Class definition
 var KTMapsWidget1 = (function () {
     // Private methods
     var initMap = function () {
@@ -19781,4 +16365,3420 @@ if (typeof module !== "undefined") {
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
     KTMapsWidget2.init();
+});
+
+"use strict";
+
+// Class definition
+var KTPlayersWidget1 = function () {
+    // Private methods
+    var initPlayers = function() {
+        // https://www.w3schools.com/jsref/dom_obj_audio.asp
+        // Toggle Handler
+        KTUtil.on(document.body, '[data-kt-element="list-play-button"]', 'click', function (e) {
+            var currentButton = this;
+
+            var audio = document.querySelector('[data-kt-element="audio-track-1"]');
+            var playIcon = this.querySelector('[data-kt-element="list-play-icon"]');
+            var pauseIcon = this.querySelector('[data-kt-element="list-pause-icon"]');
+
+            if (pauseIcon.classList.contains('d-none')) {
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            } else {
+                audio.pause();
+
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
+            }
+            
+            var buttons = [].slice.call(document.querySelectorAll('[data-kt-element="list-play-button"]'));
+            buttons.map(function (button) {
+                if (button !== currentButton) {
+                    var playIcon = button.querySelector('[data-kt-element="list-play-icon"]');
+                    var pauseIcon = button.querySelector('[data-kt-element="list-pause-icon"]');
+
+                    playIcon.classList.remove('d-none');
+                    pauseIcon.classList.add('d-none');
+                }
+            });
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            initPlayers();
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTPlayersWidget1;
+}
+
+// Window load
+window.addEventListener("load", function() {
+    KTPlayersWidget1.init();
+}); 
+        
+        
+        
+           
+"use strict";
+
+// Class definition
+var KTPlayersWidget2 = function () {
+    // Private methods
+    var initPlayer = function() {
+        // https://www.w3schools.com/jsref/dom_obj_audio.asp
+        var element = document.getElementById("kt_player_widget_2");
+
+        if ( !element ) {
+            return;
+        }
+
+        var audio = element.querySelector('[data-kt-element="audio-track-1"]');
+        var progress = element.querySelector('[data-kt-element="progress"]');        
+        var currentTime = element.querySelector('[data-kt-element="current-time"]');
+        var duration = element.querySelector('[data-kt-element="duration"]');
+        var playButton = element.querySelector('[data-kt-element="play-button"]');
+        var playIcon = element.querySelector('[data-kt-element="play-icon"]');
+        var pauseIcon = element.querySelector('[data-kt-element="pause-icon"]');
+
+        var replayButton = element.querySelector('[data-kt-element="replay-button"]');
+        var shuffleButton = element.querySelector('[data-kt-element="shuffle-button"]');
+        var playNextButton = element.querySelector('[data-kt-element="play-next-button"]');
+        var playPrevButton = element.querySelector('[data-kt-element="play-prev-button"]');
+
+        var formatTime = function(time) {
+            var s = parseInt(time % 60);
+            var m = parseInt((time / 60) % 60);
+
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        // Duration
+        duration.innerHTML = formatTime(audio.duration); 
+
+        // Update progress
+        var setBarProgress = function() {
+            progress.value = (audio.currentTime / audio.duration) * 100;
+        }
+        
+        // Handle audio update
+        var handleAudioUpdate = function() {
+            currentTime.innerHTML = formatTime(audio.currentTime);
+
+            setBarProgress();
+
+            if (this.ended) {
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
+            }
+        }
+
+        audio.addEventListener('timeupdate', handleAudioUpdate);
+
+        // Handle play
+        playButton.addEventListener('click', function() {
+            if (audio.duration > 0 && !audio.paused) {
+                audio.pause();
+
+                playIcon.classList.remove('d-none');
+                pauseIcon.classList.add('d-none');
+            } else if (audio.readyState >= 2) {
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle replay
+        replayButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle prev play
+        playPrevButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle next play
+        playNextButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Shuffle replay
+        shuffleButton.addEventListener('click', function() {
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play();
+
+                playIcon.classList.add('d-none');
+                pauseIcon.classList.remove('d-none');
+            }
+        });
+
+        // Handle track change
+        progress.addEventListener('change', function() {
+            audio.currentTime = progress.value;
+
+            playIcon.classList.add('d-none');
+            pauseIcon.classList.remove('d-none');
+            audio.play();
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            initPlayer();
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTPlayersWidget2;
+}
+
+// Window load
+window.addEventListener("load", function() {
+    KTPlayersWidget2.init();
+}); 
+"use strict";
+
+// Class definition
+var KTSlidersWidget1 = function() {
+    var chart1 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart3 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, query, data) {
+        var element = document.querySelector(query);
+
+        if ( !element) {
+            return;
+        }              
+        
+        if ( chart.rendered === true && element.classList.contains("initialized") ) {
+            return;
+        }
+
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + 'primary');
+        var lightColor = KTUtil.getCssVariableValue('--bs-' + 'primary-light' );         
+
+        var options = {
+            series: [data],
+            chart: {
+                fontFamily: 'inherit',
+                height: height,
+                type: 'radialBar',
+                sparkline: {
+                    enabled: true,
+                }
+            },
+            plotOptions: {
+                radialBar: {
+                    hollow: {
+                        margin: 0,
+                        size: "45%"
+                    },
+                    dataLabels: {
+                        showOn: "always",
+                        name: {
+                            show: false                                 
+                        },
+                        value: {                                 
+                            show: false                              
+                        }
+                    },
+                    track: {
+                        background: lightColor,
+                        strokeWidth: '100%'
+                    }
+                }
+            },
+            colors: [baseColor],
+            stroke: {
+                lineCap: "round",
+            },
+            labels: ["Progress"]
+        };
+
+        chart.self = new ApexCharts(element, options);
+        chart.self.render();
+        chart.rendered = true;
+
+        element.classList.add('initialized');
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            // Init default chart
+            initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
+
+            var carousel = document.querySelector('#kt_sliders_widget_1_slider');
+            
+            if ( !carousel ) {
+                return;
+            }
+
+            // Init slide charts
+            carousel.addEventListener('slid.bs.carousel', function (e) {
+                if (e.to === 1) {
+                    // Init second chart
+                    initChart(chart2, '#kt_slider_widget_1_chart_2', 55);
+                }
+
+                if (e.to === 2) {
+                    // Init third chart
+                    initChart(chart3, '#kt_slider_widget_1_chart_3', 25);
+                }
+            });
+
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {                
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                    chart1.rendered = false;
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                    chart2.rendered = false;
+                }
+
+                if (chart3.rendered) {
+                    chart3.self.destroy();
+                    chart3.rendered = false;
+                }
+
+                initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
+                initChart(chart2, '#kt_slider_widget_1_chart_2', 55);
+                initChart(chart3, '#kt_slider_widget_1_chart_3', 25);
+            });
+        }   
+    }        
+}();
+
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTSlidersWidget1;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTSlidersWidget1.init();
+});
+   
+        
+        
+        
+           
+"use strict";
+
+// Class definition
+var KTSlidersWidget3 = function () {
+    var chart1 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, query, color, data) {
+        var element = document.querySelector(query);
+
+        if (!element) {
+            return;
+        }
+        
+        if ( chart.rendered === true && element.classList.contains("initialized") ) {
+            return;
+        }
+
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var labelColor = KTUtil.getCssVariableValue('--bs-gray-500');
+        var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
+
+        var options = {
+            series: [{
+                name: 'Lessons',
+                data: data
+            }],            
+            chart: {
+                fontFamily: 'inherit',
+                type: 'area',
+                height: height,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+
+            },
+            legend: {
+                show: false
+            },
+            dataLabels: {
+                enabled: false
+            },
+            fill: {
+                type: "gradient",
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0,
+                    stops: [0, 80, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                show: true,
+                width: 3,
+                colors: [baseColor]
+            },
+            xaxis: {
+                categories: ['', 'Apr 05', 'Apr 06', 'Apr 07', 'Apr 08', 'Apr 09', 'Apr 11', 'Apr 12', 'Apr 14', 'Apr 15', 'Apr 16', 'Apr 17', 'Apr 18', ''],
+                axisBorder: {
+                    show: false,
+                },
+                axisTicks: {
+                    show: false
+                },
+                tickAmount: 6,
+                labels: {
+                    rotate: 0,
+                    rotateAlways: true,
+                    style: {
+                        colors: labelColor,
+                        fontSize: '12px'
+                    }
+                },
+                crosshairs: {
+                    position: 'front',
+                    stroke: {
+                        color: baseColor,
+                        width: 1,
+                        dashArray: 3
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    formatter: undefined,
+                    offsetY: 0,
+                    style: {
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                tickAmount: 4,
+                max: 24,
+                min: 10,
+                labels: {
+                    style: {
+                        colors: labelColor,
+                        fontSize: '12px'
+                    } 
+                }
+            },
+            states: {
+                normal: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                hover: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                active: {
+                    allowMultipleDataPointsSelection: false,
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                }
+            },
+            tooltip: {
+                style: {
+                    fontSize: '12px'
+                } 
+            },
+            colors: [baseColor],
+            grid: {
+                borderColor: borderColor,
+                strokeDashArray: 4,
+                yaxis: {
+                    lines: {
+                        show: true
+                    }
+                }
+            },
+            markers: {
+                strokeColor: baseColor,
+                strokeWidth: 3
+            }
+        };
+
+        chart.self = new ApexCharts(element, options);
+        chart.self.render();
+        chart.rendered = true;
+
+        element.classList.add('initialized');   
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            var data1 = [19, 21, 21, 20, 20, 18, 18, 20, 20, 22, 22, 21, 21, 22];
+            var data2 = [18, 22, 22, 20, 20, 18, 18, 20, 20, 18, 18, 20, 20, 22];
+            
+            // Init default chart
+            initChart(chart1, '#kt_sliders_widget_3_chart_1', 'danger', data1);
+
+            var carousel = document.querySelector('#kt_sliders_widget_3_slider');
+
+            if ( !carousel ){
+                return;
+            }
+            
+            carousel.addEventListener('slid.bs.carousel', function (e) {
+                if (e.to === 1) {
+                    // Init second chart
+                    initChart(chart2, '#kt_sliders_widget_3_chart_2', 'primary', data2);
+                }                
+            });
+
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {                
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                    chart1.rendered = false;
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                    chart2.rendered = false;
+                }
+
+                initChart(chart1, '#kt_sliders_widget_3_chart_1', 'danger', data1);
+                initChart(chart2, '#kt_sliders_widget_3_chart_2', 'primary', data2);
+            });
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTSlidersWidget3;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTSlidersWidget3.init();
+});
+
+"use strict";
+
+// Class definition
+var KTSlidersWidget7 = function() {
+    var chart1 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart3 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, query, data) {
+        var element = document.querySelector(query);
+
+        if ( !element) {
+            return;
+        }              
+        
+        if ( chart.rendered === true && element.classList.contains("initialized") ) {
+            return;
+        }
+
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + 'danger');
+        var lightColor = KTUtil.getCssVariableValue('--bs-' + 'white' );         
+
+        var options = {
+            series: [data],
+            chart: {
+                fontFamily: 'inherit',
+                height: height,
+                type: 'radialBar',
+                sparkline: {
+                    enabled: true,
+                }
+            },
+            plotOptions: {
+                radialBar: {
+                    hollow: {
+                        margin: 0,
+                        size: "45%"
+                    },
+                    dataLabels: {
+                        showOn: "always",
+                        name: {
+                            show: false                                 
+                        },
+                        value: {                                 
+                            show: false                              
+                        }
+                    },
+                    track: {
+                        background: lightColor,
+                        strokeWidth: '100%'
+                    }
+                }
+            },
+            colors: [baseColor],
+            stroke: {
+                lineCap: "round",
+            },
+            labels: ["Progress"]
+        };
+
+        chart.self = new ApexCharts(element, options);
+        chart.self.render();
+        chart.rendered = true;
+
+        element.classList.add('initialized');
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            // Init default chart
+            initChart(chart1, '#kt_slider_widget_7_chart_1', 76);
+
+            var carousel = document.querySelector('#kt_sliders_widget_7_slider');
+            
+            if ( !carousel ) {
+                return;
+            }
+
+            // Init slide charts
+            carousel.addEventListener('slid.bs.carousel', function (e) {
+                if (e.to === 1) {
+                    // Init second chart
+                    initChart(chart2, '#kt_slider_widget_7_chart_2', 55);
+                }
+
+                if (e.to === 2) {
+                    // Init third chart
+                    initChart(chart3, '#kt_slider_widget_7_chart_3', 25);
+                }
+            });
+
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {                
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                    chart1.rendered = false;
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                    chart2.rendered = false;
+                }
+
+                if (chart3.rendered) {
+                    chart3.self.destroy();
+                    chart3.rendered = false;
+                }
+
+                initChart(chart1, '#kt_slider_widget_7_chart_1', 76);
+                initChart(chart2, '#kt_slider_widget_7_chart_2', 55);
+                initChart(chart3, '#kt_slider_widget_7_chart_3', 25);
+            });
+        }   
+    }        
+}();
+
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTSlidersWidget7;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTSlidersWidget7.init();
+});
+   
+        
+        
+        
+           
+"use strict";
+
+// Class definition
+var KTTimelineWidget1 = function () {
+    // Private methods
+    // Day timeline
+    const initTimelineDay = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_1_1');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: "research",
+                content: "Research",
+                order: 1
+            },
+            {
+                id: "qa",
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: "ui",
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: "dev",
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 'research',
+                start: now,
+                end: moment(now).add(1.5, 'hours'),
+                content: 'Meeting',
+                progress: "60%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 'qa',
+                start: moment(now).add(1, 'hours'),
+                end: moment(now).add(2, 'hours'),
+                content: 'Testing',
+                progress: "47%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 'ui',
+                start: moment(now).add(30, 'minutes'),
+                end: moment(now).add(2.5, 'hours'),
+                content: 'Landing page',
+                progress: "55%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 'dev',
+                start: moment(now).add(1.5, 'hours'),
+                end: moment(now).add(3, 'hours'),
+                content: 'Products module',
+                progress: "75%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+
+                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);      
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+
+    // Week timeline
+    const initTimelineWeek = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_1_2');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: 1,
+                content: "Research",
+                order: 1
+            },
+            {
+                id: 2,
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: 3,
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: 4,
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 1,
+                start: now,
+                end: moment(now).add(7, 'days'),
+                content: 'Framework',
+                progress: "71%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 2,
+                start: moment(now).add(7, 'days'),
+                end: moment(now).add(14, 'days'),
+                content: 'Accessibility',
+                progress: "84%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 3,
+                start: moment(now).add(3, 'days'),
+                end: moment(now).add(20, 'days'),
+                content: 'Microsites',
+                progress: "69%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 4,
+                start: moment(now).add(10, 'days'),
+                end: moment(now).add(21, 'days'),
+                content: 'Deployment',
+                progress: "74%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+
+                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);      
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+
+    // Month timeline
+    const initTimelineMonth = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_1_3');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-1-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: "research",
+                content: "Research",
+                order: 1
+            },
+            {
+                id: "qa",
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: "ui",
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: "dev",
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 'research',
+                start: now,
+                end: moment(now).add(2, 'months'),
+                content: 'Tags',
+                progress: "79%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 'qa',
+                start: moment(now).add(0.5, 'months'),
+                end: moment(now).add(5, 'months'),
+                content: 'Testing',
+                progress: "64%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 'ui',
+                start: moment(now).add(2, 'months'),
+                end: moment(now).add(6.5, 'months'),
+                content: 'Media',
+                progress: "82%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 'dev',
+                start: moment(now).add(4, 'months'),
+                end: moment(now).add(7, 'months'),
+                content: 'Plugins',
+                progress: "58%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+                
+                const target = element.closest('[data-kt-timeline-widget-1-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);                    
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+
+    // Handle BlockUI
+    const handleBlockUI = () => {
+        // Select block ui elements
+        const elements = document.querySelectorAll('[data-kt-timeline-widget-1-blockui="true"]');
+
+        // Init block ui
+        elements.forEach(element => {
+            const blockUI = new KTBlockUI(element, {
+                overlayClass: "bg-body",
+            });
+
+            blockUI.block();
+        });
+    }
+
+    // Handle tabs visibility
+    const tabsVisibility = () => {
+        const tabs = document.querySelectorAll('[data-kt-timeline-widget-1="tab"]');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', e => {
+                // Week tab
+                if(tab.getAttribute('href') === '#kt_timeline_widget_1_tab_week'){
+                    initTimelineWeek();
+                }
+
+                // Month tab
+                if(tab.getAttribute('href') === '#kt_timeline_widget_1_tab_month'){
+                    initTimelineMonth();
+                }
+            });
+        });
+    }
+
+    // Handle avatar path conflict
+    const handleAvatarPath = () => {
+        const avatars = document.querySelectorAll('[data-kt-timeline-avatar-src]');
+
+        if(!avatars){
+            return;
+        }
+
+        avatars.forEach(avatar => {
+            avatar.setAttribute('src', avatar.getAttribute('data-kt-timeline-avatar-src'));
+            avatar.removeAttribute('data-kt-timeline-avatar-src');
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            initTimelineDay();
+            handleBlockUI();
+            tabsVisibility();
+        }
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTimelineWidget1;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTTimelineWidget1.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTimelineWidget2 = function () {
+    // Private methods
+    var handleCheckbox = function() {
+        var card = document.querySelector('#kt_timeline_widget_2_card');        
+        
+        if (!card) {
+            return;
+        }
+
+        // Checkbox Handler
+        KTUtil.on(card, '[data-kt-element="checkbox"]', 'change', function (e) {
+            var check = this.closest('.form-check');
+            var tr = this.closest('tr');
+            var bullet = tr.querySelector('[data-kt-element="bullet"]');
+            var status = tr.querySelector('[data-kt-element="status"]');
+
+            if ( this.checked === true ) {
+                check.classList.add('form-check-success');
+
+                bullet.classList.remove('bg-primary');
+                bullet.classList.add('bg-success');
+
+                status.innerText = 'Done';
+                status.classList.remove('badge-light-primary');
+                status.classList.add('badge-light-success');
+            } else {
+                check.classList.remove('form-check-success');
+
+                bullet.classList.remove('bg-success');
+                bullet.classList.add('bg-primary');
+
+                status.innerText = 'In Process';
+                status.classList.remove('badge-light-success');
+                status.classList.add('badge-light-primary');
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {           
+            handleCheckbox();             
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTimelineWidget2;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTimelineWidget2.init();
+});
+
+
+ 
+"use strict";
+
+// Class definition
+var KTTimelineWidget4 = function () {
+    // Private methods
+    // Day timeline
+    const initTimelineDay = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_4_1');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: "research",
+                content: "Research",
+                order: 1
+            },
+            {
+                id: "qa",
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: "ui",
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: "dev",
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 'research',
+                start: now,
+                end: moment(now).add(1.5, 'hours'),
+                content: 'Meeting',
+                progress: "60%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 'qa',
+                start: moment(now).add(1, 'hours'),
+                end: moment(now).add(2, 'hours'),
+                content: 'Testing',
+                progress: "47%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 'ui',
+                start: moment(now).add(30, 'minutes'),
+                end: moment(now).add(2.5, 'hours'),
+                content: 'Landing page',
+                progress: "55%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 'dev',
+                start: moment(now).add(1.5, 'hours'),
+                end: moment(now).add(3, 'hours'),
+                content: 'Products module',
+                progress: "75%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+
+                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);      
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+
+    // Week timeline
+    const initTimelineWeek = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_4_2');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: 1,
+                content: "Research",
+                order: 1
+            },
+            {
+                id: 2,
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: 3,
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: 4,
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 1,
+                start: now,
+                end: moment(now).add(7, 'days'),
+                content: 'Framework',
+                progress: "71%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 2,
+                start: moment(now).add(7, 'days'),
+                end: moment(now).add(14, 'days'),
+                content: 'Accessibility',
+                progress: "84%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 3,
+                start: moment(now).add(3, 'days'),
+                end: moment(now).add(20, 'days'),
+                content: 'Microsites',
+                progress: "69%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 4,
+                start: moment(now).add(10, 'days'),
+                end: moment(now).add(21, 'days'),
+                content: 'Deployment',
+                progress: "74%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+
+                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);      
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+
+    // Month timeline
+    const initTimelineMonth = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_4_3');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: "research",
+                content: "Research",
+                order: 1
+            },
+            {
+                id: "qa",
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: "ui",
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: "dev",
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 'research',
+                start: now,
+                end: moment(now).add(2, 'months'),
+                content: 'Tags',
+                progress: "79%",
+                color: 'primary',
+                users: [
+                    'avatars/300-6.jpg',
+                    'avatars/300-1.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 'qa',
+                start: moment(now).add(0.5, 'months'),
+                end: moment(now).add(5, 'months'),
+                content: 'Testing',
+                progress: "64%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 'ui',
+                start: moment(now).add(2, 'months'),
+                end: moment(now).add(6.5, 'months'),
+                content: 'Media',
+                progress: "82%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-20.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 'dev',
+                start: moment(now).add(4, 'months'),
+                end: moment(now).add(7, 'months'),
+                content: 'Plugins',
+                progress: "58%",
+                color: 'info',
+                users: [
+                    'avatars/300-23.jpg',
+                    'avatars/300-12.jpg',
+                    'avatars/300-9.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+                
+                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);                    
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+    
+    // 2022 timeline
+    const initTimeline2022 = () => {
+        // Detect element
+        const element = document.querySelector('#kt_timeline_widget_4_4');
+        if (!element) {
+            return;
+        }
+
+        if(element.innerHTML){
+            return;
+        }
+
+        // Set variables
+        var now = Date.now();
+        var rootImagePath = element.getAttribute('data-kt-timeline-widget-4-image-root');
+
+        // Build vis-timeline datasets
+        var groups = new vis.DataSet([
+            {
+                id: "research",
+                content: "Research",
+                order: 1
+            },
+            {
+                id: "qa",
+                content: "Phase 2.6 QA",
+                order: 2
+            },
+            {
+                id: "ui",
+                content: "UI Design",
+                order: 3
+            },
+            {
+                id: "dev",
+                content: "Development",
+                order: 4
+            }
+        ]);
+
+
+        var items = new vis.DataSet([
+            {
+                id: 1,
+                group: 'research',
+                start: now,
+                end: moment(now).add(2, 'months'),
+                content: 'Tags',
+                progress: "51%",
+                color: 'primary',
+                users: [
+                    'avatars/300-7.jpg',
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 2,
+                group: 'qa',
+                start: moment(now).add(0.5, 'months'),
+                end: moment(now).add(5, 'months'),
+                content: 'Testing',
+                progress: "64%",
+                color: 'success',
+                users: [
+                    'avatars/300-2.jpg'
+                ]
+            },
+            {
+                id: 3,
+                group: 'ui',
+                start: moment(now).add(2, 'months'),
+                end: moment(now).add(6.5, 'months'),
+                content: 'Media',
+                progress: "54%",
+                color: 'danger',
+                users: [
+                    'avatars/300-5.jpg',
+                    'avatars/300-21.jpg'
+                ]
+            },
+            {
+                id: 4,
+                group: 'dev',
+                start: moment(now).add(4, 'months'),
+                end: moment(now).add(7, 'months'),
+                content: 'Plugins',
+                progress: "348%",
+                color: 'info',
+                users: [
+                    'avatars/300-3.jpg',
+                    'avatars/300-11.jpg',
+                    'avatars/300-13.jpg'
+                ]
+            },
+        ]);
+
+        // Set vis-timeline options
+        var options = {
+            zoomable: false,
+            moveable: false,
+            selectable: false,
+
+            // More options https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            margin: {
+                item: {
+                    horizontal: 10,
+                    vertical: 35
+                }
+            },
+
+            // Remove current time line --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            showCurrentTime: false,
+
+            // Whitelist specified tags and attributes from template --- more info: https://visjs.github.io/vis-timeline/docs/timeline/#Configuration_Options
+            xss: {
+                disabled: false,
+                filterOptions: {
+                    whiteList: {
+                        div: ['class', 'style'],
+                        img: ['data-kt-timeline-avatar-src', 'alt'],
+                        a: ['href', 'class']
+                    },
+                },
+            },
+            // specify a template for the items
+            template: function (item) {
+                // Build users group
+                const users = item.users;
+                let userTemplate = '';
+                users.forEach(user => {
+                    userTemplate += `<div class="symbol symbol-circle symbol-25px"><img data-kt-timeline-avatar-src="${rootImagePath + user}" alt="" /></div>`;
+                });
+
+                return `<div class="rounded-pill bg-light-${item.color} d-flex align-items-center position-relative h-40px w-100 p-2 overflow-hidden">
+                    <div class="position-absolute rounded-pill d-block bg-${item.color} start-0 top-0 h-100 z-index-1" style="width: ${item.progress};"></div>
+        
+                    <div class="d-flex align-items-center position-relative z-index-2">
+                        <div class="symbol-group symbol-hover flex-nowrap me-3">
+                            ${userTemplate}
+                        </div>
+        
+                        <a href="#" class="fw-bold text-white text-hover-dark">${item.content}</a>
+                    </div>
+        
+                    <div class="d-flex flex-center bg-body rounded-pill fs-7 fw-bolder ms-auto h-100 px-3 position-relative z-index-2">
+                        ${item.progress}
+                    </div>
+                </div>        
+                `;
+            },
+
+            // Remove block ui on initial draw
+            onInitialDrawComplete: function () {
+                handleAvatarPath();
+                
+                const target = element.closest('[data-kt-timeline-widget-4-blockui="true"]');
+                const blockUI = KTBlockUI.getInstance(target);
+
+                if (blockUI.isBlocked()) {
+                    setTimeout(() => {
+                        blockUI.release();
+                    }, 1000);                    
+                }
+            }
+        };
+
+        // Init vis-timeline
+        const timeline = new vis.Timeline(element, items, groups, options);
+
+        // Prevent infinite loop draws
+        timeline.on("currentTimeTick", () => {            
+            // After fired the first time we un-subscribed
+            timeline.off("currentTimeTick");
+        });
+    }
+    // Handle BlockUI
+    const handleBlockUI = () => {
+        // Select block ui elements
+        const elements = document.querySelectorAll('[data-kt-timeline-widget-4-blockui="true"]');
+
+        // Init block ui
+        elements.forEach(element => {
+            const blockUI = new KTBlockUI(element, {
+                overlayClass: "bg-body",
+            });
+
+            blockUI.block();
+        });
+    }
+
+    // Handle tabs visibility
+    const tabsVisibility = () => {
+        const tabs = document.querySelectorAll('[data-kt-timeline-widget-4="tab"]');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', e => {
+                // Week tab
+                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_week'){
+                    initTimelineWeek();
+                }
+
+                // Month tab
+                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_month'){
+                    initTimelineMonth();
+                }
+
+                // 2022 tab
+                if(tab.getAttribute('href') === '#kt_timeline_widget_4_tab_2022'){
+                    initTimeline2022();
+                }
+            });
+        });
+    }
+
+    // Handle avatar path conflict
+    const handleAvatarPath = () => {
+        const avatars = document.querySelectorAll('[data-kt-timeline-avatar-src]');
+
+        if(!avatars){
+            return;
+        }
+
+        avatars.forEach(avatar => {
+            avatar.setAttribute('src', avatar.getAttribute('data-kt-timeline-avatar-src'));
+            avatar.removeAttribute('data-kt-timeline-avatar-src');
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            initTimelineDay();
+            handleBlockUI();
+            tabsVisibility();
+        }
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTimelineWidget4;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTTimelineWidget4.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTablesWidget14 = function () {
+    var chart1 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart3 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart4 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart5 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, chartSelector, data, initByDefault) {
+        var element = document.querySelector(chartSelector);
+
+        if (!element) {
+            return;
+        }
+        
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var color = element.getAttribute('data-kt-chart-color');
+       
+        var strokeColor = KTUtil.getCssVariableValue('--bs-' + 'gray-300');
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
+        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
+
+        var options = {
+            series: [{
+                name: 'Net Profit',
+                data: data
+            }],
+            chart: {
+                fontFamily: 'inherit',
+                type: 'area',
+                height: height,
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false
+                },
+                sparkline: {
+                    enabled: true
+                }
+            },
+            plotOptions: {},
+            legend: {
+                show: false
+            },
+            dataLabels: {
+                enabled: false
+            },
+            fill: {
+                type: 'solid',
+                opacity: 1
+            },
+            stroke: {
+                curve: 'smooth',
+                show: true,
+                width: 2,
+                colors: [baseColor]
+            },
+            xaxis: {                 
+                axisBorder: {
+                    show: false,
+                },
+                axisTicks: {
+                    show: false
+                },
+                labels: {
+                    show: false                   
+                },
+                crosshairs: {
+                    show: false,
+                    position: 'front',
+                    stroke: {
+                        color: strokeColor,
+                        width: 1,
+                        dashArray: 3
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            yaxis: {
+                min: 0,
+                max: 60,
+                labels: {
+                    show: false                     
+                }
+            },
+            states: {
+                normal: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                hover: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                active: {
+                    allowMultipleDataPointsSelection: false,
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                }
+            },
+            tooltip: {
+                enabled: false
+            },
+            colors: [lightColor],
+            markers: {
+                colors: [lightColor],
+                strokeColor: [baseColor],
+                strokeWidth: 3
+            }
+        };
+
+        chart.self = new ApexCharts(element, options);          
+        
+        if (initByDefault === true) {
+            // Set timeout to properly get the parent elements width
+            setTimeout(function() {
+                chart.self.render();  
+                chart.rendered = true;
+            }, 200);
+        }            
+    }
+
+    // Public methods
+    return {
+        init: function () { 
+            var chart1Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];            
+            initChart(chart1, '#kt_table_widget_14_chart_1', chart1Data, true);
+
+            var chart2Data = [17, 5, 23, 2, 21, 9, 17, 23, 4, 24, 9, 17, 21,7];            
+            initChart(chart2, '#kt_table_widget_14_chart_2', chart2Data, true);
+
+            var chart3Data = [2, 24, 5, 17, 7, 2, 12, 24, 5, 24, 2, 8, 12,7];            
+            initChart(chart3, '#kt_table_widget_14_chart_3', chart3Data, true);
+
+            var chart4Data = [24, 3, 5, 19, 3, 7, 25, 14, 5, 14, 2, 8, 5,17];            
+            initChart(chart4, '#kt_table_widget_14_chart_4', chart4Data, true);
+
+            var chart5Data = [3, 23, 1, 19, 3, 17, 3, 9, 25, 4, 2, 18, 25,3];            
+            initChart(chart5, '#kt_table_widget_14_chart_5', chart5Data, true); 
+
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                }
+
+                if (chart3.rendered) {
+                    chart3.self.destroy();
+                }
+
+                if (chart4.rendered) {
+                    chart4.self.destroy();
+                }
+
+                if (chart5.rendered) {
+                    chart5.self.destroy();
+                }
+
+                initChart(chart1, '#kt_table_widget_14_chart_1', chart1Data, chart1.rendered);
+                initChart(chart2, '#kt_table_widget_14_chart_2', chart2Data, chart2.rendered);  
+                initChart(chart3, '#kt_table_widget_14_chart_3', chart3Data, chart3.rendered);
+                initChart(chart4, '#kt_table_widget_14_chart_4', chart4Data, chart4.rendered); 
+                initChart(chart5, '#kt_table_widget_14_chart_5', chart5Data, chart5.rendered); 
+            });
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget14;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTablesWidget14.init();
+}); 
+"use strict";
+
+// Class definition
+var KTTablesWidget15 = function () {
+    var chart1 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart3 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart4 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart5 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, chartSelector, data, initByDefault) {
+        var element = document.querySelector(chartSelector);
+
+        if (!element) {
+            return;
+        }
+        
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var color = element.getAttribute('data-kt-chart-color');
+         
+        var strokeColor = KTUtil.getCssVariableValue('--bs-' + 'gray-300');
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
+        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
+
+        var options = {
+            series: [{
+                name: 'Net Profit',
+                data: data
+            }],
+            chart: {
+                fontFamily: 'inherit',
+                type: 'area',
+                height: height,
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false
+                },
+                sparkline: {
+                    enabled: true
+                }
+            },
+            plotOptions: {},
+            legend: {
+                show: false
+            },
+            dataLabels: {
+                enabled: false
+            },
+            fill: {
+                type: 'solid',
+                opacity: 1
+            },
+            stroke: {
+                curve: 'smooth',
+                show: true,
+                width: 2,
+                colors: [baseColor]
+            },
+            xaxis: {                
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                labels: {
+                    show: false                    
+                },
+                crosshairs: {
+                    show: false,
+                    position: 'front',
+                    stroke: {
+                        color: strokeColor,
+                        width: 1,
+                        dashArray: 3
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            yaxis: {
+                min: 0,
+                max: 60,
+                labels: {
+                    show: false,
+                    ontSize: '12px'                   
+                }
+            },
+            states: {
+                normal: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                hover: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                active: {
+                    allowMultipleDataPointsSelection: false,
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                }
+            },
+            tooltip: {
+                enabled: false
+            },
+            colors: [lightColor],
+            markers: {
+                colors: [lightColor],
+                strokeColor: [baseColor],
+                strokeWidth: 3
+            }
+        };
+
+        chart.self = new ApexCharts(element, options);          
+        
+        if (initByDefault === true) {
+            // Set timeout to properly get the parent elements width
+            setTimeout(function() {
+                chart.self.render();  
+                chart.rendered = true;
+            }, 200);
+        }              
+    }
+
+    // Public methods
+    return {
+        init: function () { 
+            var chart1Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];            
+            initChart(chart1, '#kt_table_widget_15_chart_1', chart1Data, true);
+
+            var chart2Data = [17, 5, 23, 2, 21, 9, 17, 23, 4, 24, 9, 17, 21,7];            
+            initChart(chart2, '#kt_table_widget_15_chart_2', chart2Data, true);
+
+            var chart3Data = [2, 24, 5, 17, 7, 2, 12, 24, 5, 24, 2, 8, 12,7];            
+            initChart(chart3, '#kt_table_widget_15_chart_3', chart3Data, true);
+
+            var chart4Data = [24, 3, 5, 19, 3, 7, 25, 14, 5, 14, 2, 8, 5,17];            
+            initChart(chart4, '#kt_table_widget_15_chart_4', chart4Data, true);
+
+            var chart5Data = [3, 23, 1, 19, 3, 17, 3, 9, 25, 4, 2, 18, 25,3];            
+            initChart(chart5, '#kt_table_widget_15_chart_5', chart5Data, true);
+            
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                }
+
+                if (chart3.rendered) {
+                    chart3.self.destroy();
+                }
+
+                if (chart4.rendered) {
+                    chart4.self.destroy();
+                }
+
+                if (chart5.rendered) {
+                    chart5.self.destroy();
+                }
+
+                initChart(chart1, '#kt_table_widget_15_chart_1', chart1Data, chart1.rendered);
+                initChart(chart2, '#kt_table_widget_15_chart_2', chart2Data, chart2.rendered);  
+                initChart(chart3, '#kt_table_widget_15_chart_3', chart3Data, chart3.rendered);
+                initChart(chart4, '#kt_table_widget_15_chart_4', chart4Data, chart4.rendered); 
+                initChart(chart5, '#kt_table_widget_15_chart_5', chart5Data, chart5.rendered); 
+            });
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget15;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTablesWidget15.init();
+});
+
+
+ 
+"use strict";
+
+// Class definition
+var KTTablesWidget16 = function () {
+    var chart1 = {
+        self: null,
+        rendered: false
+    }; 
+
+    var chart2 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart3 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart4 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart5 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart6 = {
+        self: null,
+        rendered: false
+    }; 
+
+    var chart7 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart8 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart9 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart10 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart11 = {
+        self: null,
+        rendered: false
+    }; 
+
+    var chart12 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart13 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart14 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart15 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart16 = {
+        self: null,
+        rendered: false
+    }; 
+
+    var chart17 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart18 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart19 = {
+        self: null,
+        rendered: false
+    };
+
+    var chart20 = {
+        self: null,
+        rendered: false
+    };
+
+    // Private methods
+    var initChart = function(chart, toggle, selector, data, initByDefault) {
+        var element = document.querySelector(selector);
+
+        if ( !element ) {
+            return;
+        }
+        
+        var height = parseInt(KTUtil.css(element, 'height'));
+        var color = element.getAttribute('data-kt-chart-color');
+        var labelColor = KTUtil.getCssVariableValue('--bs-gray-800');
+        var strokeColor = KTUtil.getCssVariableValue('--bs-gray-300');
+        var baseColor = KTUtil.getCssVariableValue('--bs-' + color);
+        var lightColor = KTUtil.getCssVariableValue('--bs-body-bg');
+
+        var options = {
+            series: [{
+                name: 'Net Profit',
+                data: data
+            }],
+            chart: {
+                fontFamily: 'inherit',
+                type: 'area',
+                height: height,
+                toolbar: {
+                    show: false
+                },
+                zoom: {
+                    enabled: false
+                },
+                sparkline: {
+                    enabled: true
+                }
+            },
+            plotOptions: {},
+            legend: {
+                show: false
+            },
+            dataLabels: {
+                enabled: false
+            },
+            fill: {
+                type: 'solid',
+                opacity: 1
+            },
+            stroke: {
+                curve: 'smooth',
+                show: true,
+                width: 2,
+                colors: [baseColor]
+            },
+            xaxis: {                
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                },
+                labels: {
+                    show: false                    
+                },
+                crosshairs: {
+                    show: false,
+                    position: 'front',
+                    stroke: {
+                        color: strokeColor,
+                        width: 1,
+                        dashArray: 3
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            yaxis: {
+                min: 0,
+                max: 60,
+                labels: {
+                    show: false,
+                    ontSize: '12px'                   
+                }
+            },
+            states: {
+                normal: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                hover: {
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                },
+                active: {
+                    allowMultipleDataPointsSelection: false,
+                    filter: {
+                        type: 'none',
+                        value: 0
+                    }
+                }
+            },
+            tooltip: {
+                enabled: false
+            },
+            colors: [lightColor],
+            markers: {
+                colors: [lightColor],
+                strokeColor: [baseColor],
+                strokeWidth: 3
+            }
+        };
+
+        chart.self = new ApexCharts(element, options);        
+        var tab = document.querySelector(toggle);
+        
+        if (initByDefault === true) {
+            // Set timeout to properly get the parent elements width
+            setTimeout(function() {
+                chart.self.render();  
+                chart.rendered = true;
+            }, 200);
+        }        
+
+        tab.addEventListener('shown.bs.tab', function (event) {
+            if (chart.rendered === false) {
+                chart.self.render();  
+                chart.rendered = true;
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {  
+            var chart1Data = [16, 10, 15, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21, 13];  
+            initChart(chart1, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_1', chart1Data, true);        
+             
+            var chart2Data = [8, 5, 16, 3, 23, 16, 11, 15, 3, 11, 15, 7, 17, 9];  
+            initChart(chart2, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_2', chart2Data, true);    
+            
+            var chart3Data = [8, 6, 16, 3, 23, 16, 11, 14, 3, 11, 15, 8, 17, 9];  
+            initChart(chart3, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_3', chart3Data, true);  
+            
+            var chart4Data = [12, 5, 23, 12, 21, 9, 17, 20, 4, 24, 9, 13, 18, 9];  
+            initChart(chart4, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_4', chart4Data, true); 
+
+
+            var chart5Data = [13, 10, 15, 21, 6, 11, 5, 21, 5, 12, 18, 7, 21, 13];  
+            initChart(chart5, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_1', chart5Data, false);        
+             
+            var chart6Data = [13, 5, 21, 12, 21, 9, 17, 20, 4, 23, 9, 17, 21, 7];  
+            initChart(chart6, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_2', chart6Data, false);    
+            
+            var chart7Data = [8, 10, 14, 21, 6, 31, 5, 21, 5, 11, 15, 7, 23, 13];  
+            initChart(chart7, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_3', chart7Data, false);  
+            
+            var chart8Data = [6, 10, 12, 21, 6, 11, 7, 23, 5, 12, 18, 7, 21, 15];  
+            initChart(chart8, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_4', chart8Data, false); 
+
+
+            var chart9Data = [7, 10, 5, 21, 6, 11, 5, 23, 5, 11, 18, 7, 21,13];  
+            initChart(chart9, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_1', chart9Data, false);        
+             
+            var chart10Data = [8, 5, 16, 2, 19, 9, 17, 21, 4, 24, 4, 13, 21,5];  
+            initChart(chart10, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_2', chart10Data, false);    
+            
+            var chart11Data = [15, 10, 12, 21, 6, 11, 23, 11, 5, 12, 18, 7, 21, 15];  
+            initChart(chart11, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_3', chart11Data, false);  
+            
+            var chart12Data = [3, 9, 12, 23, 6, 11, 7, 23, 5, 12, 14, 7, 21, 8];  
+            initChart(chart12, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_4', chart12Data, false);
+
+
+            var chart13Data = [9, 14, 15, 21, 8, 11, 5, 23, 5, 11, 18, 5, 23, 8];  
+            initChart(chart13, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_1', chart13Data, false);        
+             
+            var chart14Data = [7, 5, 23, 12, 21, 9, 17, 15, 4, 24, 9, 17, 21, 7];  
+            initChart(chart14, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_2', chart14Data, false);    
+            
+            var chart15Data = [8, 10, 14, 21, 6, 31, 8, 23, 5, 3, 14, 7, 21, 12];  
+            initChart(chart15, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_3', chart15Data, false);  
+            
+            var chart16Data = [6, 12, 12, 19, 6, 11, 7, 23, 5, 12, 18, 7, 21, 15];  
+            initChart(chart16, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_4', chart16Data, false);
+
+
+            var chart17Data = [5, 10, 15, 21, 6, 11, 5, 23, 5, 11, 17, 7, 21, 13];  
+            initChart(chart17, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_1', chart17Data, false);        
+             
+            var chart18Data = [4, 5, 23, 12, 21, 9, 17, 15, 4, 24, 9, 17, 21, 7];  
+            initChart(chart18, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_2', chart18Data, false);    
+            
+            var chart19Data = [7, 10, 14, 21, 6, 31, 5, 23, 5, 11, 15, 7, 21, 17];  
+            initChart(chart19, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_3', chart19Data, false);  
+            
+            var chart20Data = [3, 10, 12, 23, 6, 11, 7, 22, 5, 12, 18, 7, 21, 14];  
+            initChart(chart20, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_4', chart20Data, false);
+
+            // Update chart on theme mode change
+            KTThemeMode.on("kt.thememode.change", function() {
+                if (chart1.rendered) {
+                    chart1.self.destroy();
+                }
+
+                if (chart2.rendered) {
+                    chart2.self.destroy();
+                }
+
+                if (chart3.rendered) {
+                    chart3.self.destroy();
+                }
+
+                if (chart4.rendered) {
+                    chart4.self.destroy();
+                }
+
+                if (chart5.rendered) {
+                    chart5.self.destroy();
+                }
+
+                if (chart6.rendered) {
+                    chart6.self.destroy();
+                }
+
+                if (chart7.rendered) {
+                    chart7.self.destroy();
+                }
+
+                if (chart8.rendered) {
+                    chart8.self.destroy();
+                }
+
+                if (chart9.rendered) {
+                    chart9.self.destroy();
+                }
+
+                if (chart10.rendered) {
+                    chart10.self.destroy();
+                }
+
+                if (chart11.rendered) {
+                    chart11.self.destroy();
+                }
+
+                if (chart12.rendered) {
+                    chart12.self.destroy();
+                }
+
+                if (chart13.rendered) {
+                    chart13.self.destroy();
+                }
+
+                if (chart14.rendered) {
+                    chart14.self.destroy();
+                }
+
+                if (chart15.rendered) {
+                    chart15.self.destroy();
+                }
+
+                if (chart16.rendered) {
+                    chart16.self.destroy();
+                }
+
+                if (chart17.rendered) {
+                    chart17.self.destroy();
+                }
+
+                if (chart18.rendered) {
+                    chart18.self.destroy();
+                }
+
+                if (chart19.rendered) {
+                    chart19.self.destroy();
+                }
+
+                if (chart20.rendered) {
+                    chart20.self.destroy();
+                }                
+
+                initChart(chart1, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_1', chart1Data, chart1.rendered);
+                initChart(chart2, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_2', chart2Data, chart2.rendered);  
+                initChart(chart3, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_3', chart3Data, chart3.rendered);
+                initChart(chart4, '#kt_stats_widget_16_tab_link_1', '#kt_table_widget_16_chart_1_4', chart4Data, chart4.rendered); 
+
+                initChart(chart5, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_1', chart5Data, chart5.rendered);
+                initChart(chart6, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_2', chart6Data, chart6.rendered);  
+                initChart(chart7, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_3', chart7Data, chart7.rendered);
+                initChart(chart8, '#kt_stats_widget_16_tab_link_2', '#kt_table_widget_16_chart_2_4', chart8Data, chart8.rendered); 
+
+                initChart(chart9, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_1', chart9Data, chart9.rendered);
+                initChart(chart10, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_2', chart10Data, chart10.rendered);  
+                initChart(chart11, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_3', chart11Data, chart11.rendered);
+                initChart(chart12, '#kt_stats_widget_16_tab_link_3', '#kt_table_widget_16_chart_3_4', chart12Data, chart12.rendered); 
+
+                initChart(chart13, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_1', chart13Data, chart13.rendered);
+                initChart(chart14, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_2', chart14Data, chart14.rendered);  
+                initChart(chart15, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_3', chart15Data, chart15.rendered);
+                initChart(chart16, '#kt_stats_widget_16_tab_link_4', '#kt_table_widget_16_chart_4_4', chart16Data, chart16.rendered); 
+
+                initChart(chart17, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_1', chart17Data, chart17.rendered);
+                initChart(chart18, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_2', chart18Data, chart18.rendered);  
+                initChart(chart19, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_3', chart19Data, chart19.rendered);
+                initChart(chart20, '#kt_stats_widget_16_tab_link_5', '#kt_table_widget_16_chart_5_4', chart20Data, chart20.rendered);                 
+            });            
+        }   
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget16;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTTablesWidget16.init();
+});
+
+
+ 
+"use strict";
+
+// Class definition
+var KTTablesWidget3 = function () {
+    var table;
+    var datatable;
+
+    // Private methods
+    const initDatatable = () => {
+        // Init datatable --- more info on datatables: https://datatables.net/manual/
+        datatable = $(table).DataTable({
+            "info": false,
+            'order': [],
+            'paging': false,
+            'pageLength': false,
+        });
+    }
+
+    const handleTabStates = () => {
+        const tabs = document.querySelector('[data-kt-table-widget-3="tabs_nav"]');
+        const tabButtons = tabs.querySelectorAll('[data-kt-table-widget-3="tab"]');
+        const tabClasses = ['border-bottom', 'border-3', 'border-primary'];
+
+        tabButtons.forEach(tab => {
+            tab.addEventListener('click', e => {
+                // Get datatable filter value
+                const value = tab.getAttribute('data-kt-table-widget-3-value');
+                tabButtons.forEach(t => {
+                    t.classList.remove(...tabClasses);
+                    t.classList.add('text-muted');
+                });
+
+                tab.classList.remove('text-muted');
+                tab.classList.add(...tabClasses);
+
+                // Filter datatable
+                if (value === 'Show All') {
+                    datatable.search('').draw();
+                } else {
+                    datatable.search(value).draw();
+                }
+            });
+        });
+    }
+
+    // Handle status filter dropdown
+    const handleStatusFilter = () => {
+        const select = document.querySelector('[data-kt-table-widget-3="filter_status"]');
+
+        $(select).on('select2:select', function (e) {
+            const value = $(this).val();
+            if (value === 'Show All') {
+                datatable.search('').draw();
+            } else {
+                datatable.search(value).draw();
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            table = document.querySelector('#kt_widget_table_3');
+
+            if (!table) {
+                return;
+            }
+
+            initDatatable();
+            handleTabStates();
+            handleStatusFilter();
+        }
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget3;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTTablesWidget3.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTablesWidget4 = function () {
+    var table;
+    var datatable;
+    var template;
+
+    // Private methods
+    const initDatatable = () => {
+        // Get subtable template
+        const subtable = document.querySelector('[data-kt-table-widget-4="subtable_template"]');
+        template = subtable.cloneNode(true);
+        template.classList.remove('d-none');
+
+        // Remove subtable template
+        subtable.parentNode.removeChild(subtable);
+
+        // Init datatable --- more info on datatables: https://datatables.net/manual/
+        datatable = $(table).DataTable({
+            "info": false,
+            'order': [],
+            "lengthChange": false,
+            'pageLength': 6,
+            'ordering': false,
+            'paging': false,
+            'columnDefs': [
+                { orderable: false, targets: 0 }, // Disable ordering on column 0 (checkbox)
+                { orderable: false, targets: 6 }, // Disable ordering on column 6 (actions)
+            ]
+        });
+
+        // Re-init functions on every table re-draw -- more info: https://datatables.net/reference/event/draw
+        datatable.on('draw', function () {
+            resetSubtable();
+            handleActionButton();
+        });
+    }
+
+    // Search Datatable --- official docs reference: https://datatables.net/reference/api/search()
+    var handleSearchDatatable = () => {
+        const filterSearch = document.querySelector('[data-kt-table-widget-4="search"]');
+        filterSearch.addEventListener('keyup', function (e) {
+            datatable.search(e.target.value).draw();
+        });
+    }
+
+    // Handle status filter
+    const handleStatusFilter = () => {
+        const select = document.querySelector('[data-kt-table-widget-4="filter_status"]');
+
+        $(select).on('select2:select', function (e) {
+            const value = $(this).val();
+            if (value === 'Show All') {
+                datatable.search('').draw();
+            } else {
+                datatable.search(value).draw();
+            }
+        });
+    }
+
+    // Subtable data sample
+    const data = [
+        {
+            image: '76',
+            name: 'Go Pro 8',
+            description: 'Latest  version of Go Pro.',
+            cost: '500.00',
+            qty: '1',
+            total: '500.00',
+            stock: '12'
+        },
+        {
+            image: '60',
+            name: 'Bose Earbuds',
+            description: 'Top quality earbuds from Bose.',
+            cost: '300.00',
+            qty: '1',
+            total: '300.00',
+            stock: '8'
+        },
+        {
+            image: '211',
+            name: 'Dry-fit Sports T-shirt',
+            description: 'Comfortable sportswear.',
+            cost: '89.00',
+            qty: '1',
+            total: '89.00',
+            stock: '18'
+        },
+        {
+            image: '21',
+            name: 'Apple Airpod 3',
+            description: 'Apple\'s latest earbuds.',
+            cost: '200.00',
+            qty: '2',
+            total: '400.00',
+            stock: '32'
+        },
+        {
+            image: '83',
+            name: 'Nike Pumps',
+            description: 'Apple\'s latest headphones.',
+            cost: '200.00',
+            qty: '1',
+            total: '200.00',
+            stock: '8'
+        }
+    ];
+
+    // Handle action button
+    const handleActionButton = () => {
+        const buttons = document.querySelectorAll('[data-kt-table-widget-4="expand_row"]');
+
+        // Sample row items counter --- for demo purpose only, remove this variable in your project
+        const rowItems = [3, 1, 3, 1, 2, 1];
+
+        buttons.forEach((button, index) => {
+            button.addEventListener('click', e => {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+
+                const row = button.closest('tr');
+                const rowClasses = ['isOpen', 'border-bottom-0'];
+
+                // Get total number of items to generate --- for demo purpose only, remove this code snippet in your project
+                const demoData = [];
+                for (var j = 0; j < rowItems[index]; j++) {
+                    demoData.push(data[j]);
+                }
+                // End of generating demo data
+
+                // Handle subtable expanded state
+                if (row.classList.contains('isOpen')) {
+                    // Remove all subtables from current order row
+                    while (row.nextSibling && row.nextSibling.getAttribute('data-kt-table-widget-4') === 'subtable_template') {
+                        row.nextSibling.parentNode.removeChild(row.nextSibling);
+                    }
+                    row.classList.remove(...rowClasses);
+                    button.classList.remove('active');
+                } else {
+                    populateTemplate(demoData, row);
+                    row.classList.add(...rowClasses);
+                    button.classList.add('active');
+                }
+            });
+        });
+    }
+
+    // Populate template with content/data -- content/data can be replaced with relevant data from database or API
+    const populateTemplate = (data, target) => {
+        data.forEach((d, index) => {
+            // Clone template node
+            const newTemplate = template.cloneNode(true);
+
+            // Stock badges
+            const lowStock = `<div class="badge badge-light-warning">Low Stock</div>`;
+            const inStock = `<div class="badge badge-light-success">In Stock</div>`;
+
+            // Select data elements
+            const image = newTemplate.querySelector('[data-kt-table-widget-4="template_image"]');
+            const name = newTemplate.querySelector('[data-kt-table-widget-4="template_name"]');
+            const description = newTemplate.querySelector('[data-kt-table-widget-4="template_description"]');
+            const cost = newTemplate.querySelector('[data-kt-table-widget-4="template_cost"]');
+            const qty = newTemplate.querySelector('[data-kt-table-widget-4="template_qty"]');
+            const total = newTemplate.querySelector('[data-kt-table-widget-4="template_total"]');
+            const stock = newTemplate.querySelector('[data-kt-table-widget-4="template_stock"]');
+
+            // Populate elements with data
+            const imageSrc = image.getAttribute('data-kt-src-path');
+            image.setAttribute('src', imageSrc + d.image + '.png');
+            name.innerText = d.name;
+            description.innerText = d.description;
+            cost.innerText = d.cost;
+            qty.innerText = d.qty;
+            total.innerText = d.total;
+            if (d.stock > 10) {
+                stock.innerHTML = inStock;
+            } else {
+                stock.innerHTML = lowStock;
+            }
+
+            // New template border controller
+            // When only 1 row is available
+            if (data.length === 1) {
+                //let borderClasses = ['rounded', 'rounded-end-0'];
+                //newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
+                //borderClasses = ['rounded', 'rounded-start-0'];
+                //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
+
+                // Remove bottom border
+                //newTemplate.classList.add('border-bottom-0');
+            } else {
+                // When multiple rows detected
+                if (index === (data.length - 1)) { // first row
+                    //let borderClasses = ['rounded-start', 'rounded-bottom-0'];
+                   // newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
+                    //borderClasses = ['rounded-end', 'rounded-bottom-0'];
+                    //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
+                }
+                if (index === 0) { // last row
+                    //let borderClasses = ['rounded-start', 'rounded-top-0'];
+                    //newTemplate.querySelectorAll('td')[0].classList.add(...borderClasses);
+                    //borderClasses = ['rounded-end', 'rounded-top-0'];
+                    //newTemplate.querySelectorAll('td')[4].classList.add(...borderClasses);
+
+                    // Remove bottom border on last row
+                    //newTemplate.classList.add('border-bottom-0');
+                }
+            }
+
+            // Insert new template into table
+            const tbody = table.querySelector('tbody');
+            tbody.insertBefore(newTemplate, target.nextSibling);
+        });
+    }
+
+    // Reset subtable
+    const resetSubtable = () => {
+        const subtables = document.querySelectorAll('[data-kt-table-widget-4="subtable_template"]');
+        subtables.forEach(st => {
+            st.parentNode.removeChild(st);
+        });
+
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(r => {
+            r.classList.remove('isOpen');
+            if (r.querySelector('[data-kt-table-widget-4="expand_row"]')) {
+                r.querySelector('[data-kt-table-widget-4="expand_row"]').classList.remove('active');
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            table = document.querySelector('#kt_table_widget_4_table');
+
+            if (!table) {
+                return;
+            }
+
+            initDatatable();
+            handleSearchDatatable();
+            handleStatusFilter();
+            handleActionButton();
+        }
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget4;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTTablesWidget4.init();
+});
+
+"use strict";
+
+// Class definition
+var KTTablesWidget5 = function () {
+    var table;
+    var datatable;
+
+    // Private methods
+    const initDatatable = () => {
+        // Set date data order
+        const tableRows = table.querySelectorAll('tbody tr');
+
+        tableRows.forEach(row => {
+            const dateRow = row.querySelectorAll('td');
+            const realDate = moment(dateRow[2].innerHTML, "MMM DD, YYYY").format(); // select date from 3rd column in table
+            dateRow[2].setAttribute('data-order', realDate);
+        });
+
+        // Init datatable --- more info on datatables: https://datatables.net/manual/
+        datatable = $(table).DataTable({
+            "info": false,
+            'order': [],
+            "lengthChange": false,
+            'pageLength': 6,
+            'paging': false,
+            'columnDefs': [
+                { orderable: false, targets: 1 }, // Disable ordering on column 1 (product id)
+            ]
+        });
+    }
+
+    // Handle status filter
+    const handleStatusFilter = () => {
+        const select = document.querySelector('[data-kt-table-widget-5="filter_status"]');
+
+        $(select).on('select2:select', function (e) {
+            const value = $(this).val();
+            if (value === 'Show All') {
+                datatable.search('').draw();
+            } else {
+                datatable.search(value).draw();
+            }
+        });
+    }
+
+    // Public methods
+    return {
+        init: function () {
+            table = document.querySelector('#kt_table_widget_5_table');
+
+            if (!table) {
+                return;
+            }
+
+            initDatatable();
+            handleStatusFilter();
+        }
+    }
+}();
+
+// Webpack support
+if (typeof module !== 'undefined') {
+    module.exports = KTTablesWidget5;
+}
+
+// On document ready
+KTUtil.onDOMContentLoaded(function () {
+    KTTablesWidget5.init();
 });
