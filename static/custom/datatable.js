@@ -2,15 +2,15 @@ function dataTable({
        selector = 'table.data-table',
        searchTableFn,
        dateRangeObj = {api : "", headers: {}, then: () => null},
-       filterColumnIndex,
-       filterColumnOptions
+       singleFilter,
+       multiFilter,
    }) {
     const tableEl = $sel(selector).closest(".table-wrap-container")
     const tableID = "#" + tableEl.$sel("table").id;
+    let tableHeaders = []
 
     const tableInstance = $(selector).DataTable({
         retrieve: true,
-        // destroy: true,
         order: [],
         pageLength: 25,
         fixedHeader: {
@@ -20,7 +20,6 @@ function dataTable({
         columnDefs: [
             {orderable: false, targets: [0, 'no-sort']},
         ],
-        // responsive: true,
         oLanguage: {
             sInfo: "_START_ - _END_ of _TOTAL_",
             sInfoEmpty: "0 entries",
@@ -42,10 +41,13 @@ function dataTable({
         tableInstance.rows().invalidate().draw()
     }
 
+    tableInstance.columns().header().each((head) => tableHeaders.push(head.innerText.toLowerCase()))
+
     $sel(tableID).dataset.dtableInit = "true"
     searchOnServer()
     handleDateRange()
-    handleFilterTable(filterColumnOptions, filterColumnIndex)
+    handleFilterTable(singleFilter)
+    handleMultiFilterTable(multiFilter)
     handleSearchDatatable()
     exportButtons()
     checkBoxes()
@@ -218,13 +220,14 @@ function dataTable({
         });
     }
 
-    function handleFilterTable(columnOptions, columnIndex) {
+    function handleFilterTable(singleFilter) {
         const filterElement = tableEl.$sel('[data-filter-column]');
 
         if (!filterElement)
             return;
 
-        columnIndex = columnIndex ?? filterElement.dataset.filterColumn
+        const columnOptions = singleFilter.options
+        const columnIndex = singleFilter.index ?? filterElement.dataset.filterColumn
 
         filterElement.$html('<option value="__ALL__">All</option>' + columnOptions)
 
@@ -240,6 +243,107 @@ function dataTable({
         });
     }
 
+    function handleMultiFilterTable(multiFilter) {
+
+        const filterElement = tableEl.$sel('[data-multi-filter]');
+
+        if (!filterElement)
+            return;
+
+
+        const filterTemplate = (column, options) => {
+            const columnLower = column.toLowerCase();
+            const columnTag = columnLower.trim().replaceAll(" ", "-");
+            const columnName = columnTag.replaceAll("-","_");
+            let columnIndex = column
+
+            if(isNaN(columnIndex))
+                tableHeaders.$loop((head, i) => {
+                    if(head === columnLower)
+                        columnIndex = i
+                })
+
+            return {
+                columnIndex: columnIndex,
+                id: "multi-filter-" + columnTag,
+                body: (
+                    `<div class="mb-10">
+                        <label class="form-label fs-6 fw-semibold">${column}:</label>
+                        <select
+                            id="multi-filter-${columnTag}" 
+                            class="form-select form-select-solid fw-bold" 
+                            data-kt-select2="true" 
+                            data-placeholder="Select option" 
+                            data-allow-clear="true" data-kt-user-table-filter="${columnTag}" 
+                            data-hide-search="true"
+                            data-column-index="${columnIndex}"
+                            name="${columnName}"
+                        >
+                            <option value="__ALL__">All</option>
+                            ${options}
+                        </select>
+                    </div>`
+                )
+            }
+        }
+
+        const handleResetForm = () => {
+            // Select reset button
+            const resetButton = filterElement.$sel('[data-kt-user-table-filter="reset"]');
+
+            // Reset datatable
+            resetButton.$on('click', function () {
+                // Select filter options
+                const filterForm = filterElement.$sel('[data-kt-user-table-filter="form"]');
+                const selectOptions = filterForm.querySelectorAll('select');
+
+                // Reset select2 values -- more info: https://select2.org/programmatic-control/add-select-clear-items
+                selectOptions.forEach(select => $(select).val('__ALL__').trigger('change'));
+
+                // Reset datatable --- official docs reference: https://datatables.net/reference/api/search()
+                tableInstance.search('').draw();
+            });
+        }
+
+        const handleFilterDatatable = () => {
+            // Select filter options
+            const filterForm = tableEl.$sel('[data-kt-user-table-filter="form"]');
+            const filterButton = filterForm.$sel('[data-kt-user-table-filter="filter"]');
+            const selectOptions = filterForm.querySelectorAll('select');
+
+            // Filter datatable on submit
+            filterButton.addEventListener('click', function () {
+                tableInstance.search.fixed("fun", (row, data) => {
+                    let condition = true;
+
+                    selectOptions.forEach(item => {
+                        const value = item.value.trim()
+
+                        if(value === '' || value === '__ALL__')
+                            return;
+
+
+                        condition = condition && data[item.dataset.columnIndex].includes(item.value)
+                    });
+
+                    // data
+                    return condition;
+                }).draw();
+            });
+        }
+
+        filterElement.$sel(".multi-filter-body").$html(" ")
+
+        $loop(multiFilter, (options, column) => {
+            const data = filterTemplate(column, options)
+
+            filterElement.$sel(".multi-filter-body").$html("beforeend", data.body)
+        })
+
+        handleResetForm()
+        handleFilterDatatable()
+    }
+
     function handleSearchDatatable() {
         tableEl.closest(".table-wrap-container").$sel('[data-kt-user-table-search="search"]').$on(
             'input',
@@ -252,73 +356,69 @@ function dataTable({
     }
 
     function checkBoxes() {
-        if (!tableEl.$sel('.entry-checkbox'))
+        if (!tableEl.$sel("table").dataset.hasCheckbox)
             return;
 
-        const selectAll = tableEl.$sel('.datatable-check-select-all')
-        const selectAllCache = tableEl.$sel('.datatable-check-select-all-cache')
-        let selectedBoxes = []
-
-        tableEl
-            .$sela('.entry-checkbox')
-            .$loop(check => {
-                $on(check, "change", e => {
-                    toggleToolbars(e.target, selectedBoxes)
-                    selectAllCache.value = JSON.stringify(selectedBoxes)
-                })
-            })
-
-        selectAll.$on('change', () => {
-            selectedBoxes = []
-
-            tableEl.$sela('tbody .entry-checkbox').$loop(box => {
-                box.checked = selectAll.checked
-
-                if (box.checked)
-                    selectedBoxes.push(box.value)
-            })
-
-            selectAllCache.value = JSON.stringify(selectedBoxes)
-        });
-    }
-
-    function toggleToolbars(trigger, selectAllCache) {
-        // Define variables
         const toolbarBase = tableEl.$sel('[data-kt-docs-table-toolbar="base"]');
         const toolbarSelected = tableEl.$sel('[data-kt-docs-table-toolbar="selected"]');
         const selectedCount = tableEl.$sel('[data-kt-docs-table-select="selected_count"]');
 
-        // Select refreshed checkbox DOM elements
-        const allCheckboxes = tableEl.$sela('tbody .entry-checkbox');
+        const selectAll = tableEl.$sel('.datatable-check-select-all')
+        const selectAllCache = tableEl.$sel('.datatable-check-select-all-cache')
 
-        // Detect checkboxes state & count
-        let checkedState = false;
-        let count = 0;
-        let affectAll = $data(trigger, 'check-type') === "central"
+        let selectedBoxes = []
 
-        // Count checked boxes
-        allCheckboxes.forEach(c => {
-            if (affectAll)
-                c.checked = trigger.checked
-
-            if (c.checked) {
-                checkedState = true;
-                count++;
-            }
-        });
-
-        tableEl.$sel('.entry-checkbox').checked = allCheckboxes.length === count;
-
-        // Toggle toolbars
-        if (checkedState) {
-            selectedCount.innerHTML = count;
-            $class(toolbarBase, 'add', 'd-none')
-            $class(toolbarSelected, 'del', 'd-none')
-            return;
+        const saveToCache = () => {
+            $debounce(() => {
+                selectAllCache.value = JSON.stringify(selectedBoxes)
+            }, 700)
         }
 
-        $class(toolbarBase, 'del', 'd-none')
-        $class(toolbarSelected, 'add', 'd-none')
+        tableEl
+            .$sela('.entry-checkbox')
+            .$loop(check => {
+                $on(check, "change", (e, box) => {
+                    toggleToolbars(box)
+                    saveToCache()
+                })
+            })
+
+        selectAll.$on('change', (e, selectAllBtn) => {
+            selectedBoxes = []
+
+            tableEl.$sela('tbody .entry-checkbox').$loop(box => {
+                box.checked = selectAllBtn.checked
+
+                toggleToolbars(box)
+            })
+
+            saveToCache()
+        });
+
+
+        function toggleToolbars(trigger) {
+            if (trigger.checked) {
+                selectedBoxes.push(trigger.value)
+                selectedCount.innerHTML = selectedBoxes.length;
+
+                $class(toolbarBase, 'add', 'd-none')
+                $class(toolbarSelected, 'del', 'd-none')
+
+                return;
+            }
+
+            selectedBoxes.splice(
+                selectedBoxes.indexOf(trigger.value), 1
+            )
+
+            if(selectedBoxes.length === 0) {
+                $class(toolbarBase, 'del', 'd-none')
+                $class(toolbarSelected, 'add', 'd-none')
+                return;
+            }
+
+            selectedCount.innerHTML = selectedBoxes.length;
+        }
     }
 
     function handleDateRange(){
@@ -429,12 +529,13 @@ function dataTable({
         if (!searchBar)
             return
 
-        searchBar.name = "search"
-        searchBar.required = true
-
         $on(searchBar, "keyup", e => {
             if (searchTableFn && (e.key === "Enter" || e.keyCode === 13)) {
-                let value = searchBar.value
+                let value = searchBar.value.trim()
+
+                if(value === "")
+                    return osNote("Cannot submit an empty search to server")
+
                 searchTableFn(encodeURIComponent(value))
             }
         })
@@ -532,12 +633,17 @@ async function hookTableOnPage({
 
         let output = ""
         let filtersArray = [];
+        let multiFiltersArray = {};
+        let multiFilters = {};
+        let multiFilterColumns = [];
         let filters = "";
+        const tableHasCheckbox = tableBody.closest("table").dataset.hasCheckbox
+        let useDefaultCheckbox = entry.anchor.checkbox ?? true
 
         $loop(response, (row, i) => {
             i++;
 
-            if(entry.filter) {
+            if(entry.filter && !entry.multiFilter) {
                 const fil = entry.filter(row)
                 const filterName = fil.name
                 const filterValue = fil.value ?? fil.name
@@ -547,6 +653,27 @@ async function hookTableOnPage({
                     filters += `<option value="${filterValue}">${filterName}</option>`;
                 }
             }
+
+            if(entry.multiFilter) {
+                $loop(entry.multiFilter(row), (fill, col) => {
+                    const filterName = fill.name
+                    const filterValue = fill.value ?? fill.name
+
+                    if (!multiFilterColumns.includes(col))
+                        multiFilterColumns.push(col)
+
+                    if(!multiFiltersArray[col]) {
+                        multiFiltersArray[col] = []
+                        multiFilters[col] = "";
+                    }
+
+                    if (!multiFiltersArray[col].includes(filterName)) {
+                        multiFiltersArray[col].push(filterName)
+                        multiFilters[col] += `<option value="${filterValue}">${filterName}</option>`;
+                    }
+                })
+            }
+
 
             entry.anchor = entry.anchor ?? {}
             entry.anchor.actions = entry.anchor.actions ?? []
@@ -561,9 +688,24 @@ async function hookTableOnPage({
             if(entry.rowDataset)
                 $loop(entry.rowDataset(row, i), (data, name) => rowDataset += `data-${name}="${data}" `)
 
+            let checkboxRow = "";
+
+            if(tableHasCheckbox) {
+                checkboxRow += useDefaultCheckbox ? `<td>
+                    <div 
+                        class="form-check form-check-sm form-check-custom form-check-solid"
+                    >
+                        <input class="form-check-input entry-checkbox" type="checkbox" value="${row[entry.anchor.id]}">
+                    </div>
+                </td>` : ""
+            }
+
             output += (
                 `<tr ${rowDataset}>
+                    ${checkboxRow}
+                    
                     ${entry.row(row, i)}
+                    
                     ${ !entry.anchor?.id ? '' :
                     `<td class="text-end">
                             ${$lay.fn.rowEntrySave(row)}
@@ -609,11 +751,20 @@ async function hookTableOnPage({
         if(entry.then)
             entry.then()
 
-        const tableObj = !entry.filter ? {} :
-            {
-                filterColumnOptions: filters,
-                filterColumnIndex: entry.filter.index,
+        const tableObj = {};
+
+        if(entry.filter) {
+            tableObj.singleFilter = {
+                column: entry.filter.index,
+                options: filters,
             }
+            tableObj.filterColumnIndex = entry.filter.index
+            tableObj.filterColumnOptions = filters
+        }
+
+        if(entry.multiFilter)
+            tableObj.multiFilter = multiFilters
+
 
         if(api.dateRange)
             tableObj.dateRangeObj = {

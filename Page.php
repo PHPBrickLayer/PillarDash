@@ -138,6 +138,11 @@ final class Page
             // ["column" => String, "rules" => Array<String>]
             'filter' => 'array|bool',
 
+            // Use when you want to filter based on more than one column
+            // Example:
+            // ["columns" => String]
+            'multi_filter' => 'array|bool',
+
             // HTML element of a button or whatever you want to use on the toolbar
             'toolbar' => 'string|bool',
 

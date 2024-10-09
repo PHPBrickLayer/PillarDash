@@ -28,6 +28,7 @@ $search_bar = $topts['search'] ?? true;
 ]
  */
 $table_filter = $topts['filter'] ?? false;
+$table_multi_filter = $topts['multi_filter'] ?? false;
 
 // Modify the message that shows when batch action is to be taken.
 // This only shows when checkbox is active
@@ -127,7 +128,7 @@ if(is_array($tbody)) {
     }
 }
 
-$has_tools = $search_bar || $date_range || $table_filter || $export_opt || $toolbar;
+$has_tools = $search_bar || $date_range || $table_filter || $table_multi_filter || $export_opt || $toolbar;
 ?>
 
 <div class="card table-wrap-container <?= $card_class ?>" <?= $card_attr ?>>
@@ -173,7 +174,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
                     </div>
                 <?php endif ?>
 
-                <?php if($table_filter !== false) :
+                <?php if(!$table_multi_filter && $table_filter !== false) :
                     $table_filter = is_array($table_filter) ? $table_filter : [
                         "column" => $table_filter,
                         "rules" => []
@@ -191,13 +192,77 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
                     </div>
                 <?php endif ?>
 
+                <?php if($table_multi_filter !== false) :
+                    $table_filter = is_array($table_multi_filter) ? $table_multi_filter : [
+                        "column" => $table_multi_filter,
+                        "rules" => []
+                    ];
+                    ?>
+                    <div class="d-flex justify-content-end me-2">
+                        <div class="w-100 mw-250px">
+                            <!--begin::Filter-->
+                            <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                <i class="ki-outline ki-filter fs-2"></i>Filter
+                            </button>
+
+                            <!--begin::Menu 1-->
+                            <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true" data-multi-filter="true">
+                                <!--begin::Header-->
+                                <div class="px-7 py-5">
+                                    <div class="fs-5 text-gray-900 fw-bold">Filter Options</div>
+                                </div>
+                                <!--end::Header-->
+                                <!--begin::Separator-->
+                                <div class="separator border-gray-200"></div>
+                                <!--end::Separator-->
+                                <!--begin::Content-->
+                                <div class="px-7 py-5" data-kt-user-table-filter="form">
+                                    <div class="multi-filter-body">
+                                        <!--begin::Input group-->
+                                        <div class="mb-10">
+                                            <label class="form-label fs-6 fw-semibold">Role:</label>
+                                            <select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="role" data-hide-search="true">
+                                                <option></option>
+                                                <option value="Administrator">Administrator</option>
+                                                <option value="Analyst">Analyst</option>
+                                                <option value="Developer">Developer</option>
+                                                <option value="Support">Support</option>
+                                                <option value="Trial">Trial</option>
+                                            </select>
+                                        </div>
+                                        <!--end::Input group-->
+                                        <!--begin::Input group-->
+                                        <div class="mb-10">
+                                            <label class="form-label fs-6 fw-semibold">Two Step Verification:</label>
+                                            <select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="two-step" data-hide-search="true">
+                                                <option></option>
+                                                <option value="Enabled">Enabled</option>
+                                            </select>
+                                        </div>
+                                        <!--end::Input group-->
+                                    </div>
+                                    <!--begin::Actions-->
+                                    <div class="d-flex justify-content-end">
+                                        <button type="reset" class="btn btn-light btn-active-light-primary fw-semibold me-2 px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Reset</button>
+                                        <button type="submit" class="btn btn-primary fw-semibold px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="filter">Apply</button>
+                                    </div>
+                                    <!--end::Actions-->
+                                </div>
+                                <!--end::Content-->
+                            </div>
+                            <!--end::Menu 1-->
+                            <!--end::Filter-->
+                        </div>
+                    </div>
+                <?php endif ?>
+
                 <?php if($export_opt) : ?>
                     <div class="card-toolbar gap-5 me-2">
                         <!--begin::Hide default export buttons-->
                         <div id="kt_datatable_example_1_export" class="d-none"></div>
                         <!--end::Hide default export buttons-->
                         <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                            <i class="ki-outline ki-file-up fs-2 me-1"></i>
+                            <i class="ki-outline ki-exit-up fs-2 me-1"></i>
                             Export
                         </button>
                         <div id="kt_datatable_example_export_menu" class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4" data-kt-menu="true">
@@ -247,7 +312,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
 
     <div class="card-body py-4">
         <!--begin::Table-->
-        <table id="<?= $tid ?>" class="table data-table align-middle table-row-dashed fs-6 gy-3 gs-7 <?= $table_class ?>" <?= $table_attr ?>>
+        <table id="<?= $tid ?>" <?= $check_box ? 'data-has-checkbox="true"' : '' ?> class="table data-table align-middle table-row-dashed fs-6 gy-3 gs-7 <?= $table_class ?>" <?= $table_attr ?>>
             <thead>
             <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                 <?php if($serial_num && !$check_box): ?>
@@ -257,7 +322,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $export_opt || $tool
                 <?php if($check_box): ?>
                     <th class="w-10px pe-2">
                         <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                            <input class="form-check-input datatable-check-select-all" type="checkbox" data-kt-check="true" value="1" />
+                            <input class="form-check-input datatable-check-select-all" data-check-type="central" type="checkbox" data-kt-check="true" value="__SELECT_ALL__" />
                             <input type="hidden" class="datatable-check-select-all-cache" name="batch_action_values" />
                         </div>
                     </th>
