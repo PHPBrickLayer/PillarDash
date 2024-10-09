@@ -252,16 +252,30 @@ function dataTable({
 
 
         const filterTemplate = (column, options) => {
+            let columnIndex = column
+            let isColumnIndexSet = false
+
+            if(!isNaN(column)) {
+                tableHeaders.$loop((head, i) => {
+                    if (i === column)
+                        column = head.toUpperCase()
+                })
+
+                isColumnIndexSet = true
+            }
+
             const columnLower = column.toLowerCase();
             const columnTag = columnLower.trim().replaceAll(" ", "-");
             const columnName = columnTag.replaceAll("-","_");
-            let columnIndex = column
 
-            if(isNaN(columnIndex))
+            if(isNaN(columnIndex) && !isColumnIndexSet) {
+                column = column.toUpperCase()
+
                 tableHeaders.$loop((head, i) => {
-                    if(head === columnLower)
+                    if (head === columnLower)
                         columnIndex = i
                 })
+            }
 
             return {
                 columnIndex: columnIndex,
