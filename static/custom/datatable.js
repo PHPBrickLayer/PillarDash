@@ -737,7 +737,10 @@ async function hookTableOnPage({
 
                             ...entryAnchorActions,
 
-                            {separator: true},
+                            (
+                                entry.anchor.delete || enableDelete 
+                                    ? {separator: true} : {}
+                            ),
 
                             (
                                 entry.anchor.delete === false ? {} : (
@@ -910,8 +913,11 @@ async function hookTableOnPage({
 
         $loop(menu, m => {
             let subMenu = "";
+
             if ($type(m) === "Array") {
+
                 $loop(m.submenu, sub => subMenu += link(sub))
+
                 menus += (
                     `<div class="menu-item px-3 text-start" data-kt-menu-trigger="hover" data-kt-menu-placement="right-start">
                         <a href="#" class="menu-link px-3">
