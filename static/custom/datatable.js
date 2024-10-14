@@ -840,7 +840,7 @@ async function hookTableOnPage({
                     return;
 
                 Swal.fire({
-                    html: deleteMsg(name),
+                    html: !deleteMsg ? "Are you sure you want to delete: <b>" + name + "</b>?" : deleteMsg(name),
                     icon: "warning",
                     buttonsStyling: false,
                     confirmButtonText: "Yeah, do it!",
