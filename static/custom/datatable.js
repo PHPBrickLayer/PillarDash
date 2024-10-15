@@ -550,12 +550,20 @@ function dataTable({
                 if(value === "")
                     return osNote("Cannot submit an empty search to server")
 
-                searchTableFn(encodeURIComponent(value))
+                tableEl.$sel(".reset-table-entries").$class('del', "d-none")
+
+                searchTableFn(encodeURIComponent(value), {
+                    tableInstance: tableInstance,
+                    tableContainer: tableEl
+                })
             }
         })
     }
 
-    return tableInstance;
+    return {
+        tableInstance: tableInstance,
+        tableContainer: tableEl
+    };
 }
 
 async function hookTableOnPage({
@@ -782,14 +790,23 @@ async function hookTableOnPage({
         if(entry.multiFilter)
             tableObj.multiFilter = multiFilters
 
-        if(entry.search) {
-            tableObj.searchTableFn = (value) => {
+        if(entry.search)
+            tableObj.searchTableFn = (value, dTable) => {
                 entry.search(value, {
                     populateTable: (res) => tableEntries(res),
                     loadEntries: (opts) => loadEntries(opts),
                 })
+
+                dTable.tableContainer.$sel(".reset-table-entries").$on('click', (e, btn) => {
+                    e.preventDefault()
+
+                    loadEntries().then(() => {
+                        btn.$class('add', 'd-none')
+                        dTable.tableContainer.$sel('.search-table').value = ""
+                        dTable.tableInstance.search('').draw();
+                    })
+                })
             }
-        }
 
         if(api.dateRange)
             tableObj.dateRangeObj = {
