@@ -150,7 +150,7 @@ $has_tools = $search_bar || $date_range || $table_filter || $table_multi_filter 
                 <?php elseif(is_string($search_bar)):
                     echo $search_bar;
                 endif; ?>
-                <div class="position-absolute" style="left: -45px"><button title="Reset table to default state" class="d-none btn btn-icon btn-lg btn-light-primary reset-table-entries"><i class="ki-outline ki-arrows-loop"></i></button></div>
+                <div class="position-absolute" style="left: -45px"><button style="border-radius: 0" title="Reset table to default state" class="d-none btn btn-icon btn-lg btn-light-warning reset-table-entries"><i class="ki-outline ki-arrows-loop"></i></button></div>
             </div>
 
             <div class="card-toolbar justify-content-center ms-auto" data-kt-docs-table-toolbar="base">
