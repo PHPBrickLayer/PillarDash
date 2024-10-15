@@ -782,6 +782,8 @@ async function hookTableOnPage({
         if(entry.multiFilter)
             tableObj.multiFilter = multiFilters
 
+        if(entry.search)
+            tableObj.searchTableFn = entry.search
 
         if(api.dateRange)
             tableObj.dateRangeObj = {
