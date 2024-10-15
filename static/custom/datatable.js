@@ -782,8 +782,14 @@ async function hookTableOnPage({
         if(entry.multiFilter)
             tableObj.multiFilter = multiFilters
 
-        if(entry.search)
-            tableObj.searchTableFn = entry.search
+        if(entry.search) {
+            tableObj.searchTableFn = (value) => {
+                entry.search(value, {
+                    populateTable: (res) => tableEntries(res),
+                    loadEntries: (opts) => loadEntries(opts),
+                })
+            }
+        }
 
         if(api.dateRange)
             tableObj.dateRangeObj = {
@@ -876,7 +882,7 @@ async function hookTableOnPage({
                     })
             },
         }
-        entryAction = entryActionFn ? entryActionFn({loadEntries: loadEntries, }) : entryAction
+        entryAction = entryActionFn ? entryActionFn({loadEntries: loadEntries, populateTable: tableEntries }) : entryAction
 
         $loop(entryAction, (action, key) => {
             opts[key] = (opt) => {
