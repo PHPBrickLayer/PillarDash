@@ -4,7 +4,16 @@ function dataTable({
        dateRangeObj = {api : "", headers: {}, then: () => null},
        singleFilter,
        multiFilter,
+       destroy
    }) {
+
+    if(destroy) {
+        if($.fn.DataTable.isDataTable(selector))
+            $(selector).DataTable().destroy()
+
+        return;
+    }
+
     const tableEl = $sel(selector).closest(".table-wrap-container")
     const tableID = "#" + tableEl.$sel("table").id;
     let tableHeaders = []
@@ -25,21 +34,6 @@ function dataTable({
             sInfoEmpty: "0 entries",
         },
     })
-
-    if($sel(tableID).dataset.dtableInit) {
-        const data = []
-
-        tableEl.$sela("tbody tr").$loop(row => {
-            const rowData = [];
-            row.$sela('td').$loop((col) => rowData.push(col.$html()));
-
-            data.push(rowData);
-        })
-
-        tableInstance.clear().draw()
-        tableInstance.rows.add(data).draw()
-        tableInstance.rows().invalidate().draw()
-    }
 
     tableInstance.columns().header().each((head) => tableHeaders.push(head.innerText.toLowerCase()))
 
@@ -646,6 +640,10 @@ async function hookTableOnPage({
     }
 
     function tableEntries(response) {
+        dataTable({
+            destroy: true
+        })
+
         if ((response.code && (!response.data || response.data.length === 0)) || response.length === 0) {
             $html(tableBody, "in", (
                 `<tr><td colspan="100%" style="text-align: center">No data found!</td></tr>`
@@ -729,43 +727,44 @@ async function hookTableOnPage({
                     ${entry.row(row, i)}
                     
                     ${ !entry.anchor?.id ? '' :
+                    
                     `<td class="text-end">
-                            ${$lay.fn.rowEntrySave(row)}
-                                  
-                            ${dataTableDropdown({
-                        id: row[entry.anchor.id],
-                        name: row[entry.anchor.name],
-                        menu: [
-                            entry.anchor.edit === false ? '' : ( entry.anchor.edit ? entry.anchor.edit({id: row[entry.anchor.id]}) :
-                                    {
-                                        name: "Edit Item",
-                                        act: "edit",
-                                    }
-                            ),
-
-                            ...entryAnchorActions,
-
-                            (
-                                entry.anchor.delete || enableDelete 
-                                    ? {separator: true} : {}
-                            ),
-
-                            (
-                                entry.anchor.delete === false ? {} : (
-                                    enableDelete ? {
-                                        name: "Delete Item",
-                                        act: "delete",
-                                        wrap: true,
-                                        className: "btn btn-danger btn-sm"
-                                    } : (
-                                        enableDelete === false ? {}
-                                            : entry.anchor.delete({id: row[entry.anchor.id], info: row})
+                        ${$lay.fn.rowEntrySave(row)}
+                              
+                        ${dataTableDropdown({
+                            id: row[entry.anchor.id],
+                            name: row[entry.anchor.name],
+                            menu: [
+                                entry.anchor.edit === false ? '' : ( entry.anchor.edit ? entry.anchor.edit({id: row[entry.anchor.id]}) :
+                                        {
+                                            name: "Edit Item",
+                                            act: "edit",
+                                        }
+                                ),
+    
+                                ...entryAnchorActions,
+    
+                                (
+                                    entry.anchor.delete || enableDelete 
+                                        ? {separator: true} : {}
+                                ),
+    
+                                (
+                                    entry.anchor.delete === false ? {} : (
+                                        enableDelete ? {
+                                            name: "Delete Item",
+                                            act: "delete",
+                                            wrap: true,
+                                            className: "btn btn-danger btn-sm"
+                                        } : (
+                                            enableDelete === false ? {}
+                                                : entry.anchor.delete({id: row[entry.anchor.id], info: row})
+                                        )
                                     )
-                                )
-                            ),
-                        ],
-                    })}
-                        </td>`
+                                ),
+                            ],
+                        })}
+                    </td>`
                 }
                 </tr>`
             );
