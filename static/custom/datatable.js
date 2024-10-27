@@ -565,7 +565,7 @@ async function hookTableOnPage({
        entry,           entryAction,
        entryActionFn,   deleteMsg,
        batch,           enableDelete = true,
-       ctrl,
+       ctrl,            fetchOnLoad = true,
        tableBody = $sel(".entry-table-body"),
    }) {
     const tableContainer = tableBody.closest(".table-wrap-container")
@@ -1039,7 +1039,8 @@ async function hookTableOnPage({
         });
     }
 
-    return loadEntries()
+    if(fetchOnLoad)
+        return loadEntries()
 }
 
 function initDropzone ({api, id = "drag-drop-place", maxFileSize = 1, fileTypes, uploadFn, parallelUploads = 10, onQueueComplete}) {
