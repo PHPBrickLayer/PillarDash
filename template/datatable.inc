@@ -159,9 +159,11 @@ $has_tools = $search_bar || $date_range || $table_filter || $table_multi_filter 
                         $date_range, "YYYY-MM-DD"
                     ] : $date_range;
 
-                    $thead_name = $thead[$date_range[0]] ?? $thead[$date_range[0]][0];
+                    $date_range[0] = is_int($date_range[0]) ? $date_range[0] : (array_search($date_range[0],$thead) + 1);
 
-                    if($serial_num || $check_box)
+                    $thead_name = $thead[$date_range[0]] ?? $thead[$date_range[0]][0] ?? null;
+
+                    if($serial_num || $check_box || !$thead_name)
                         $thead_name = $thead[$date_range[0] - 1] ?? $thead[$date_range[0] - 1][0];
                     ?>
                     <div class="input-group w-250px me-3">
@@ -221,23 +223,17 @@ $has_tools = $search_bar || $date_range || $table_filter || $table_multi_filter 
                                     <div class="multi-filter-body">
                                         <!--begin::Input group-->
                                         <div class="mb-10">
-                                            <label class="form-label fs-6 fw-semibold">Role:</label>
+                                            <label class="form-label fs-6 fw-semibold">Pending Table Load:</label>
                                             <select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="role" data-hide-search="true">
                                                 <option></option>
-                                                <option value="Administrator">Administrator</option>
-                                                <option value="Analyst">Analyst</option>
-                                                <option value="Developer">Developer</option>
-                                                <option value="Support">Support</option>
-                                                <option value="Trial">Trial</option>
                                             </select>
                                         </div>
                                         <!--end::Input group-->
                                         <!--begin::Input group-->
                                         <div class="mb-10">
-                                            <label class="form-label fs-6 fw-semibold">Two Step Verification:</label>
+                                            <label class="form-label fs-6 fw-semibold">Pending Table Load:</label>
                                             <select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Select option" data-allow-clear="true" data-kt-user-table-filter="two-step" data-hide-search="true">
                                                 <option></option>
-                                                <option value="Enabled">Enabled</option>
                                             </select>
                                         </div>
                                         <!--end::Input group-->
