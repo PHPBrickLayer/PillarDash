@@ -210,7 +210,7 @@ function dataTable({
 
                 // Trigger click event on hidden datatable export buttons
                 target.click();
-            });
+            }, "on");
         });
     }
 
@@ -310,7 +310,7 @@ function dataTable({
 
                 // Reset datatable --- official docs reference: https://datatables.net/reference/api/search()
                 tableInstance.search('').draw();
-            });
+            }, "on");
         }
 
         const handleFilterDatatable = () => {
@@ -360,6 +360,7 @@ function dataTable({
                     tableInstance.search(field.value).draw()
                 }, 100)
             },
+            'on'
         )
     }
 
@@ -388,7 +389,7 @@ function dataTable({
                 $on(check, "change", (e, box) => {
                     toggleToolbars(box)
                     saveToCache()
-                })
+                }, 'on')
             })
 
         selectAll.$on('change', (e, selectAllBtn) => {
@@ -401,7 +402,7 @@ function dataTable({
             })
 
             saveToCache()
-        });
+        }, 'on');
 
 
         function toggleToolbars(trigger) {
@@ -506,7 +507,7 @@ function dataTable({
             datePicker.clear();
             dateRange.dataset.min = "__"
             dateRange.dataset.max = "__"
-        });
+        }, 'on');
 
         $on(tableEl.$sel('.datatable-date-goto-server'), "click", e => {
             e.preventDefault()
@@ -535,7 +536,7 @@ function dataTable({
 
                     dateRangeObj.then(resolve)
                 })
-        });
+        }, 'on');
     }
 
     function searchOnServer(){
@@ -558,7 +559,7 @@ function dataTable({
                     tableContainer: tableEl
                 })
             }
-        })
+        }, 'on')
     }
 
     return {
@@ -625,7 +626,7 @@ async function hookTableOnPage({
                     ))
                 }
             })
-        });
+        }, "on");
     }
 
     function loadEntries(opts = {closeBox : true, preload : true, redraw: true}) {
@@ -811,7 +812,7 @@ async function hookTableOnPage({
                         dTable.tableContainer.$sel('.search-table').value = ""
                         dTable.tableInstance.search('').draw();
                     })
-                })
+                }, "on")
             }
 
         if(api.dateRange)
@@ -862,7 +863,7 @@ async function hookTableOnPage({
                                     .finally(() => preloadBtn(btn, false))
                                     .then(res => serverResponse(res.code, res.msg, loadEntries, false))
                             )
-                        })
+                        }, 'on')
                     }
                 })
             },
@@ -1043,7 +1044,7 @@ async function hookTableOnPage({
                     })
                 }
             })
-        });
+        }, 'on');
     }
 
     if(fetchOnLoad)
