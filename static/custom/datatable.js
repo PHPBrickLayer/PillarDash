@@ -454,16 +454,23 @@ function dataTable({
 
                                 return osNote(
                                     `An invalid date was received! Please check your date format and try again.
-                            <p class="m-0 p-0">
-                                Current Format: <b>${dateRange.dataset.format}</b> <br>
-                                Table Date: <b>${row[dateRange.dataset.column]}</b>
-                            </p>`,
+                                    <p class="m-0 p-0">
+                                        Current Format: <b>${dateRange.dataset.format}</b> <br>
+                                        Table Date: <b>${row[dateRange.dataset.column]}</b>
+                                    </p>`,
+
                                     "warn", {duration: -1}
                                 )
                             }
 
                             const minDate = dateRange.dataset.min === "__" ? null : new Date(dateRange.dataset.min)
                             const maxDate = dateRange.dataset.max === "__" ? null : new Date(dateRange.dataset.max)
+
+                            if(maxDate) {
+                                maxDate.setHours(23)
+                                maxDate.setMinutes(59)
+                                maxDate.setSeconds(59)
+                            }
 
                             const isLowerBound = minDate ? minDate <= date : true
                             const isUpperBound = maxDate ? maxDate >= date : true
