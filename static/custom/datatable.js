@@ -666,7 +666,7 @@ async function hookTableOnPage({
         let multiFilterColumns = [];
         let filters = "";
         const tableHasCheckbox = tableBody.closest("table").dataset.hasCheckbox
-        let useDefaultCheckbox = entry.anchor.checkbox ?? true
+        let useDefaultCheckbox = entry?.anchor?.checkbox ?? true
 
         $loop(response, (row, i) => {
             i++;
