@@ -4,7 +4,8 @@ function dataTable({
        dateRangeObj = {api : "", headers: {}, then: () => null},
        singleFilter,
        multiFilter,
-       destroy
+       destroy,
+       exportColumns,
    }) {
 
     if(destroy) {
@@ -49,6 +50,7 @@ function dataTable({
     function exportButtons() {
         const documentTitle = $lay.page.title;
         let columns = []
+        let columnsObj = {}
         let columnWidth = []
 
         // Just add the brand logo to the page before user tries to export, to prevent error due to delay in image load time
@@ -63,11 +65,33 @@ function dataTable({
 
             if (i === 0) {
                 columnWidth.push("5%")
-                return
+                return "continue"
             }
 
             columnWidth.push("*")
         })
+
+        if(exportColumns) {
+            columnWidth = [];
+
+            $loop(exportColumns, (entry, name) => {
+                columnsObj[name] = [];
+
+                entry.$loop(col => {
+                    col = $type(col) !== "String" ? col + "" : col;
+                    col = col.toLowerCase();
+
+                    if (col === "0" || col === "sn") {
+                        columnsObj[name].push(0)
+                        columnWidth.push("5%")
+                        return "continue";
+                    }
+
+                    columnWidth.push("*")
+                    columnsObj[name].push(tableHeaders.findIndex(value => value === col));
+                })
+            })
+        }
 
         new $.fn.dataTable.Buttons(tableInstance, {
             buttons: [
@@ -75,30 +99,72 @@ function dataTable({
                     extend: 'copyHtml5',
                     title: documentTitle,
                     exportOptions: {
-                        columns: columns
+                        columns: columnsObj.copy ?? columns
                     }
                 },
                 {
                     extend: 'excelHtml5',
                     title: documentTitle,
                     exportOptions: {
-                        columns: columns
+                        columns: columnsObj.excel ?? columns,
+                        format: {
+                            body: function (data, row, column, node) {
+                                const link = $(node).find('a');
+
+                                if (link.length > 0)
+                                    data = `=HYPERLINK("${link.attr('href')}", "${link.attr('href')}")`;
+
+                                return data;
+                            }
+                        }
                     }
                 },
                 {
                     extend: 'csvHtml5',
                     title: documentTitle,
                     exportOptions: {
-                        columns: columns
+                        columns: columnsObj.csv ?? columns,
+                        format: {
+                            body: function (data, row, column, node) {
+                                const anchor = $(node).find('a');
+
+                                if (anchor.length > 0)
+                                    data = anchor.attr('href') + ' (' + anchor.attr('href') + ')';
+
+                                return data;
+                            }
+                        }
                     }
                 },
                 {
                     extend: 'pdfHtml5',
                     title: documentTitle,
                     exportOptions: {
-                        columns: columns
+                        columns: columnsObj.pdf ?? columns,
+                        stripHtml: false
                     },
                     customize: (doc) => {
+                        doc.content[1].table.body.forEach((row, key) => {
+
+                            row.forEach((cell, index) => {
+                                if($type(cell.text) === "String" && cell.text.trim().substring(0, 1) === "<") {
+                                    const element = new DOMParser().parseFromString(cell.text, 'text/html').body;
+
+                                    doc.content[1].table.body[key][index].text = element.textContent;
+
+                                    if ($type(element.firstChild) === "HTMLAnchorElement") {
+                                        doc.content[1].table.body[key][index].text = [
+                                            {
+                                                text: element.textContent,
+                                                link: element.firstElementChild.href ?? element.firstChild.href,
+                                                decoration: 'underline',
+                                            },
+                                        ]
+                                    }
+                                }
+                            });
+                        })
+
                         //Remove the title created by dataTables
                         doc.content.splice(0, 1);
 
@@ -796,6 +862,10 @@ async function hookTableOnPage({
 
         if(entry.multiFilter)
             tableObj.multiFilter = multiFilters
+
+        if(entry.export)
+            tableObj.exportColumns = entry.export
+
 
         if(entry.search)
             tableObj.searchTableFn = (value, dTable) => {
