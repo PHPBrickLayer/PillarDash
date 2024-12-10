@@ -72,7 +72,8 @@ function dataTable({
         })
 
         if(exportColumns) {
-            columnWidth = [];
+            if(exportColumns.pdf)
+                columnWidth = [];
 
             $loop(exportColumns, (entry, name) => {
                 columnsObj[name] = [];
@@ -83,12 +84,20 @@ function dataTable({
 
                     if (col === "0" || col === "sn") {
                         columnsObj[name].push(0)
-                        columnWidth.push("5%")
+
+                        if(exportColumns.pdf && name === "pdf")
+                            columnWidth.push("5%")
+
                         return "continue";
                     }
 
-                    columnWidth.push("*")
-                    columnsObj[name].push(tableHeaders.findIndex(value => value === col));
+                    if(exportColumns.pdf && name === "pdf")
+                        columnWidth.push("*")
+
+                    const colToPush = tableHeaders.findIndex(value => value === col)
+
+                    if(colToPush !== -1)
+                        columnsObj[name].push(colToPush);
                 })
             })
         }
@@ -184,6 +193,7 @@ function dataTable({
 
                         // Set the fontsize for the table header
                         doc.styles.tableHeader.fontSize = 8;
+
                         doc.content[0].table.widths = columnWidth;
 
                         // Create a header object with 3 columns
