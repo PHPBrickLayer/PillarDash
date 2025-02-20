@@ -645,7 +645,7 @@ function dataTable({
 }
 
 async function hookTableOnPage({
-       api,             form,
+       api,             form,  apiHeaders,
        entry,           entryAction,
        entryActionFn,   deleteMsg,
        batch,           enableDelete = true,
@@ -693,9 +693,7 @@ async function hookTableOnPage({
                         () => $curl(ctrl + api.add, {
                             preload: () => preloadBtn(btn),
                             data: btn,
-                            headers: {
-                                "X-CSRF-TOKEN": getCsrf()
-                            }
+                            headers: apiHeaders
                         })
                             .finally(() => preloadBtn(btn, false))
                             .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
@@ -710,9 +708,7 @@ async function hookTableOnPage({
             CusWind.closeBox()
 
         const obj = {
-            headers: {
-                "X-CSRF-TOKEN": getCsrf()
-            }
+            headers: apiHeaders
         }
 
         if(opts.preload)
@@ -898,9 +894,7 @@ async function hookTableOnPage({
         if(api.dateRange)
             tableObj.dateRangeObj = {
                 api: ctrl + api.dateRange,
-                headers: {
-                    "X-CSRF-TOKEN": getCsrf()
-                },
+                headers: apiHeaders,
                 then: (res) => tableEntries(res)
             }
 
@@ -936,9 +930,7 @@ async function hookTableOnPage({
                                 () => $curl(ctrl + api.edit, {
                                     preload: () => preloadBtn(btn),
                                     data: btn,
-                                    headers: {
-                                        "X-CSRF-TOKEN": getCsrf()
-                                    }
+                                    headers: apiHeaders
                                 })
                                     .finally(() => preloadBtn(btn, false))
                                     .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
@@ -968,9 +960,7 @@ async function hookTableOnPage({
                                 data: {
                                     id: id,
                                 },
-                                headers: {
-                                    "X-CSRF-TOKEN": getCsrf()
-                                }
+                                headers: apiHeaders
                             })
                                 .finally(() => $preloader("hide"))
                                 .then(res => {
@@ -1105,9 +1095,7 @@ async function hookTableOnPage({
                             $curl(api, {
                                 data: data,
                                 type: "file",
-                                headers: {
-                                    "X-CSRF-TOKEN": getCsrf()
-                                },
+                                headers: apiHeaders,
                                 progress: (e) => {
                                     width = Math.floor((e.loaded/e.total) * 100)
                                     bar.style.width = width + '%';
