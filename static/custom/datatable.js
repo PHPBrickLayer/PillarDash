@@ -698,7 +698,7 @@ async function hookTableOnPage({
                             }
                         })
                             .finally(() => preloadBtn(btn, false))
-                            .then(res => serverResponse(res.code, res.msg, loadEntries, false))
+                            .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
                     ))
                 }
             })
@@ -941,7 +941,7 @@ async function hookTableOnPage({
                                     }
                                 })
                                     .finally(() => preloadBtn(btn, false))
-                                    .then(res => serverResponse(res.code, res.msg, loadEntries, false))
+                                    .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
                             )
                         }, 'on')
                     }
@@ -976,12 +976,12 @@ async function hookTableOnPage({
                                 .then(res => {
                                     let type = "warn"
 
-                                    if (res.code === 1) {
+                                    if (res.code === 200 || res.code === 1) {
                                         type = "success"
                                         loadEntries()
                                     }
 
-                                    osNote(res.msg, type)
+                                    osNote(res.message ?? res.msg, type)
                                 })
                     })
             },
@@ -1114,11 +1114,11 @@ async function hookTableOnPage({
                                 }
                             })
                                 .then(res => {
-                                    if (res.code === 1 && width >= 100) {
+                                    if ((res.code === 200 || res.code === 1) && width >= 100) {
                                         drop.emit("success", file);
                                         drop.emit("complete", file);
                                     }
-                                    serverResponse(res.code, res.msg, callback, false, false)
+                                    serverResponse(res.code, (res.message ?? res.msg), callback, false, false)
                                 })
                         }
                     })
