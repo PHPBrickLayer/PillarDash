@@ -696,7 +696,7 @@ async function hookTableOnPage({
                             headers: apiHeaders
                         })
                             .finally(() => preloadBtn(btn, false))
-                            .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
+                            .then(res => serverResponse(res.code, res.message ?? res.message, loadEntries, false))
                     ))
                 }
             })
@@ -933,7 +933,7 @@ async function hookTableOnPage({
                                     headers: apiHeaders
                                 })
                                     .finally(() => preloadBtn(btn, false))
-                                    .then(res => serverResponse(res.code, res.message ?? res.msg, loadEntries, false))
+                                    .then(res => serverResponse(res.code, res.message ?? res.message, loadEntries, false))
                             )
                         }, 'on')
                     }
@@ -966,12 +966,12 @@ async function hookTableOnPage({
                                 .then(res => {
                                     let type = "warn"
 
-                                    if (res.code === 200 || res.code === 1) {
+                                    if (res.code === 200 || res.code === 200) {
                                         type = "success"
                                         loadEntries()
                                     }
 
-                                    osNote(res.message ?? res.msg, type)
+                                    osNote(res.message ?? res.message, type)
                                 })
                     })
             },
@@ -1078,7 +1078,7 @@ async function hookTableOnPage({
                     </p>
                     <h5 class="text-warning-emphasis">${note}</h5>
                     <div class="mb-3 p-3">
-                        ${callDropFile({id: "batch-upload-csv", maxFileSize: 1})}
+                        <div id="batch-upload-csv"></div>
                     </div>
                 </form>`
                 ),
@@ -1102,11 +1102,11 @@ async function hookTableOnPage({
                                 }
                             })
                                 .then(res => {
-                                    if ((res.code === 200 || res.code === 1) && width >= 100) {
+                                    if ((res.code === 200 || res.code === 200) && width >= 100) {
                                         drop.emit("success", file);
                                         drop.emit("complete", file);
                                     }
-                                    serverResponse(res.code, (res.message ?? res.msg), callback, false, false)
+                                    serverResponse(res.code, (res.message ?? res.message), callback, false, false)
                                 })
                         }
                     })
@@ -1119,14 +1119,28 @@ async function hookTableOnPage({
         return loadEntries()
 }
 
-function initDropzone ({api, id = "drag-drop-place", maxFileSize = 1, fileTypes, uploadFn, parallelUploads = 10, onQueueComplete}) {
-    id = "#" + id;
-    // set the dropzone container id
-    const dropzone = document.querySelector(id);
+function initDropzone ({
+   api,
+   id = "drag-drop-place",
+   maxFileSize = 1,
+   fileTypes,
+   uploadFn,
+   parallelUploads = 10,
+   onQueueComplete
+}) {
+    const dropzone = $id(id);
+
+    dropzone.$html(
+        drawDropZone({
+            id: id,
+            maxFileSize: maxFileSize
+        })
+    );
 
     // set the preview element template
-    const previewNode = dropzone.querySelector(".dropzone-item");
+    const previewNode = dropzone.$sel(".dropzone-item");
     previewNode.id = "";
+    id = "#" + id;
 
     const previewTemplate = previewNode.parentNode.innerHTML;
     previewNode.parentNode.removeChild(previewNode);
@@ -1234,11 +1248,10 @@ function initDropzone ({api, id = "drag-drop-place", maxFileSize = 1, fileTypes,
             dropzone.querySelector('.dropzone-remove-all').style.display = "none";
         }
     });
-}
 
-function callDropFile({id = "drag-drop-place", maxFileSize = 1 }){
-    return (
-        `<style>
+    function drawDropZone(){
+        return (
+            `<style>
             .drop-zone-custom {
                 width: 100%;
                 height: 300px;
@@ -1260,9 +1273,11 @@ function callDropFile({id = "drag-drop-place", maxFileSize = 1 }){
         </style>
         <div class="dropzone dropzone-queue mb-2" id="${id}">
             <div class="dropzone-panel mb-4">
-                <a class="dropzone-select dz-button me-2 dz-clickable drop-zone-custom">Click to add files</a>
-                <a class="dropzone-upload btn btn-sm btn-light-primary me-2">Upload All</a>
-                <a class="dropzone-remove-all btn btn-sm btn-light-primary">Remove All</a>
+                <div class="d-flex gap-2">
+                    <a class="dropzone-select dz-button dz-clickable drop-zone-custom">Add Files</a>
+                    <a class="dropzone-upload btn btn-sm btn-light-primary me-2">Upload All</a>
+                    <a class="dropzone-remove-all btn btn-sm btn-light-danger">Remove All</a>
+                </div>
                 
                 <div class="dropzone-items wm-200px">
                     <div class="dropzone-item p-5" style="display:none">
@@ -1293,9 +1308,10 @@ function callDropFile({id = "drag-drop-place", maxFileSize = 1 }){
                             </span>
                         </div>
                     </div>
-                    <div class="form-text text-center fs-6 text-muted mt-3">Max file size is ${maxFileSize}MB per file.</div>
+                    <div class="form-text text-center fs-6 text-muted my-5">Max file size is <b>${maxFileSize}MB</b> per file.</div>
                 </div>
             </div>
         </div>`
-    )
+        )
+    }
 }

@@ -206,7 +206,7 @@ final class Menu
     ) : self
     {
         if ($permit === false)
-            return self::new();
+            ;
 
         self::set_route_data();
 
