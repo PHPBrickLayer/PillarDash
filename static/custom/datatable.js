@@ -696,7 +696,21 @@ async function hookTableOnPage({
                             headers: apiHeaders
                         })
                             .finally(() => preloadBtn(btn, false))
-                            .then(res => serverResponse(res.code, res.message ?? res.message, loadEntries, false))
+                            .then(res => {
+                                Swal.fire({
+                                    html: res.message,
+                                    icon: "success",
+                                    buttonsStyling: false,
+                                    confirmButtonText: "Ok, got it!",
+                                    customClass: {
+                                        confirmButton: "btn btn-primary",
+                                        // lift Swal above omjs default modal
+                                        container: "osai-dialogbox__appear",
+                                    }
+                                });
+
+                                loadEntries()
+                            })
                     ))
                 }
             })
@@ -933,7 +947,21 @@ async function hookTableOnPage({
                                     headers: apiHeaders
                                 })
                                     .finally(() => preloadBtn(btn, false))
-                                    .then(res => serverResponse(res.code, res.message ?? res.message, loadEntries, false))
+                                    .then(res => {
+                                        Swal.fire({
+                                            html: res.message,
+                                            icon: "success",
+                                            buttonsStyling: false,
+                                            confirmButtonText: "Ok, got it!",
+                                            customClass: {
+                                                confirmButton: "btn btn-primary",
+                                                // lift Swal above omjs default modal
+                                                container: "osai-dialogbox__appear",
+                                            }
+                                        })
+
+                                        loadEntries()
+                                    })
                             )
                         }, 'on')
                     }
@@ -1106,7 +1134,20 @@ async function hookTableOnPage({
                                         drop.emit("success", file);
                                         drop.emit("complete", file);
                                     }
-                                    serverResponse(res.code, (res.message ?? res.message), callback, false, false)
+
+                                    Swal.fire({
+                                        html: res.message,
+                                        icon: "success",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, got it!",
+                                        customClass: {
+                                            confirmButton: "btn btn-primary",
+                                            // lift Swal above omjs default modal
+                                            container: "osai-dialogbox__appear",
+                                        }
+                                    })
+
+                                    callback();
                                 })
                         }
                     })
