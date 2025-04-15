@@ -1102,7 +1102,7 @@ async function hookTableOnPage({
                                 }
                             })
                                 .then(res => {
-                                    if ((res.code === 200 || res.code === 200) && width >= 100) {
+                                    if (width >= 100) {
                                         drop.emit("success", file);
                                         drop.emit("complete", file);
                                     }
