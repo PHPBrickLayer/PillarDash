@@ -1218,27 +1218,38 @@ function initDropzone ({
 
     // Hide the total progress bar when nothing's uploading anymore
     myDropzone.on("complete", function (file) {
-        const progressBars = dropzone.querySelectorAll('.dz-complete');
         setTimeout(function () {
-            progressBars.forEach(progressBar => {
-                progressBar.querySelector('.progress-bar').style.opacity = "0";
-                progressBar.querySelector('.progress').style.opacity = "0";
-                progressBar.querySelector('.dropzone-start').style.opacity = "0";
-            });
+            const progressBar = file.previewElement.$sel('.progress-bar');
+            progressBar.style.opacity = "0";
+            file.previewElement.$sel('.progress').style.opacity = "0";
+            file.previewElement.$sel('.dropzone-start').style.display = "none";
+
+            if(file.status === Dropzone.SUCCESS) {
+                file.previewElement.$sel(".dropzone-toolbar").$html("afterbegin", `<span class="dropzone-start"><i class="ki-outline ki-file-added fs-3 text-success"></i></span>`);
+                file.previewElement.classList.add('dz-success');
+            }
+
+            if (myDropzone.files.length > 0 && myDropzone.files.every(file => file.status === Dropzone.SUCCESS)) {
+                dropzone.$sel(".dropzone-upload").style.display = "none";
+                dropzone.$sel(".dropzone-remove-all").style.display = "none";
+                onQueueComplete(myDropzone);
+            }
         }, 300);
     });
 
     // Setup the buttons for all transfers
-    dropzone.querySelector(".dropzone-upload").addEventListener('click', function () {
+    dropzone.$sel(".dropzone-upload").$on('click', function () {
         myDropzone.files.forEach(file => {
-            const progressBar = file.previewElement.querySelector('.progress-bar');
-            progressBar.style.opacity = "1";
-            uploadFn(file, myDropzone, progressBar)
+            if(file.status !== Dropzone.SUCCESS && file.status !== Dropzone.UPLOADING) {
+                const progressBar = file.previewElement.querySelector('.progress-bar');
+                progressBar.style.opacity = "1";
+                uploadFn(file, myDropzone, progressBar)
+            }
         });
     });
 
     // Setup the button for remove all files
-    dropzone.querySelector(".dropzone-remove-all").addEventListener('click', function () {
+    dropzone.$sel(".dropzone-remove-all").$on('click', function () {
         Swal.fire({
             text: "Are you sure you would like to remove all files?",
             icon: "warning",
@@ -1258,6 +1269,7 @@ function initDropzone ({
                 dropzone.querySelector('.dropzone-remove-all').style.display = "none";
                 myDropzone.removeAllFiles(true);
             } else if (result.dismiss === 'cancel') {
+                osNote("Your files was not removed!.")
                 Swal.fire({
                     text: "Your files was not removed!.",
                     icon: "error",
@@ -1274,10 +1286,11 @@ function initDropzone ({
     });
 
     // On all files completed upload
-    myDropzone.on("queuecomplete", function (progress) {
+    myDropzone.on("queuecomplete", function () {
         const uploadIcons = dropzone.querySelectorAll('.dropzone-upload');
         uploadIcons.forEach(uploadIcon => uploadIcon.style.display = "none");
-        onQueueComplete(myDropzone, progress)
+        dropzone.$sel(".dropzone-upload").style.display = "none";
+        dropzone.$sel(".dropzone-remove-all").style.display = "none";
     });
 
     // On all files removed
