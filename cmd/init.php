@@ -5,13 +5,20 @@ use BrickLayer\Lay\BobDBuilder\Helper\Console\Console;
 use BrickLayer\Lay\BobDBuilder\Helper\Console\Format\Foreground;
 use BrickLayer\Lay\Core\LayConfig;
 
-include_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
+$self = explode(DIRECTORY_SEPARATOR, $_SERVER['PHP_SELF']);
+
+$dot_slash = str_repeat(".." . DIRECTORY_SEPARATOR, count($self) - 1);
+
+include_once __DIR__ . DIRECTORY_SEPARATOR . $dot_slash . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
+
+$pillar_dash = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR ;
+$pillar_dash = str_replace([LayConfig::server_data()->root, "cmd" . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR], "", $pillar_dash);
 
 if(!isset($argv[1])) {
     LayConfig::$ENV_IS_DEV = true;
     Console::log("Domain is not set", Foreground::red);
     Console::log("Command format: ", Foreground::yellow, newline: false);
-    Console::log("php utils/PillarDash/cmd/init.php [EXISTING_DOMAIN_NAME] [COMMAND TAG]", Foreground::cyan);
+    Console::log("php {$pillar_dash}init.php [EXISTING_DOMAIN_NAME] [COMMAND TAG]", Foreground::cyan);
 
     \BrickLayer\Lay\Core\Exception::kill_and_trace();
 }
@@ -21,7 +28,7 @@ $overwrite = isset($argv[2]) && $argv[2] == "--force";
 $domain_dir = "web/domains/$domain/";
 
 $exec_code = (new BobExec(
-    "link:dir utils/PillarDash/static {$domain_dir}static/dev/ui/static " . ($overwrite ? " --force" : ""),
+    "link:dir {$pillar_dash}static {$domain_dir}static/dev/ui/static " . ($overwrite ? " --force" : ""),
     true
 ))->response_code;
 
@@ -59,7 +66,7 @@ file_put_contents(
 print "  .\n";
 file_put_contents(
     $domain_dir . "Plaster.php",
-    "<?php \nnamespace web\domains\\$domain; \n" . file_get_contents($default_dir .  "plaster.php")
+    "<?php \nnamespace Web\\$domain; \n" . file_get_contents($default_dir .  "plaster.php")
 );
 
 print "  .\n";
