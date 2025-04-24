@@ -140,7 +140,7 @@ final class Layout
                                     <span class="text-muted fw-semibold me-1">Powered by</span>
                                     <a href="https://www.osaitech.dev" target="_blank" class="text-gray-800 text-hover-primary">
                                         <img
-                                                src="https://www.osaitech.dev/shared/static/prod/images/favicon.webp"
+                                                src="https://old.osaitech.dev/shared/static/prod/images/favicon.webp"
                                                 style="width: 20px; height: 20px"
                                                 alt="Osai Technologies"
                                                 loading="lazy"
