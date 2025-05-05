@@ -2,10 +2,9 @@
 
 namespace utils\PillarDash;
 
-use BrickLayer\Lay\Core\Traits\IsSingleton;
+use BrickLayer\Lay\Libs\Primitives\Traits\IsSingleton;
 use BrickLayer\Lay\Core\View\DomainResource;
 use BrickLayer\Lay\Core\View\SrcFilter;
-use JetBrains\PhpStorm\ArrayShape;
 
 final class Header
 {
@@ -140,14 +139,19 @@ final class Header
      * @param string $name
      * @param string $email
      * @param string $dp
-     * @param array ...$nav
+     * @param array{
+     *  name: string,
+     *  url: string,
+     *  class: string,
+     *  sub: array,
+     * } ...$nav
      * @return self
      */
     public static function user_nav(
         string $name,
         string $email,
         string $dp,
-        #[ArrayShape(['name' => 'string', 'url' => 'string', 'class' => 'string', 'sub' => 'array'])] array ...$nav
+        array ...$nav
     ) : self
     {
         $navs = "";
