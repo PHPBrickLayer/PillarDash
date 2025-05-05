@@ -2,10 +2,9 @@
 
 namespace Utils\PillarDash;
 
-use BrickLayer\Lay\Core\Traits\IsSingleton;
+use BrickLayer\Lay\Libs\Primitives\Traits\IsSingleton;
 use BrickLayer\Lay\Core\View\DomainResource;
 use BrickLayer\Lay\Core\View\Tags\Anchor;
-use JetBrains\PhpStorm\ArrayShape;
 
 final class Menu
 {
@@ -186,23 +185,23 @@ final class Menu
      * @param string $menu_name
      * @param string $icon
      * @param bool|null $permit
-     * @param array ...$items
+     * @param array{
+     *  name: string,
+     *  title: string,
+     *  url: string,
+     *  alias: array,
+     *  sub: array,
+     *  icon: string,
+     *  permit: bool,
+     *  domain_id: string,
+     *  target: string,
+     * } ...$items
      * @return self
      */
     public static function make(
         string     $menu_name,
         string     $icon, ?bool $permit,
-        #[ArrayShape([
-            'name' => 'string',
-            'title' => 'string',
-            'url' => 'string',
-            'alias' => 'array',
-            'sub' => 'array',
-            'icon' => 'string',
-            'permit' => 'bool',
-            'domain_id' => 'string',
-            'target' => 'string',
-        ])] array  ...$items
+        array  ...$items
     ) : self
     {
         if ($permit === false)
