@@ -676,14 +676,19 @@ async function hookTableOnPage({
                 foot: "",
                 closeOnBlur: false,
                 size: form.size ?? "lg",
-                body: (
-                    `<form>
-                        ${form.body()}
-                        <div class="text-center">
-                            ${$facades.submitBtn()}
-                        </div>
-                    </form>`
-                ),
+                body: (() => {
+                    const info = {
+                        FORM_ACTION: "ADD"
+                    }
+                    return (
+                        `<form>
+                            ${form.body(info)}
+                            <div class="text-center">
+                                ${$facades.submitBtn()}
+                            </div>
+                        </form>`
+                    );
+                })(),
                 then: () => {
                     if(form.then)
                         form.then('ADD')
@@ -919,6 +924,8 @@ async function hookTableOnPage({
     function entriesAction(){
         let opts = {
             edit: ({info, name, id}) => {
+                info.FORM_ACTION = "EDIT";
+
                 osModal({
                     head: "Edit " + name,
                     foot: "",
