@@ -741,7 +741,7 @@ async function hookTableOnPage({
         }, "on");
     }
 
-    function loadEntries(opts = {closeBox : true, preload : true, redraw: true}) {
+    function loadEntries(opts = {closeBox : true, preload : true, redraw: true, page: 1}) {
         if(opts.closeOnBlur)
             CusWind.closeBox()
 
@@ -752,7 +752,7 @@ async function hookTableOnPage({
         if(opts.preload)
             obj.preload = $preloader
 
-        return $curl(ctrl + api.list, obj)
+        return $curl(ctrl + api.list.replace("{page}", opts.page), obj)
             .finally(() => $preloader("hide"))
             .then(response => tableEntries(response))
     }
