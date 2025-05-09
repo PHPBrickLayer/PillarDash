@@ -644,7 +644,7 @@ function dataTable({
     };
 }
 
-function sndMsg(msg) {
+function _sndMsg(msg) {
     CusWind.closeBox();
 
     Swal.fire({
@@ -658,6 +658,13 @@ function sndMsg(msg) {
             container: "osai-dialogbox__appear",
         }
     });
+}
+
+function _ajax(submitButton, xhrRequest){
+    if(submitButton.disabled)
+        return;
+
+    xhrRequest();
 }
 
 async function hookTableOnPage({
@@ -709,19 +716,26 @@ async function hookTableOnPage({
                     if(form.then)
                         form.then('ADD')
 
-                    $facades.submitBtnEvent((btn) => ajax(
-                        btn,
-                        () => $curl(ctrl + api.add, {
-                            preload: () => preloadBtn(btn),
-                            data: btn,
-                            headers: apiHeaders
-                        })
-                            .finally(() => preloadBtn(btn, false))
-                            .then(res => {
-                                sndMsg(res.message);
-                                loadEntries()
+                    $on($sel(".submit-form"), "click", (e, btn) => {
+                        e.preventDefault()
+
+                        if(form.onSubmit)
+                            form.onSubmit(btn)
+
+                        _ajax(
+                            btn,
+                            () => $curl(ctrl + api.add, {
+                                preload: () => preloadBtn(btn),
+                                data: btn,
+                                headers: apiHeaders
                             })
-                    ))
+                                .finally(() => preloadBtn(btn, false))
+                                .then(res => {
+                                    _sndMsg(res.message);
+                                    loadEntries()
+                                })
+                        )
+                    })
                 }
             })
         }, "on");
@@ -951,6 +965,10 @@ async function hookTableOnPage({
 
                         $on($sel(".submit-form"), "click", (e, btn) => {
                             e.preventDefault()
+
+                            if(form.onSubmit)
+                                form.onSubmit(btn)
+
                             ajax(
                                 btn,
                                 () => $curl(ctrl + api.edit, {
@@ -960,7 +978,7 @@ async function hookTableOnPage({
                                 })
                                     .finally(() => preloadBtn(btn, false))
                                     .then(res => {
-                                        sndMsg(res.message);
+                                        _sndMsg(res.message);
                                         loadEntries()
                                     })
                             )
@@ -1136,7 +1154,7 @@ async function hookTableOnPage({
                                         drop.emit("complete", file);
                                     }
 
-                                    sndMsg(res.message);
+                                    _sndMsg(res.message);
 
                                     callback();
                                 })
