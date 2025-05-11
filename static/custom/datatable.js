@@ -719,8 +719,8 @@ async function hookTableOnPage({
                     $on($sel(".submit-form"), "click", (e, btn) => {
                         e.preventDefault()
 
-                        if(form.onSubmit)
-                            form.onSubmit(btn)
+                        if(form.onSubmit && !form.onSubmit(btn))
+                            return;
 
                         _ajax(
                             btn,
@@ -966,8 +966,8 @@ async function hookTableOnPage({
                         $on($sel(".submit-form"), "click", (e, btn) => {
                             e.preventDefault()
 
-                            if(form.onSubmit)
-                                form.onSubmit(btn)
+                            if(form.onSubmit && !form.onSubmit(btn))
+                                return;
 
                             ajax(
                                 btn,
