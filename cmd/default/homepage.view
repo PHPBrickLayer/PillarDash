@@ -1,6 +1,6 @@
 <?php
 
-use utils\PillarDash\Page;
+use Utils\Services\PillarDash\Page;
 
 // This is only used here because of the script tag at the bottom of the page
 Page::using_table(false);

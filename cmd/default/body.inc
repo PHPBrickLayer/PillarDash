@@ -1,5 +1,10 @@
 <?php
-\utils\PillarDash\Layout::outside(function () {
+
+use Utils\Services\PillarDash\Header;
+use Utils\Services\PillarDash\Layout;
+use Utils\Services\PillarDash\Menu;
+
+Layout::outside(function () {
     $meta = \BrickLayer\Lay\Core\View\DomainResource::plaster();
     $section = $meta->local->section;
 
@@ -17,12 +22,14 @@
     return true;
 });
 
-\utils\PillarDash\Layout::header(
-    \utils\PillarDash\Header::logo(
-        "@shared_img/logo.png",
+Layout::header(
+    Header::logo(
+        "@shared_img/icon.png",
+        " ",
+        "height: 50px; width: 50px"
     ),
 
-    \utils\PillarDash\Header::favourite(
+    Header::favourite(
         function (){ ?>
             <a href="blog/compose" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-warning">
@@ -54,7 +61,7 @@
         <?php }
     ),
 
-    \utils\PillarDash\Header::user_nav(
+    Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
         "@ui/static/assets/media/avatars/300-2.jpg",
@@ -74,9 +81,9 @@
     ),
 );
 
-\utils\PillarDash\Layout::sidebar(
+Layout::sidebar(
     "auto",
-    \utils\PillarDash\Menu::make(
+    Menu::make(
         "Dashboard",
         "ki-home-3",
         true,
@@ -86,7 +93,7 @@
             "title" => "This page consists of all published articles"
         ],
     ),
-    \utils\PillarDash\Menu::make(
+    Menu::make(
         "Blog",
         "ki-message-edit",
         true,
@@ -108,4 +115,4 @@
     ),
 );
 
-\utils\PillarDash\Layout::body();
+Layout::body();

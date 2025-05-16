@@ -296,8 +296,8 @@ function dataTable({
         if (!filterElement)
             return;
 
-        const columnOptions = singleFilter.options
-        const columnIndex = singleFilter.index ?? filterElement.dataset.filterColumn
+        const columnOptions = singleFilter?.options
+        const columnIndex = singleFilter?.index ?? filterElement.dataset.filterColumn
 
         filterElement.$html('<option value="__ALL__">All</option>' + columnOptions)
 

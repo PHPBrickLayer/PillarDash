@@ -1,8 +1,8 @@
 
 use BrickLayer\Lay\Core\View\ViewBuilder;
 use BrickLayer\Lay\Core\View\ViewCast;
-use utils\PillarDash\Layout;
-use utils\PillarDash\Page;
+use Utils\Services\PillarDash\Layout;
+use Utils\Services\PillarDash\Page;
 
 class Plaster extends ViewCast
 {

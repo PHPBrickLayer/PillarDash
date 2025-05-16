@@ -1,4 +1,4 @@
 <?php
-\utils\PillarDash\Layout::head();
+\Utils\Services\PillarDash\Layout::head();
 
 echo \BrickLayer\Lay\Core\View\DomainResource::plaster()->head;

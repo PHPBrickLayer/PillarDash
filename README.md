@@ -26,7 +26,7 @@ php bob make:domain User user
 ### fall_from_sky (recommended)
 This is the easiest method as the name implies. Simply run the command below
 ```shell
-php utils/PillarDash/cmd/init.php User
+php \Utils\Services\PillarDash\cmd\init.php User
 ```
 Now open your project and navigate to the user domain url, and that's all.
 
@@ -35,20 +35,20 @@ Follow these processes closely to raw dog successfully.
 
 - Use the command below to link the `static` directory to the `ui` directory of the designated domain you're working with:
   ```shell
-  php bob link:dir utils/PillarDash/static web/domains/User/static/dev/ui/static
+  php bob link:dir utils/Services/PillarDash/static web/domains/User/static/dev/ui/static
   ```
 - Then navigate to the `layout` folder and do the following in the appropriate files as commented:
   ```php
   # /web/domains/User/layout/head.inc
-  \utils\PillarDash\Layout::head();
+  \Utils\Services\PillarDash\Layout::head();
   ```
   ```php
   # /web/domains/User/layout/script.inc
-  \utils\PillarDash\Layout::script();
+  \Utils\Services\PillarDash\Layout::script();
   ```
   ```php
   # /web/domains/User/layout/body.inc
-  \utils\PillarDash\Layout::body();
+  \Utils\Services\PillarDash\Layout::body();
   ```
 ### Editing `body.inc`
 Open the `body.inc` file and do the following to set up the header, sidebar and every other required component. 
@@ -61,7 +61,7 @@ Use this when rendering the **error** and **auth** pages.\
 Ensure to pass `->local("section", "error")` for error pages or `->local("section", "auth")` for auth pages.
 
 ```php
-\utils\PillarDash\Layout::outside(function () {
+\Utils\Services\PillarDash\Layout::outside(function () {
     $meta = \BrickLayer\Lay\Core\View\DomainResource::plaster();
     $section = $meta->local->section;
   
@@ -81,12 +81,12 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
 ```
 #### Header Component
 ```php
-\utils\PillarDash\Layout::header(
-    \utils\PillarDash\Header::logo(
+\Utils\Services\PillarDash\Layout::header(
+    \Utils\Services\PillarDash\Header::logo(
         "@shared_img/logo.png",
     ),
 
-    \utils\PillarDash\Header::favourite(
+    \Utils\Services\PillarDash\Header::favourite(
         function (){ ?>
             <a href="blog/compose" class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
                 <div class="rounded d-flex flex-center w-40px h-40px flex-shrink-0 bg-warning">
@@ -118,7 +118,7 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
         <?php }
     ),
 
-    \utils\PillarDash\Header::user_nav(
+    \Utils\Services\PillarDash\Header::user_nav(
         "Brownian Motion",
         "brownian.motion@mot.ion",
         "@ui/static/assets/media/avatars/300-2.jpg",
@@ -141,9 +141,9 @@ Ensure to pass `->local("section", "error")` for error pages or `->local("sectio
 #### Sidebar Component
 To create a sidebar menu component, do the following inside the `body.inc` file.
 ```php
-\utils\PillarDash\Layout::sidebar(
+\Utils\Services\PillarDash\Layout::sidebar(
   "auto",
-  \utils\PillarDash\Menu::make(
+  \Utils\Services\PillarDash\Menu::make(
       "Dashboard",
       "ki-home-3",
       true,
@@ -153,7 +153,7 @@ To create a sidebar menu component, do the following inside the `body.inc` file.
             "title" => "This page consists of all published articles"
         ],
     ),
-    \utils\PillarDash\Menu::make(
+    \Utils\Services\PillarDash\Menu::make(
         "Blog",
         "ki-message-edit",
         true,
@@ -184,7 +184,7 @@ As you noticed, there are various keys you can pass to the `items` argument. Typ
 public function init_pages(): void
 {
     $this->builder->init_start()
-        ->body_attr(\utils\PillarDash\Layout::BODY_ATTR['class'], \utils\PillarDash\Layout::BODY_ATTR['attr'])
+        ->body_attr(\Utils\Services\PillarDash\Layout::BODY_ATTR['class'], \Utils\Services\PillarDash\Layout::BODY_ATTR['attr'])
         ->local("section", "app")
     ->init_end();
 }
